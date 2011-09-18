@@ -8,29 +8,42 @@ use Plack::Response;
 use Plack::Request;
 
 use Exporter::Easy (
-    OK => [ qw(enviroment request response response_json) ],
+    OK => [ qw(db
+               db_scope
+               enviroment
+               request
+               response
+               response_json) ],
 );
 
-my ($enviroment, $request, $response);
+my ($db,
+    $db_scope,
+    $enviroment,
+    $request,
+    $response);
+
+sub db {
+    if (@_) { $db = $_[0] }
+    $db
+}
+
+sub db_scope {
+    if (@_) { $db_scope = $_[0] }
+    $db_scope
+}
 
 sub enviroment {
-    if (@_) {
-        $enviroment = $_[0]
-    }
+    if (@_) { $enviroment = $_[0] }
     $enviroment
 }
 
 sub request {
-    if (@_) {
-        $request = $_[0]
-    }
+    if (@_) { $request = $_[0] }
     $request;
 }
 
 sub response {
-    if (@_) {
-        $response = $_[0];
-    }
+    if (@_) { $response = $_[0] }
     $response;
 }
 

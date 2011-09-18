@@ -1,0 +1,14 @@
+backend:
+  class: KiokuDB::Backend::DBI
+  dsn: dbi:SQLite:dbname=./tmp/test.db
+  create: 1
+
+  columns:
+    - sid
+    - data_type: varchar
+      is_nullable: 1
+    - username
+    - data_type: varchar
+      is_nullable: 1
+
+      
