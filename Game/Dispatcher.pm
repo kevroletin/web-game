@@ -7,13 +7,16 @@ use Game::Lobby qw(login logout register);
 
 sub process_request {
     my ($data) = @_;
-    eval {
+
+    #TODO: различать не найденный обработчики action-ов и внутренние падения
+    # расскоментировать, если хотите скрыть все ошибки от пользователя
+#    eval {
         no  strict 'refs';
         "$data->{action}"->($data);
-    };
-    if ($@) {
-        response_json({result => "badAction"});
-    }
+#    };
+#    if ($@) {
+#        response_json({result => "badAction"});
+#    }
 }
 
 1
