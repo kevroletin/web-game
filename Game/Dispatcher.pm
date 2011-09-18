@@ -9,10 +9,10 @@ sub process_request {
     my ($data) = @_;
     eval {
         no  strict 'refs';
-        "$data->{action}"->();
+        "$data->{action}"->($data);
     };
     if ($@) {
-        response_json({result => "badaction"});
+        response_json({result => "badAction"});
     }
 }
 

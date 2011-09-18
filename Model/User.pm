@@ -6,10 +6,10 @@ has 'sid' => ( isa => 'Str',
 
 has 'username' => ( isa => 'Str',
                     is  => 'rw',
-                    required => 1 );
+                    required => 0 );
 
 has 'password' => ( isa => 'Str',
                     is  => 'rw',
-                    required => 1 );
+                    required => 0 );
 
 1
