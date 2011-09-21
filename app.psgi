@@ -1,3 +1,27 @@
+=head1 NAME
+
+app.psgi - запуск приложения
+
+=head1 DESCRIPTION
+
+Запуск приложения состоит из нескольких шагов:
+
+=over
+
+=item * разбор полученного в запросе json,
+
+=item * загрузка конфигурации
+
+=item * соединение с базой данных
+
+=item * инициализация веб-сессии(поиск sid-а в базе данных)
+
+=back
+
+=head1 METHODS
+
+=cut
+
 use strict;
 use warnings;
 
@@ -13,6 +37,11 @@ use Model::Configurator;
 
 use Data::Dumper;
 
+=head2 setup_enviroment
+
+Инициализирует глобальные переменные из L<Include::Enviroment>
+
+=cut
 
 sub setup_enviroment {
     my ($env) = @_;
@@ -23,6 +52,13 @@ sub setup_enviroment {
     # TODO: Process errors
     Model::Configurator::connect_db();
 }
+
+=head2 parse_request
+
+Разбирает JSON, полученный в http-запросе и отправляет полученные
+данные на дальнейшую обработку в L<Game::Dispatcher>
+
+=cut
 
 sub parse_request {
     my ($env) = @_;
@@ -49,6 +85,13 @@ sub parse_request {
     response()->finalize();
 };
 
+=head2 builder
+
+Создаёт приложение Plack. Для подробностей смотрите L<Plack> и
+L<Plack::Builder>
+
+=cut
+
 builder {
     # Include PSGI middleware here
 
@@ -57,17 +100,3 @@ builder {
 };
 
 __END__
-
-=head1 NAME
-
-app.psgi - разбор полученного в запросе json, загрузка конфигурации, соединение с базой данных, инициализация веб-сессии(поиск sid-а в базе данных)
-
-
-
-
-
-
-
-
-
-

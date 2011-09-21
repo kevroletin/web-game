@@ -1,3 +1,13 @@
+=head1 NAME
+
+Model::User - описание модели User
+
+=head1 DETAILS
+
+Смотрите L<Moose> для подробностей.
+
+=cut
+
 package Model::User;
 use Moose;
 

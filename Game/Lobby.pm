@@ -1,3 +1,11 @@
+=head1 NAME
+
+Game::Lobby - обработчики для регистрации, аутентификация пользователя
+
+=head1 METHODS
+
+=cut
+
 package Game::Lobby;
 use strict;
 use warnings;
@@ -12,19 +20,44 @@ use Exporter::Easy (
 );
 
 
+=head2 login
+
+TODO
+
+=cut
+
 sub login {
     my ($data) = @_;
     response->body("login");
 }
+
+=head2 logout
+
+TODO
+
+=cut
 
 sub logout {
     my ($data) = @_;
     response->body("logout");
 }
 
+#TODO: вынести в методы класс MODEL::USER
 sub _validate_username { $_[0] ? 1 : 0 }
 
 sub _validate_password { $_[0] ? 1 : 0 }
+
+=head2 _gen_sid
+
+Метод генерации сидов:
+
+    $sid = Digest::SHA1::sha1_hex(rand() . time() .
+                                  'secret#$#%#%#%#%@#KJDFSd24');
+
+TODO: Для тестирование нужен простой генератор сидов, возвращающий
+целый числа. Нужно запоминать последнее сгенерированное число.
+
+=cut
 
 sub _gen_sid {
     my $sid;
@@ -36,6 +69,13 @@ sub _gen_sid {
     }
     $sid
 }
+
+=head2 register
+
+Регистрация новый пользователей.
+TODO: валидация имени пользователя и пароля.
+
+=cut
 
 sub register {
     my ($data) = @_;
@@ -68,7 +108,3 @@ sub register {
 1
 
 __END__
-
-=head1 NAME
-
-Game::Lobby - аутенфикация/регистрация
