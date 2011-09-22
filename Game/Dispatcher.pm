@@ -22,7 +22,7 @@ package Game::Dispatcher;
 use strict;
 use warnings;
 
-use Include::Enviroment qw(response_json);
+use Include::Environment qw(response_json);
 use Game::Lobby qw(login logout register);
 
 =head2 process_request

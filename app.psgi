@@ -31,21 +31,21 @@ use Plack::Request;
 use JSON;
 
 use Client::Runner;
-use Include::Enviroment qw(enviroment request response response_json);
+use Include::Environment qw(environment request response response_json);
 use Game::Dispatcher;
 use Model::Configurator;
 
 use Data::Dumper;
 
-=head2 setup_enviroment
+=head2 setup_environment
 
-Инициализирует глобальные переменные из L<Include::Enviroment>
+Инициализирует глобальные переменные из L<Include::Environment>
 
 =cut
 
-sub setup_enviroment {
+sub setup_environment {
     my ($env) = @_;
-    enviroment($env);
+    environment($env);
     response(Plack::Response->new(200));
     response()->content_type('text/javascript');
     request(Plack::Request->new($env));
@@ -64,7 +64,7 @@ sub parse_request {
     my ($env) = @_;
 
     #set global response, request and env objects
-    setup_enviroment($env);
+    setup_environment($env);
 
     my $json = request()->raw_body();
 

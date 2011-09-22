@@ -43,7 +43,7 @@ use warnings;
 
 use KiokuDB;
 
-use Include::Enviroment qw(db db_scope);
+use Include::Environment qw(db db_scope);
 
 =head2 connect_db
 
