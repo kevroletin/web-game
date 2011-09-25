@@ -1,6 +1,6 @@
 =head1 NAME
 
-Include::Enviroment - глобальные данные
+Include::Environment - глобальные данные
 
 =head1 DESCRIPTION
 
@@ -16,7 +16,7 @@ Include::Enviroment - глобальные данные
 
 =cut
 
-package Include::Enviroment;
+package Include::Environment;
 
 use strict;
 use warnings;
@@ -28,7 +28,7 @@ use Plack::Request;
 use Exporter::Easy (
     OK => [ qw(db
                db_scope
-               enviroment
+               environment
                request
                response
                response_json) ],
@@ -36,7 +36,7 @@ use Exporter::Easy (
 
 my ($db,
     $db_scope,
-    $enviroment,
+    $environment,
     $request,
     $response);
 
@@ -67,16 +67,16 @@ sub db_scope {
     $db_scope
 }
 
-=head2 enviroment
+=head2 environment
 
 Устанавливает/Возвращает hash с информацией об окружении, который
 передаёт Plack при запуске приложения.
 
 =cut
 
-sub enviroment {
-    if (@_) { $enviroment = $_[0] }
-    $enviroment
+sub environment {
+    if (@_) { $environment = $_[0] }
+    $environment
 }
 
 =head2 request

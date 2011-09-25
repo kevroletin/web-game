@@ -22,7 +22,9 @@ package Game::Dispatcher;
 use strict;
 use warnings;
 
-use Include::Environment qw(response_json);
+use Scalar::Util qw(reftype);
+
+use Include::Environment qw(response response_json);
 use Game::Lobby qw(login logout register);
 
 =head2 process_request
@@ -35,15 +37,21 @@ use Game::Lobby qw(login logout register);
 sub process_request {
     my ($data) = @_;
 
-    #TODO: различать не найденный обработчики action-ов и внутренние падения
-    # расскоментировать, если хотите скрыть все ошибки от пользователя
-#    eval {
+    my $action_handler = 0;
+    {
         no  strict 'refs';
-        "$data->{action}"->($data);
-#    };
-#    if ($@) {
-#        response_json({result => "badAction"});
-#    }
+        if (defined &{$data->{action}}) {
+            $action_handler = \&{$data->{action}}
+        }
+    }
+
+    if ($action_handler) {
+        # TODO: internal error should be catched in
+        # production enviroment
+        $action_handler->($data)
+    } else {
+        response_json({result => "badAction"});
+    }
 }
 
 1

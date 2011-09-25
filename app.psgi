@@ -31,7 +31,8 @@ use Plack::Request;
 use JSON;
 
 use Client::Runner;
-use Include::Environment qw(environment request response response_json);
+use Include::Environment qw(environment request response
+                            response_json);
 use Game::Dispatcher;
 use Model::Configurator;
 
@@ -45,7 +46,7 @@ use Data::Dumper;
 
 sub setup_environment {
     my ($env) = @_;
-    environment($env);
+    Include::Environment::environment($env);
     response(Plack::Response->new(200));
     response()->content_type('text/javascript');
     request(Plack::Request->new($env));
@@ -80,8 +81,6 @@ sub parse_request {
         Game::Dispatcher::process_request($data);
     }
 
-    response()->body([
-      response()->body(), '<pre>', Dumper($data), '</pre>' ]);
     response()->finalize();
 };
 
