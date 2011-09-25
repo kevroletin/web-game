@@ -1,3 +1,22 @@
+package Model::Configurator;
+use strict;
+use warnings;
+
+use KiokuDB;
+
+use Include::Environment qw(db db_scope);
+
+
+sub connect_db {
+    my $dir = KiokuDB->connect('config/db.yml');
+    db($dir);
+    db_scope($dir->new_scope());
+}
+
+1
+
+__END__
+
 =head1 NAME
 
 Model::Configurator - соединение с базой данных
@@ -35,29 +54,8 @@ Perl. Перед отправкой в БД объект сериализует�
 
 =head1 METHODS
 
-=cut
-
-package Model::Configurator;
-use strict;
-use warnings;
-
-use KiokuDB;
-
-use Include::Environment qw(db db_scope);
-
 =head2 connect_db
 
 Читает конфиг из config/db.yml и устанавливает соединение.
 
 =cut
-
-sub connect_db {
-    my $dir = KiokuDB->connect('config/db.yml');
-    db($dir);
-    db_scope($dir->new_scope());
-}
-
-
-1
-
-__END__

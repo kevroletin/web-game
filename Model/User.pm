@@ -1,13 +1,3 @@
-=head1 NAME
-
-Model::User - описание модели User
-
-=head1 DETAILS
-
-Смотрите L<Moose> для подробностей.
-
-=cut
-
 package Model::User;
 use Moose;
 
@@ -23,3 +13,16 @@ has 'password' => ( isa => 'Str',
                     required => 0 );
 
 1
+
+__END__
+
+=head1 NAME
+
+Model::User - описание модели User
+
+=head1 DETAILS
+
+Смотрите L<Moose> для подробностей.
+
+=cut
+
