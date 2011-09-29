@@ -2,7 +2,8 @@ package Model::User;
 use Moose;
 
 has 'sid' => ( isa => 'Str',
-               is  => 'rw' );
+               is  => 'rw',
+               required => 0 );
 
 has 'username' => ( isa => 'Str',
                     is  => 'rw',

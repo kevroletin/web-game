@@ -4,7 +4,7 @@ use warnings;
 
 use Scalar::Util qw(reftype);
 
-use Include::Environment qw(response response_json);
+use Include::Environment qw(response response_json is_debug);
 use Game::Lobby qw(login logout register);
 
 
@@ -20,9 +20,15 @@ sub process_request {
     }
 
     if ($action_handler) {
-        # TODO: internal error should be catched in
-        # production enviroment
-        $action_handler->($data)
+        if (is_debug()) {
+            $action_handler->($data)
+        } else {
+            eval { $action_handler->($data) };
+            if ($@) {
+                # TODO: save error in logs
+                response->status(500)
+            }
+        }
     } else {
         response_json({result => "badAction"});
     }

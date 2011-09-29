@@ -11,6 +11,8 @@ use Exporter::Easy (
     OK => [ qw(db
                db_scope
                environment
+               is_debug
+               if_debug
                request
                response
                response_json) ],
@@ -19,6 +21,7 @@ use Exporter::Easy (
 my ($db,
     $db_scope,
     $environment,
+    $is_debug,
     $request,
     $response);
 
@@ -35,6 +38,21 @@ sub db_scope {
 sub environment {
     if (@_) { $environment = $_[0] }
     $environment
+}
+
+sub is_debug {
+    if (@_) { $is_debug = $_[0] }
+    $is_debug
+}
+
+sub if_debug {
+    return unless $is_debug;
+    if (@_ > 1 && ref($_[0]) eq 'CODE') {
+        my $code = shift;
+        $code->(@_)
+    } else {
+        @_
+    }
 }
 
 sub request {

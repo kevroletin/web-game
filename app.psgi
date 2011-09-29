@@ -1,14 +1,14 @@
 use strict;
 use warnings;
 
+use JSON;
 use Plack::Builder;
 use Plack::Response;
 use Plack::Request;
-use JSON;
 
 use Client::Runner;
-use Include::Environment qw(environment request response
-                            response_json);
+use Include::Environment qw(environment is_debug if_debug
+                            request response response_json);
 use Game::Dispatcher;
 use Model::Configurator;
 
@@ -17,7 +17,9 @@ use Data::Dumper;
 
 sub setup_environment {
     my ($env) = @_;
-    Include::Environment::environment($env);
+    environment($env);
+    is_debug($ENV{environment} &&
+             $ENV{environment} eq 'debug');
     response(Plack::Response->new(200));
     response()->content_type('text/javascript');
     request(Plack::Request->new($env));
@@ -28,6 +30,7 @@ sub setup_environment {
 sub parse_request {
     my ($env) = @_;
 
+#    return [200, [], [Dumper \%ENV]];
     #set global response, request and env objects
     setup_environment($env);
 
@@ -40,7 +43,10 @@ sub parse_request {
     if ($@ or !$data->{action}) {
         response_json({
             result => 'badJson',
-            description => $@ ? $@ : 'no action field'});
+
+    if_debug(description => $@ ? $@ : 'no action field')
+
+});
     } else {
         Game::Dispatcher::process_request($data);
     }
