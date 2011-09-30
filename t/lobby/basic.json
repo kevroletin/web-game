@@ -1,0 +1,79 @@
+@register
+
+{
+"action": "register",
+"username": "user",
+"password": "password"
+}
+
+{
+"result": "ok"
+}
+
+@login
+
+{
+"action": "login",
+"username": "user",
+"password": "password"
+}
+
+{
+"result": "ok",
+"sid": ""
+}
+
+@logout
+
+{
+"action": "logout",
+"sid": ""
+}
+
+{
+"result": "ok"
+}
+
+
+# register errors
+@usernameTaken error
+
+{
+"action": "register",
+"username": "user",
+"password": "password"
+}
+
+{
+"result": "usernameTaken"
+}
+
+# TODO: badUsername
+
+# TODO: badPassword
+
+
+# login errors
+@bad username error
+
+{
+"action": "login",
+"username": "user123",
+"password": "123"
+}
+
+{
+"result": "badUsernameOrPassword"
+}
+
+@bad password error
+        
+{
+"action": "login",
+"username": "user",
+"password": "sadfks;ldfj"
+}
+
+{
+"result": "badUsernameOrPassword"
+}

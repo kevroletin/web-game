@@ -7,13 +7,33 @@ use Data::Dumper;
 use JSON;
 use LWP;
 use LWP::UserAgent;
+use Exporter::Easy (
+    EXPORT => [ qw(reset_server
+                   open_log
+                   close_log
+                   log_file
+                   request
+                   request_json
+                   raw_compare_test
+                   hook_sid_to_params
+                   hook_sid_from_params
+                   hook_sid_from_to_params
+                   hook_sid_specified
+                   params_same_sid
+                   json_compare_test) ],
+);
 
 my $url = $ENV{gameurl} ? $ENV{gameurl} :
                           "http://localhost:5000/engine";
 my $log_file = undef;
 
+sub reset_server {
+    # TODO: отправлять команду в запросе
+    eval { `rm ../tmp/test.db` };
+}
+
 sub open_log {
-    open $log_file, '>>', $_[0];
+    open $log_file, '>', $_[0];
 }
 
 sub close_log {
@@ -34,7 +54,7 @@ sub request {
     if ($log_file) {
         print $log_file "\n***REQUEST***\n" . $req->content();
         print $log_file "\n***RESPONSE***\n" . $res->content();
-        print "\n";
+        print $log_file "\n";
     }
     $res
 }
@@ -138,13 +158,28 @@ sub _json_compare {
 
 sub hook_sid_to_params {
     sub {
-        $_[1]->{_sid} = $_[0]->{sid}
+        $_[1]->{_sid} = $_[0]->{sid} if $_[0]->{sid}
     }
 }
 
 sub hook_sid_from_params {
     sub {
-        $_[0]->{sid} = $_[1]->{_sid}
+        $_[0]->{sid} = $_[1]->{_sid} if $_[1]->{_sid}
+    }
+}
+
+sub hook_sid_from_to_params {
+    sub {
+        #from params only if sid eq '' in test
+        if ($_[1]->{_sid} &&
+            defined $_[0]->{sid} && $_[0]->{sid} eq '')
+        {
+            $_[0]->{sid} = $_[1]->{_sid}
+        }
+        #to params always
+        if ($_[0]->{sid}) {
+            $_[1]->{_sid} = $_[0]->{sid}
+        }
     }
 }
 
@@ -157,8 +192,9 @@ sub hook_sid_specified {
 
 sub params_same_sid {
     {
-        res_hook => hook_sid_to_params(),
-        out_hook => hook_sid_from_params()
+        in_hook => hook_sid_from_to_params(),
+        res_hook => hook_sid_from_to_params(),
+        out_hook => hook_sid_from_to_params()
     }
 }
 
