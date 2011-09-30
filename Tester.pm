@@ -176,13 +176,13 @@ sub hook_sid_from_params {
 sub hook_sid_from_to_params {
     sub {
         #from params only if sid eq '' in test
-        if ($_[1]->{_sid} &&
+        if (defined $_[1]->{_sid} &&
             defined $_[0]->{sid} && $_[0]->{sid} eq '')
         {
             $_[0]->{sid} = $_[1]->{_sid}
         }
         #to params always
-        if ($_[0]->{sid}) {
+        if (defined $_[0]->{sid}) {
             $_[1]->{_sid} = $_[0]->{sid}
         }
     }

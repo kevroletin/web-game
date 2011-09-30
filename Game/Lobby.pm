@@ -12,16 +12,28 @@ use Exporter::Easy (
     OK => [qw(login logout register)]
 );
 
-
 sub _gen_sid {
     my $sid;
 
-    return reverse($_[0]) if is_debug();
+    if (is_debug()) {
+        my ($cnt) = db_search({CLASS => '_sidCounter'})->all();
+        if (!$cnt) {
+            package _sidCounter;
+            use Moose;
+            has 'value' => (is => 'rw', isa => 'Int',
+                            default => -1);
+            no Moose;
+
+            $cnt = _sidCounter->new();
+        }
+        $cnt->{value}++;
+        db->store($cnt);
+        return $cnt->{value};
+    }
     while (1) {
         $sid = Digest::SHA1::sha1_hex(rand() . time() .
                                       'secret#$#%#%#%#%@#KJDFSd24');
-        my $stream = db_serch({ sid => $sid });
-        last unless ($stream->all());
+        last unless (db_search({ sid => $sid })->all());
     }
     $sid
 }
