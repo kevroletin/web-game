@@ -10,13 +10,33 @@ use LWP::UserAgent;
 
 my $url = $ENV{gameurl} ? $ENV{gameurl} :
                           "http://localhost:5000/engine";
+my $log_file = undef;
+
+sub open_log {
+    open $log_file, '>>', $_[0];
+}
+
+sub close_log {
+    close $log_file;
+    $log_file = undef;
+}
+
+sub log_file {
+    $log_file
+}
 
 sub request {
     my ($content) = @_;
     my $ua = LWP::UserAgent->new(agent => "web-game-tester");
     my $req = HTTP::Request->new(POST => $url);
     $req->content($content);
-    $ua->request($req);
+    my $res = $ua->request($req);
+    if ($log_file) {
+        print $log_file "\n***REQUEST***\n" . $req->content();
+        print $log_file "\n***RESPONSE***\n" . $res->content();
+        print "\n";
+    }
+    $res
 }
 
 sub request_json {
@@ -24,10 +44,10 @@ sub request_json {
 }
 
 sub _run_test {
-    my ($code, $in, $out, %params) = @_;
+    my ($cmp_code, $in, $out, $params) = @_;
     my $resp = request($in);
     if ($resp->code() == 200) {
-        $code->($in, $out, $resp->content(), %params);
+        $cmp_code->($in, $out, $resp->content(), $params);
     } else {
         { res => 0,
           quick => 'status != 200; ',
@@ -36,10 +56,10 @@ sub _run_test {
     }
 }
 
-sub _compare_test {
+sub _raw_compare {
     my ($in, $out, $res) = @_;
     if ($out eq $res) {
-        { res => 0, quick => 'ok' }
+        { res => 1, quick => 'ok' }
     } else {
         { res => 0, quick => 'out != res',
           long => "server returned:\n$res" }
@@ -47,39 +67,66 @@ sub _compare_test {
 }
 
 sub raw_compare_test {
-    _run_test(\&_compare_test, @_)
+    _run_test(\&_raw_compare, @_)
 }
+
+# converts to json or creates bad test result
+sub _from_json {
+    my ($in, $result, $where) = @_;
+    my $res;
+    eval {
+        $res = from_json($in);
+    };
+    if ($@) {
+        $_[1] = { res => 0,
+                  quick => 'bad json in ' . ($where | ''),
+                  long => "error:\n" . $@ };
+        return 0
+    }
+    $_[1] = $res;
+    return 1;
+}
+
+sub _json_cmp_transformer {
+    my ($cmp_code, $in, $out, $res, $params) = @_;
+    sub {
+        my ($in, $out, $res, $params) = @_;
+        my ($out_parsed, $res_parsed);
+        unless (_from_json($out, $out_parsed, 'test output')) {
+            return $out_parsed
+        }
+        unless (_from_json($res, $res_parsed, 'response')) {
+            $res_parsed->{long} = $res_parsed->{long} .
+                                  "\n\nserver returned:\n$res";
+            return $res_parsed;
+        };
+        if ($params->{res_hook}) {
+            $params->{res_hook}->($res_parsed, $params)
+        }
+        if ($params->{out_hook}) {
+            $params->{out_hook}->($out_parsed, $params)
+        }
+        $cmp_code->($in, $out_parsed, $res_parsed, $params)
+    }
+};
 
 sub _run_json_test {
-    my ($code) = shift;
-
-    my $new_code = sub {
-        my ($in, $out, $res, %params) = @_;
-        my ($out_parsed, $res_parsed);
-        eval {
-            $out_parsed = from_json($out)
-        };
-        if ($@) {
-            return { res => 0, quick => 'bad json in test',
-                     long => $@ }
+    my ($cmp_code, $in, $out, $params) = @_;
+    if ($params->{in_hook}) {
+        unless (_from_json($in, $in, 'test input')) {
+            return $in
         }
-        eval {
-            $res_parsed = from_json($res)
-        };
-        if ($@) {
-            return { res => 0, quick => 'bad json in response',
-                     long => "error:\n" . $@ .
-                             "\n\nserver returned:\n$res" }
-        }
-        $code->($in, $out_parsed, $res_parsed, %params)
-    };
-    _run_test($new_code, @_)
+        $params->{in_hook}->($in, $params);
+        $in = to_json($in);
+    }
+    my $new_code = _json_cmp_transformer($cmp_code, @_);
+    _run_test($new_code, $in, $out, $params)
 }
 
-sub _json_compare_test {
+sub _json_compare {
     my ($in, $out, $res) = @_;
     if (Compare($out, $res)) {
-        { res => 0, quick => 'ok' }
+        { res => 1, quick => 'ok' }
     } else {
         { res => 0,
           quick => 'structures differs',
@@ -89,8 +136,34 @@ sub _json_compare_test {
     }
 }
 
+sub hook_sid_to_params {
+    sub {
+        $_[1]->{_sid} = $_[0]->{sid}
+    }
+}
+
+sub hook_sid_from_params {
+    sub {
+        $_[0]->{sid} = $_[1]->{_sid}
+    }
+}
+
+sub hook_sid_specified {
+    my ($sid) = @_;
+    sub {
+        $_[0]->{sid} = $sid
+    }
+}
+
+sub params_same_sid {
+    {
+        res_hook => hook_sid_to_params(),
+        out_hook => hook_sid_from_params()
+    }
+}
+
 sub json_compare_test {
-    _run_json_test(\&_json_compare_test, @_)
+    _run_json_test(\&_json_compare, @_)
 }
 
 1;
