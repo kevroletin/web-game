@@ -13,6 +13,14 @@ has 'password' => ( isa => 'Str',
                     is  => 'rw',
                     required => 0 );
 
+sub _db_extractor {
+    my ($h, $obj, $extractor, @args) = @_;
+    if ($obj->isa("Model::User")) {
+        $h->{sid} = $obj->sid();
+        $h->{username} = $obj->username();
+    }
+}
+
 1
 
 __END__

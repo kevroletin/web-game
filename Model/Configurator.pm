@@ -10,30 +10,32 @@ use Search::GIN::Extract::Callback;
 
 my @extractors;
 
-# TODO:
 sub _all_extractors {
     my ($obj, $extractor, @args) = @_;
+    my $ans = {};
+    for (@extractors) {
+        $_->($ans, @_)
+    }
+    $ans->{CLASS} = ref($obj);
+    $ans
 }
 
-sub _create_user_extractor {
-    sub {
-        my ($obj, $extractor, @args) = @_;
-        if ($obj->isa("Model::User")) {
-            return {
-                    sid => $obj->sid(),
-                    username => $obj->username()
-                   };
-        }
-    }
+sub add_extractor {
+    push @extractors, $_ for @_
+}
+
+sub _register_default_extractors {
+    add_extractor(\&Model::User::_db_extractor)
 }
 
 sub connect_db {
+    _register_default_extractors();
     my $dir = KiokuDB->new(
         backend => KiokuDB::Backend::DBI->new({
             create => 1,
             dsn => 'dbi:SQLite:dbname=tmp/test.db',
             extract => Search::GIN::Extract::Callback->new(
-                extract => _create_user_extractor()
+                extract => \&_all_extractors
             ),
         })
     );
