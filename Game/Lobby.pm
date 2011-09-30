@@ -4,7 +4,7 @@ use warnings;
 
 use Digest::SHA1 ();
 
-use Include::Environment qw(db is_debug if_debug
+use Include::Environment qw(db db_search is_debug if_debug
                             response response_json);
 use Model::User;
 
@@ -20,7 +20,7 @@ sub _gen_sid {
     while (1) {
         $sid = Digest::SHA1::sha1_hex(rand() . time() .
                                       'secret#$#%#%#%#%@#KJDFSd24');
-        my $stream = db()->search({ sid => $sid });
+        my $stream = db_serch({ sid => $sid });
         last unless ($stream->all());
     }
     $sid
@@ -29,26 +29,26 @@ sub _gen_sid {
 sub login {
     my ($data) = @_;
     my $query = {username => $data->{username}};
-    my @users = db()->search($query)->all();
+    my @users = db_search($query)->all();
     if (@users > 1 ) {
         die("multiple users with same name");
-    } elsif (!@users) {
+    } elsif (!@users ||
+             $users[0]->password() ne $data->{password})
+    {
         response_json({result => 'badUsernameOrPassword'});
         return
     }
     my $user = $users[0];
-    if ($user->password() eq $data->{password}) {
-        $user->sid(_gen_sid($user->username()));
-        db->store($user);
-        response_json({'result' => 'ok',
-                       'sid' => $user->sid() });
-    }
+    $user->sid(_gen_sid($user->username()));
+    db->store($user);
+    response_json({'result' => 'ok',
+                   'sid' => $user->sid() });
 }
 
 sub logout {
     my ($data) = @_;
     my $query = {sid => $data->{sid}};
-    my @users = db()->search($query)->all();
+    my @users = db_search($query)->all();
     if (@users > 1 ) {
         die("multiple users with same sid");
     } elsif (@users) {
@@ -73,7 +73,7 @@ sub register {
     } elsif (!_validate_password($data->{password})) {
         response_json({result => 'badPassword'})
     } else {
-        my $stream = db()->search({
+        my $stream = db_search({
             username => $data->{username}
         });
         if ($stream->all()) {

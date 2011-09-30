@@ -6,9 +6,11 @@ use warnings;
 use JSON;
 use Plack::Response;
 use Plack::Request;
+use Search::GIN::Query::Manual;
 
 use Exporter::Easy (
     OK => [ qw(db
+               db_search
                db_scope
                environment
                is_debug
@@ -28,6 +30,14 @@ my ($db,
 sub db {
     if (@_) { $db = $_[0] }
     $db
+}
+
+sub db_search {
+    my ($q) = @_;
+    my $query = Search::GIN::Query::Manual->new(
+       values => $q
+    );
+    $db->search($query);
 }
 
 sub db_scope {

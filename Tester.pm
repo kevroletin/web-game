@@ -12,6 +12,7 @@ use Exporter::Easy (
                    open_log
                    close_log
                    log_file
+                   write_to_log
                    request
                    request_json
                    raw_compare_test
@@ -41,8 +42,12 @@ sub close_log {
     $log_file = undef;
 }
 
-sub log_file {
+sub get_log_file {
     $log_file
+}
+
+sub write_to_log {
+    print $log_file @_
 }
 
 sub request {

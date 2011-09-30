@@ -3,11 +3,40 @@ use strict;
 use warnings;
 
 use KiokuDB;
+use KiokuDB::Backend::DBI;
 
 use Include::Environment qw(db db_scope);
+use Search::GIN::Extract::Callback;
+
+my @extractors;
+
+# TODO:
+sub _all_extractors {
+    my ($obj, $extractor, @args) = @_;
+}
+
+sub _create_user_extractor {
+    sub {
+        my ($obj, $extractor, @args) = @_;
+        if ($obj->isa("Model::User")) {
+            return {
+                    sid => $obj->sid(),
+                    username => $obj->username()
+                   };
+        }
+    }
+}
 
 sub connect_db {
-    my $dir = KiokuDB->connect('config/db.yml');
+    my $dir = KiokuDB->new(
+        backend => KiokuDB::Backend::DBI->new({
+            create => 1,
+            dsn => 'dbi:SQLite:dbname=tmp/test.db',
+            extract => Search::GIN::Extract::Callback->new(
+                extract => _create_user_extractor()
+            ),
+        })
+    );
     db($dir);
     db_scope($dir->new_scope());
 }

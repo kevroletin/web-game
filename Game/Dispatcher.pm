@@ -9,8 +9,7 @@ use Game::Lobby qw(login logout register);
 
 
 sub resetServer {
-    `rm tmp/test.db`;
-#    `echo -1 > last_game.txt`;
+    unlink 'tmp/test.db';
     response_json({result => 'ok'});
 }
 
