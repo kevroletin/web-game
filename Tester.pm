@@ -24,12 +24,12 @@ use Exporter::Easy (
 );
 
 my $url = $ENV{gameurl} ? $ENV{gameurl} :
+#                          "http://192.168.1.51/small_worlds";
                           "http://localhost:5000/engine";
 my $log_file = undef;
 
 sub reset_server {
-    # TODO: отправлять команду в запросе
-    eval { `rm ../tmp/test.db` };
+    request_json({action => 'resetServer'});
 }
 
 sub open_log {

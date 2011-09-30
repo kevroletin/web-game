@@ -15,6 +15,7 @@ use Exporter::Easy (
 
 sub _gen_sid {
     my $sid;
+
     return reverse($_[0]) if is_debug();
     while (1) {
         $sid = Digest::SHA1::sha1_hex(rand() . time() .
@@ -31,17 +32,17 @@ sub login {
     my @users = db()->search($query)->all();
     if (@users > 1 ) {
         die("multiple users with same name");
-    } elsif (@users) {
-        my $user = $users[0];
+    } elsif (!@users) {
+        response_json({result => 'badUsernameOrPassword'});
+        return
+    }
+    my $user = $users[0];
+    if ($user->password() eq $data->{password}) {
         $user->sid(_gen_sid($user->username()));
         db->store($user);
-        if ($user->password() eq $data->{password}) {
-            response_json({'result' => 'ok',
-                           'sid' => $user->sid() });
-            return;
-        }
+        response_json({'result' => 'ok',
+                       'sid' => $user->sid() });
     }
-    response_json({result => 'badUsernameOrPassword'});
 }
 
 sub logout {

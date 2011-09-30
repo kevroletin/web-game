@@ -8,6 +8,12 @@ use Include::Environment qw(response response_json is_debug);
 use Game::Lobby qw(login logout register);
 
 
+sub resetServer {
+    `rm tmp/test.db`;
+#    `echo -1 > last_game.txt`;
+    response_json({result => 'ok'});
+}
+
 sub process_request {
     my ($data) = @_;
 

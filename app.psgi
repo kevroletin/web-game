@@ -43,10 +43,8 @@ sub parse_request {
     if ($@ or !$data->{action}) {
         response_json({
             result => 'badJson',
-
-    if_debug(description => $@ ? $@ : 'no action field')
-
-});
+            if_debug(description => $@ ? $@ : 'no action field')
+        });
     } else {
         Game::Dispatcher::process_request($data);
     }

@@ -6,7 +6,6 @@ use KiokuDB;
 
 use Include::Environment qw(db db_scope);
 
-
 sub connect_db {
     my $dir = KiokuDB->connect('config/db.yml');
     db($dir);
