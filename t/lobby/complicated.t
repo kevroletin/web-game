@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 25;
+use Test::More tests => 39;
 
 use lib '..';
 use Tester;
@@ -372,3 +372,211 @@ GO(
 , {}
 );
 
+
+TEST("Register bad username(no field)");
+GO(
+'{
+"action": "register",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(empty)");
+GO(
+'{
+"action": "register",
+"username": "",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(too short)");
+GO(
+'{
+"action": "register",
+"username": "ab",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(too long)");
+GO(
+'{
+"action": "register",
+"username": "a1234567890123456",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(Starts with number)");
+GO(
+'{
+"action": "register",
+"username": "1abcde",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(contains @)");
+GO(
+'{
+"action": "register",
+"username": "Jonh@",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register user(boundaries1)");
+GO(
+'{
+"action": "register",
+"username": "Abcd",
+"password": "password"
+}'
+,
+'{
+"result": "ok"
+}'
+, {}
+);
+
+
+TEST("Register user(boundaries2)");
+GO(
+'{
+"action": "register",
+"username": "a123456789012345",
+"password": "password"
+}'
+,
+'{
+"result": "ok"
+}'
+, {}
+);
+
+
+TEST("Register bad username(contains @)");
+GO(
+'{
+"action": "register",
+"username": "Jonh@",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad username(contains russian letters)");
+GO(
+'{
+"action": "register",
+"username": "Петька",
+"password": "password"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad password(boundaries1)");
+GO(
+'{
+"action": "register",
+"username": "UserPasswd4",
+"password": "pas12"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register bad password(boundaries2)");
+GO(
+'{
+"action": "register",
+"username": "UserPasswd3",
+"password": "1234567890123456789"
+}'
+,
+'{
+"result": "badUsernameOrPassword"
+}'
+, {}
+);
+
+
+TEST("Register password (boundaries1)");
+GO(
+'{
+"action": "register",
+"username": "UserPasswd2",
+"password": "!@#$%^&*()!@#$%^&*"
+}'
+,
+'{
+"result": "ok"
+}'
+, {}
+);
+
+
+TEST("Register user(boundaries2)");
+GO(
+'{
+"action": "register",
+"username": "UserPasswd1",
+"password": "!@#$%^&*()!@#$%^&*"
+}'
+,
+'{
+"result": "ok"
+}'
+, {}
+);

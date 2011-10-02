@@ -4,7 +4,8 @@ use warnings;
 
 use Digest::SHA1 ();
 
-use Game::Environment qw(db db_search global_user
+use Game::Environment qw(db db_search early_response_json
+                         global_user
                          is_debug if_debug
                          response response_json);
 use Game::Model::User;
@@ -16,7 +17,7 @@ use Exporter::Easy (
 sub _gen_sid {
     my $sid;
 
-    if (0 && is_debug()) {
+    if (is_debug()) {
         my ($cnt) = db_search({CLASS => '_sidCounter'})->all();
         if (!$cnt) {
             package _sidCounter;
@@ -68,32 +69,20 @@ sub logout {
     response_json({result => 'ok'});
 }
 
-#TODO: move to Model::User with exeptions
-sub _validate_username { $_[0] ? 1 : 0 }
-
-sub _validate_password { $_[0] ? 1 : 0 }
-
 sub register {
     my ($data) = @_;
-    if (!_validate_username($data->{username})) {
-        response_json({result => 'badUsername'})
-    } elsif (!_validate_password($data->{password})) {
-        response_json({result => 'badPassword'})
-    } else {
-        my $q = {user_name => $data->{username}};
-        if (db_search($q)->all()) {
-            response_json({
-                result => 'usernameTaken'
-            })
-        } else {
-            my $user = Game::Model::User->new(
-                name => $data->{username},
-                password => $data->{password},
-            );
-            db()->store($user);
-            response_json({result => 'ok'})
-        }
+    my $q = {user_name => $data->{username}};
+    if (db_search($q)->all()) {
+        early_response_json({
+            result => 'usernameTaken'
+        });
     }
+    my $user = Game::Model::User->new(
+                   name => $data->{username},
+                   password => $data->{password},
+               );
+    db()->store($user);
+    response_json({result => 'ok'})
 }
 
 
