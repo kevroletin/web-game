@@ -1,4 +1,4 @@
-package Include::Environment;
+package Game::Environment;
 
 use strict;
 use warnings;
@@ -7,11 +7,14 @@ use JSON;
 use Plack::Response;
 use Plack::Request;
 use Search::GIN::Query::Manual;
+use Game::Exception;
 
 use Exporter::Easy (
     OK => [ qw(db
                db_search
                db_scope
+               early_response
+               early_response_json
                environment
                global_user
                is_debug
@@ -20,7 +23,8 @@ use Exporter::Easy (
                request
                response
                response_json
-               response_raw) ],
+               response_raw
+               stack_trace) ],
 );
 
 my ($db,
@@ -29,7 +33,8 @@ my ($db,
     $global_user,
     $is_debug,
     $request,
-    $response);
+    $response,
+    $stack_trace);
 
 sub db {
     if (@_) { $db = $_[0] }
@@ -47,6 +52,14 @@ sub db_search {
 sub db_scope {
     if (@_) { $db_scope = $_[0] }
     $db_scope
+}
+
+sub early_response {
+    Game::Exception::EarlyResponse->throw(@_)
+}
+
+sub early_response_json {
+    Game::Exception::EarlyResponse->throw_json(@_)
 }
 
 sub environment {
@@ -107,7 +120,13 @@ sub response_json {
 }
 
 sub response_raw {
+    $_[0] = [@_] if ref($_[0]) ne 'ARRAY';
     $response->body($_[0])
+}
+
+sub stack_trace {
+    if (@_) { $stack_trace = $_[0] }
+    $stack_trace
 }
 
 1

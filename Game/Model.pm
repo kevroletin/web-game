@@ -1,12 +1,14 @@
-package Model::Configurator;
+package Game::Model;
 use strict;
 use warnings;
 
 use KiokuDB;
 use KiokuDB::Backend::DBI;
-
-use Include::Environment qw(db db_scope);
 use Search::GIN::Extract::Callback;
+
+use Game::Environment qw(db db_scope);
+use Game::Model::User;
+
 
 my @extractors;
 
@@ -25,7 +27,7 @@ sub add_extractor {
 }
 
 sub _register_default_extractors {
-    add_extractor(\&Model::User::_db_extractor)
+    add_extractor(\&Game::Model::User::_db_extractor);
 }
 
 sub connect_db {
@@ -49,7 +51,7 @@ __END__
 
 =head1 NAME
 
-Model::Configurator - соединение с базой данных
+Game::Model - соединение с базой данных, регистрация экстракторов
 
 =head1 DESCRIPTION
 

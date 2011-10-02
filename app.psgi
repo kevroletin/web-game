@@ -8,6 +8,7 @@ use Game;
 
 
 builder {
+    enable 'Plack::Middleware::StackTrace';
     enable 'Plack::Middleware::AccessLog';
     enable 'Plack::Middleware::Lint';
 

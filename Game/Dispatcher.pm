@@ -2,13 +2,12 @@ package Game::Dispatcher;
 use strict;
 use warnings;
 
-use utf8;
-
 use Devel::StackTrace::AsHTML;
-use Include::Environment qw(init_user_by_sid
-                            response response_json
-                            response_raw is_debug);
-use Game::Lobby qw(login logout register);
+use Game::Actions::Lobby qw(login logout register);
+use Game::Environment qw(init_user_by_sid is_debug
+                         response response_json
+                         response_raw stack_trace);
+use utf8;
 
 
 # this is action handler
@@ -39,7 +38,7 @@ sub process_request {
         }
     }
 
-    unless ($action_handler) {
+    if (!$action_handler || $data->{action} =~ /^_.*/) {
         response_json({result => "badAction"});
         return
     }
@@ -53,8 +52,12 @@ sub process_request {
     eval {
         $action_handler->($data)
     };
-    if (ref($@) eq 'Devel::StackTrace' ) {
-        my $str = $@->as_html();
+    return unless $@;
+
+    if (ref($@) eq 'Game::Exception::EarlyResponse') {
+        response_raw($@->{msg})
+    } else {
+        my $str = stack_trace()->as_html();
         utf8::encode($str) if utf8::is_utf8($str);
         response_raw($str);
     }

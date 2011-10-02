@@ -1,23 +1,25 @@
+package Game;
 use strict;
 use warnings;
 
 use Devel::StackTrace;
 use JSON;
-use Plack::Builder;
 use Plack::Response;
 use Plack::Request;
 
-use Client::Runner;
-use Include::Environment qw(environment is_debug if_debug
-                            request response response_json);
+use Game::Environment qw(environment is_debug if_debug
+                         request response response_json
+                         stack_trace);
 use Game::Dispatcher;
-use Model::Configurator;
+use Game::Model;
 
 sub _dier {
-    die Devel::StackTrace->new(
-           indent => 1, message => $_[0],
-           ignore_package => __PACKAGE__
-        )
+    my $t = Devel::StackTrace->new(
+                indent => 1, message => $_[0],
+                ignore_package => [__PACKAGE__, 'Game::Exception']
+            );
+    stack_trace($t);
+    die @_;
 }
 
 $SIG{__WARN__} = \&_dier;
@@ -34,7 +36,7 @@ sub setup_environment {
     response()->content_type('text/html; charset=utf-8');
     request(Plack::Request->new($env));
     # TODO: Process errors
-    Model::Configurator::connect_db();
+    Game::Model::connect_db();
 }
 
 sub parse_request {
@@ -59,19 +61,13 @@ sub parse_request {
     response()->finalize();
 };
 
-builder {
-    enable 'Plack::Middleware::AccessLog';
-    enable 'Plack::Middleware::Lint';
-
-    mount "/" => \&Client::Runner::run;
-    mount "/engine" => \&parse_request;
-};
+1
 
 __END__
 
 =head1 NAME
 
-app.psgi - запуск приложения
+Game - запуск приложения
 
 =head1 DESCRIPTION
 

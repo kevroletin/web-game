@@ -1,13 +1,13 @@
-package Game::Lobby;
+package Game::Actions::Lobby;
 use strict;
 use warnings;
 
 use Digest::SHA1 ();
 
-use Include::Environment qw(db db_search global_user
-                            is_debug if_debug
-                            response response_json);
-use Model::User;
+use Game::Environment qw(db db_search global_user
+                         is_debug if_debug
+                         response response_json);
+use Game::Model::User;
 
 use Exporter::Easy (
     OK => [qw(login logout register)]
@@ -16,11 +16,12 @@ use Exporter::Easy (
 sub _gen_sid {
     my $sid;
 
-    if (is_debug()) {
+    if (0 && is_debug()) {
         my ($cnt) = db_search({CLASS => '_sidCounter'})->all();
         if (!$cnt) {
             package _sidCounter;
             use Moose;
+
             has 'value' => (is => 'rw', isa => 'Int',
                             default => -1);
             no Moose;
@@ -41,8 +42,9 @@ sub _gen_sid {
 
 sub login {
     my ($data) = @_;
-    my $query = {username => $data->{username}};
-    my @users = db_search($query)->all();
+    my $q = {user_name => $data->{username}};
+    my @users = db_search($q)->all();
+
     if (@users > 1 ) {
         die("multiple users with same name");
     } elsif (!@users || !defined $data->{password} ||
@@ -51,6 +53,7 @@ sub login {
         response_json({result => 'badUsernameOrPassword'});
         return
     }
+
     my $user = $users[0];
     $user->sid(_gen_sid());
     db->store($user);
@@ -65,12 +68,11 @@ sub logout {
     response_json({result => 'ok'});
 }
 
-#TODO: 
+#TODO: move to Model::User with exeptions
 sub _validate_username { $_[0] ? 1 : 0 }
 
 sub _validate_password { $_[0] ? 1 : 0 }
 
-#TODO: 
 sub register {
     my ($data) = @_;
     if (!_validate_username($data->{username})) {
@@ -78,14 +80,14 @@ sub register {
     } elsif (!_validate_password($data->{password})) {
         response_json({result => 'badPassword'})
     } else {
-        my $q = {username => $data->{username}};
+        my $q = {user_name => $data->{username}};
         if (db_search($q)->all()) {
             response_json({
                 result => 'usernameTaken'
             })
         } else {
-            my $user = Model::User->new(
-                username => $data->{username},
+            my $user = Game::Model::User->new(
+                name => $data->{username},
                 password => $data->{password},
             );
             db()->store($user);

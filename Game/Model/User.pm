@@ -1,23 +1,24 @@
-package Model::User;
+package Game::Model::User;
 use Moose;
+
 
 has 'sid' => ( isa => 'Str',
                is  => 'rw',
                required => 0 );
 
-has 'username' => ( isa => 'Str',
-                    is  => 'rw',
-                    required => 0 );
+has 'name' => ( isa => 'Str',
+                is  => 'rw',
+                required => 1 );
 
 has 'password' => ( isa => 'Str',
                     is  => 'rw',
-                    required => 0 );
+                    required => 1 );
 
 sub _db_extractor {
     my ($h, $obj, $extractor, @args) = @_;
-    if ($obj->isa("Model::User")) {
+    if ($obj->isa(__PACKAGE__)) {
         $h->{sid} = $obj->sid();
-        $h->{username} = $obj->username();
+        $h->{user_name} = $obj->name();
     }
 }
 

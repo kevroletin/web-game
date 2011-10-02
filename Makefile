@@ -5,7 +5,7 @@ debug :
 production : run_server
 
 run_server :
-	@plackup -E deployment -R app.psgi,Client,config,Game,Include,Model
+	@plackup -E deployment -R app.psgi,Game,Game.pm
 
 tags:
 	@find -regex "[^#].*.\(pm\|pl\|psgi\|t\)" | etags -
