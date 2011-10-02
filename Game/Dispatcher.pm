@@ -2,19 +2,34 @@ package Game::Dispatcher;
 use strict;
 use warnings;
 
-use Scalar::Util qw(reftype);
+use utf8;
 
-use Include::Environment qw(response response_json is_debug);
+use Devel::StackTrace::AsHTML;
+use Include::Environment qw(init_user_by_sid
+                            response response_json
+                            response_raw is_debug);
 use Game::Lobby qw(login logout register);
 
 
+# this is action handler
 sub resetServer {
     unlink 'tmp/test.db';
     response_json({result => 'ok'});
 }
 
+# this is action handler
+sub doSmth {
+    response_json({result => 'ok'})
+}
+
+sub _is_action_without_sid {
+    $_[0] eq 'login' ||
+    $_[0] eq 'register' ||
+    $_[0] eq 'resetServer'
+}
+
 sub process_request {
-    my ($data) = @_;
+    my ($data, $env) = @_;
 
     my $action_handler = 0;
     {
@@ -24,18 +39,24 @@ sub process_request {
         }
     }
 
-    if ($action_handler) {
-        if (is_debug()) {
-            $action_handler->($data)
-        } else {
-            eval { $action_handler->($data) };
-            if ($@) {
-                # TODO: save error in logs
-                response->status(500)
-            }
-        }
-    } else {
+    unless ($action_handler) {
         response_json({result => "badAction"});
+        return
+    }
+    if (!_is_action_without_sid($data->{action}) &&
+        !init_user_by_sid($data->{sid}))
+    {
+        response_json({result => 'badSid'});
+        return;
+    }
+
+    eval {
+        $action_handler->($data)
+    };
+    if (ref($@) eq 'Devel::StackTrace' ) {
+        my $str = $@->as_html();
+        utf8::encode($str) if utf8::is_utf8($str);
+        response_raw($str);
     }
 }
 

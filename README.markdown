@@ -40,3 +40,8 @@ make
                              и так: `localhost:5000/engine`
 
 
+DEPLOYMENT
+========== 
+
+Необходимо подключить Plack::Middleware::HTTPExceptions plack middleware вместо Plack::Middleware::StackTrace, используемого по дефолту, чтобы stack trace не 
+доходил до пльзователя.

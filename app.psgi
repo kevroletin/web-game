@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 
+use Devel::StackTrace;
 use JSON;
 use Plack::Builder;
 use Plack::Response;
@@ -12,7 +13,16 @@ use Include::Environment qw(environment is_debug if_debug
 use Game::Dispatcher;
 use Model::Configurator;
 
-use Data::Dumper;
+sub _dier {
+    die Devel::StackTrace->new(
+           indent => 1, message => $_[0],
+           ignore_package => __PACKAGE__
+        )
+}
+
+$SIG{__WARN__} = \&_dier;
+$SIG{__DIE__} = \&_dier;
+$SIG{INT} = \&_dier;
 
 
 sub setup_environment {
@@ -21,7 +31,7 @@ sub setup_environment {
     is_debug($ENV{environment} &&
              $ENV{environment} eq 'debug');
     response(Plack::Response->new(200));
-    response()->content_type('text/javascript');
+    response()->content_type('text/html; charset=utf-8');
     request(Plack::Request->new($env));
     # TODO: Process errors
     Model::Configurator::connect_db();
@@ -30,8 +40,6 @@ sub setup_environment {
 sub parse_request {
     my ($env) = @_;
 
-#    return [200, [], [Dumper \%ENV]];
-    #set global response, request and env objects
     setup_environment($env);
 
     my $json = request()->raw_body();
@@ -42,18 +50,18 @@ sub parse_request {
     };
     if ($@ or !$data->{action}) {
         response_json({
-            result => 'badJson',
-            if_debug(description => $@ ? $@ : 'no action field')
+            result => 'badJson'
         });
     } else {
-        Game::Dispatcher::process_request($data);
+        Game::Dispatcher::process_request($data, $env);
     }
 
     response()->finalize();
 };
 
 builder {
-    # Include PSGI middleware here
+    enable 'Plack::Middleware::AccessLog';
+    enable 'Plack::Middleware::Lint';
 
     mount "/" => \&Client::Runner::run;
     mount "/engine" => \&parse_request;

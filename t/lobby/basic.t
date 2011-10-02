@@ -5,6 +5,9 @@ use Test::More tests => 7;
 
 use lib '..';
 use Tester;
+use Tester::Hooks;
+
+# TODO: вынести повторяющийся в тестах код
 
 open_log('lobby/basic.msg');
 open my $f, '<', 'lobby/basic.json';

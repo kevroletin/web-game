@@ -13,16 +13,20 @@ use Exporter::Easy (
                db_search
                db_scope
                environment
+               global_user
                is_debug
                if_debug
+               init_user_by_sid
                request
                response
-               response_json) ],
+               response_json
+               response_raw) ],
 );
 
 my ($db,
     $db_scope,
     $environment,
+    $global_user,
     $is_debug,
     $request,
     $response);
@@ -50,6 +54,11 @@ sub environment {
     $environment
 }
 
+sub global_user {
+    if (@_) { $global_user = $_[0] }
+    $global_user
+}
+
 sub is_debug {
     if (@_) { $is_debug = $_[0] }
     $is_debug
@@ -63,6 +72,22 @@ sub if_debug {
     } else {
         @_
     }
+}
+
+sub init_user_by_sid {
+    my ($sid) = @_;
+    return 0 unless defined $sid;
+    $global_user = undef;
+
+    my @users = db_search({ sid => $sid })->all();
+    if (!@users ) {
+        return 0
+    } elsif ( @users > 1 ) {
+        die "multiple users with same name"
+    }
+
+    $global_user = $users[0];
+    1
 }
 
 sub request {
@@ -79,6 +104,10 @@ sub response_json {
     my ($text, $params) = @_;
     $params->{pretty} = 1;
     $response->body(to_json($text, $params))
+}
+
+sub response_raw {
+    $response->body($_[0])
 }
 
 1

@@ -4,7 +4,8 @@ use warnings;
 
 use Digest::SHA1 ();
 
-use Include::Environment qw(db db_search is_debug if_debug
+use Include::Environment qw(db db_search global_user
+                            is_debug if_debug
                             response response_json);
 use Model::User;
 
@@ -44,14 +45,14 @@ sub login {
     my @users = db_search($query)->all();
     if (@users > 1 ) {
         die("multiple users with same name");
-    } elsif (!@users ||
+    } elsif (!@users || !defined $data->{password} ||
              $users[0]->password() ne $data->{password})
     {
         response_json({result => 'badUsernameOrPassword'});
         return
     }
     my $user = $users[0];
-    $user->sid(_gen_sid($user->username()));
+    $user->sid(_gen_sid());
     db->store($user);
     response_json({'result' => 'ok',
                    'sid' => $user->sid() });
@@ -59,25 +60,17 @@ sub login {
 
 sub logout {
     my ($data) = @_;
-    my $query = {sid => $data->{sid}};
-    my @users = db_search($query)->all();
-    if (@users > 1 ) {
-        die("multiple users with same sid");
-    } elsif (@users) {
-        $users[0]->sid("");
-        db->store($users[0]);
-        response_json({'result' => 'ok'});
-        return;
-    }
-    response_json({'result' => 'badSid'});
+    global_user()->sid("");
+    db->store(global_user());
+    response_json({result => 'ok'});
 }
 
-#TODO: вынести в методы класс MODEL::USER
+#TODO: 
 sub _validate_username { $_[0] ? 1 : 0 }
 
 sub _validate_password { $_[0] ? 1 : 0 }
 
-#TODO: валидация имени пользователя и пароля.
+#TODO: 
 sub register {
     my ($data) = @_;
     if (!_validate_username($data->{username})) {
@@ -85,10 +78,8 @@ sub register {
     } elsif (!_validate_password($data->{password})) {
         response_json({result => 'badPassword'})
     } else {
-        my $stream = db_search({
-            username => $data->{username}
-        });
-        if ($stream->all()) {
+        my $q = {username => $data->{username}};
+        if (db_search($q)->all()) {
             response_json({
                 result => 'usernameTaken'
             })

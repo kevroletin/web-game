@@ -30,7 +30,11 @@ my $url = $ENV{gameurl} ? $ENV{gameurl} :
 my $log_file = undef;
 
 sub reset_server {
-    request_json({action => 'resetServer'});
+    my $r = json_compare_test(
+        '{"action": "resetServer"}',
+        '{"result": "ok"}'
+    );
+    $r->{res}
 }
 
 sub open_log {
@@ -158,48 +162,6 @@ sub _json_compare {
           long => "parsed test:\n" . Dumper($out) .
                   "\nparsed server response:\n" .
                   Dumper($res) }
-    }
-}
-
-sub hook_sid_to_params {
-    sub {
-        $_[1]->{_sid} = $_[0]->{sid} if $_[0]->{sid}
-    }
-}
-
-sub hook_sid_from_params {
-    sub {
-        $_[0]->{sid} = $_[1]->{_sid} if $_[1]->{_sid}
-    }
-}
-
-sub hook_sid_from_to_params {
-    sub {
-        #from params only if sid eq '' in test
-        if (defined $_[1]->{_sid} &&
-            defined $_[0]->{sid} && $_[0]->{sid} eq '')
-        {
-            $_[0]->{sid} = $_[1]->{_sid}
-        }
-        #to params always
-        if (defined $_[0]->{sid}) {
-            $_[1]->{_sid} = $_[0]->{sid}
-        }
-    }
-}
-
-sub hook_sid_specified {
-    my ($sid) = @_;
-    sub {
-        $_[0]->{sid} = $sid
-    }
-}
-
-sub params_same_sid {
-    {
-        in_hook => hook_sid_from_to_params(),
-        res_hook => hook_sid_from_to_params(),
-        out_hook => hook_sid_from_to_params()
     }
 }
 
