@@ -5,34 +5,11 @@ use Test::More tests => 39;
 
 use lib '..';
 use Tester;
+use Tester::OK;
 use Tester::Hooks;
 
-# TODO: вынести повторяющийся в тестах код
 
-open_log('lobby/complicated.msg');
-open my $fout, '>', 'lobby/complicated.log';
-
-sub OK {
-    ok($_[0]->{res}, $_[1]);
-    print $fout "\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n";
-    print $fout $_[0]->{long} . "\n" if $_[0]->{long};
-}
-
-my ($descr, $in, $out, $hooks);
-
-sub TEST {
-    $descr = $_[0]
-}
-
-sub GO {
-    $in = $_[0] if $_[0];
-    $out = $_[1] if $_[1];
-    $hooks = $_[2] if $_[2];
-    write_to_log($descr);
-    OK( json_compare_test($in, $out, $hooks), $descr );
-}
-
-
+init_logs('lobby/complicated');
 ok( reset_server(), 'reset server' );
 
 TEST("Bad json 1");
@@ -373,7 +350,7 @@ GO(
 );
 
 
-TEST("Register bad username(no field)");
+TEST("Register: bad username(no field)");
 GO(
 '{
 "action": "register",
@@ -387,7 +364,7 @@ GO(
 );
 
 
-TEST("Register bad username(empty)");
+TEST("Register: bad username(empty)");
 GO(
 '{
 "action": "register",
@@ -402,7 +379,7 @@ GO(
 );
 
 
-TEST("Register bad username(too short)");
+TEST("Register: bad username(too short)");
 GO(
 '{
 "action": "register",
@@ -417,7 +394,7 @@ GO(
 );
 
 
-TEST("Register bad username(too long)");
+TEST("Register: bad username(too long)");
 GO(
 '{
 "action": "register",
@@ -432,7 +409,7 @@ GO(
 );
 
 
-TEST("Register bad username(Starts with number)");
+TEST("Register: bad username(Starts with number)");
 GO(
 '{
 "action": "register",
@@ -447,7 +424,7 @@ GO(
 );
 
 
-TEST("Register bad username(contains @)");
+TEST("Register: bad username(contains @)");
 GO(
 '{
 "action": "register",
@@ -462,7 +439,7 @@ GO(
 );
 
 
-TEST("Register user(boundaries1)");
+TEST("Register: user(boundaries1)");
 GO(
 '{
 "action": "register",
@@ -477,7 +454,7 @@ GO(
 );
 
 
-TEST("Register user(boundaries2)");
+TEST("Register: user(boundaries2)");
 GO(
 '{
 "action": "register",
@@ -492,7 +469,7 @@ GO(
 );
 
 
-TEST("Register bad username(contains @)");
+TEST("Register: bad username(contains @)");
 GO(
 '{
 "action": "register",
@@ -507,7 +484,7 @@ GO(
 );
 
 
-TEST("Register bad username(contains russian letters)");
+TEST("Register: bad username(contains russian letters)");
 GO(
 '{
 "action": "register",
@@ -522,7 +499,7 @@ GO(
 );
 
 
-TEST("Register bad password(boundaries1)");
+TEST("Register: bad password(boundaries1)");
 GO(
 '{
 "action": "register",
@@ -537,7 +514,7 @@ GO(
 );
 
 
-TEST("Register bad password(boundaries2)");
+TEST("Register: bad password(boundaries2)");
 GO(
 '{
 "action": "register",
@@ -552,7 +529,7 @@ GO(
 );
 
 
-TEST("Register password (boundaries1)");
+TEST("Register: password(boundaries1)");
 GO(
 '{
 "action": "register",
@@ -567,7 +544,7 @@ GO(
 );
 
 
-TEST("Register user(boundaries2)");
+TEST("Register: password(boundaries2)");
 GO(
 '{
 "action": "register",

@@ -24,7 +24,7 @@ sub _gen_sid {
             use Moose;
 
             has 'value' => (is => 'rw', isa => 'Int',
-                            default => -1);
+                            default => 0);
             no Moose;
 
             $cnt = _sidCounter->new();

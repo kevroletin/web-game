@@ -8,11 +8,15 @@ use JSON;
 use LWP;
 use LWP::UserAgent;
 use Exporter::Easy (
-    EXPORT => [ qw(reset_server
+    EXPORT => [ qw(init_logs
+                   close_logs
+                   reset_server
                    open_log
                    close_log
-                   log_file
-                   write_to_log
+                   open_msg
+                   close_msg
+                   write_log
+                   write_msg
                    request
                    request_json
                    raw_compare_test
@@ -21,13 +25,26 @@ use Exporter::Easy (
                    hook_sid_from_to_params
                    hook_sid_specified
                    params_same_sid
-                   json_compare_test) ],
+                   json_compare_test
+                   already_json_test) ],
 );
 
 my $url = $ENV{gameurl} ? $ENV{gameurl} :
 #                          "http://192.168.1.51/small_worlds";
                           "http://localhost:5000/engine";
 my $log_file = undef;
+my $msg_file = undef;
+
+sub init_logs {
+    my ($test_name) = @_;
+    open_log($test_name . '.log');
+    open_msg($test_name . '.msg');
+}
+
+sub close_logs {
+    close_log();
+    close_msg();
+}
 
 sub reset_server {
     my $r = json_compare_test(
@@ -46,12 +63,21 @@ sub close_log {
     $log_file = undef;
 }
 
-sub get_log_file {
-    $log_file
+sub open_msg {
+    open $msg_file, '>', $_[0];
 }
 
-sub write_to_log {
+sub close_msg {
+    close $msg_file;
+    $msg_file = undef;
+}
+
+sub write_log {
     print $log_file @_
+}
+
+sub write_msg {
+    print $msg_file @_
 }
 
 sub request {
@@ -167,6 +193,15 @@ sub _json_compare {
 
 sub json_compare_test {
     _run_json_test(\&_json_compare, @_)
+}
+
+sub already_json_test {
+    my $in = shift;
+    my $compare = sub {
+        my ($in, $out, $res) = @_;
+        return _json_compare($in, $out, from_json($res))
+    };
+    _run_test($compare, to_json($in), @_)
 }
 
 1;
