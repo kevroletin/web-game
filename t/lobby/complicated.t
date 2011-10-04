@@ -257,7 +257,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badJson"
 }'
 , {}
 );
@@ -271,7 +271,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badJson"
 }'
 , {}
 );
@@ -314,7 +314,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badJson"
 }'
 , {}
 );
@@ -358,7 +358,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badJson"
 }'
 , {}
 );

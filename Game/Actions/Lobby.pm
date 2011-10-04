@@ -4,6 +4,7 @@ use warnings;
 
 use Digest::SHA1 ();
 
+use Game::Actions;
 use Game::Environment qw(db db_search early_response_json
                          global_user
                          is_debug if_debug
@@ -43,16 +44,17 @@ sub _gen_sid {
 
 sub login {
     my ($data) = @_;
+    proto($data, 'username', 'password');
+
     my $q = {user_name => $data->{username}};
     my @users = db_search($q)->all();
 
     if (@users > 1 ) {
         die("multiple users with same name");
-    } elsif (!@users || !defined $data->{password} ||
+    } elsif (!@users ||
              $users[0]->password() ne $data->{password})
     {
-        response_json({result => 'badUsernameOrPassword'});
-        return
+        early_response_json({result => 'badUsernameOrPassword'});
     }
 
     my $user = $users[0];
@@ -64,6 +66,7 @@ sub login {
 
 sub logout {
     my ($data) = @_;
+
     global_user()->sid("");
     db->store(global_user());
     response_json({result => 'ok'});
@@ -71,6 +74,8 @@ sub logout {
 
 sub register {
     my ($data) = @_;
+    proto($data, 'username', 'password');
+
     my $q = {user_name => $data->{username}};
     if (db_search($q)->all()) {
         early_response_json({

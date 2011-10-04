@@ -50,7 +50,7 @@ sub parse_request {
     eval {
         $data = from_json($json)
     };
-    if ($@ or !$data->{action}) {
+    if ($@ || !$data->{action}) {
         response_json({
             result => 'badJson'
         });
