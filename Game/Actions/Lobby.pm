@@ -46,15 +46,15 @@ sub login {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
-    my $q = {user_name => $data->{username}};
-    my @users = db_search($q)->all();
+    my @q = ({ name => $data->{username} },
+             { password => $data->{password} },
+             { CLASS => 'Game::Model::User' });
+    my @users = db_search(@q)->all();
 
-    if (@users > 1 ) {
-        die("multiple users with same name");
-    } elsif (!@users ||
-             $users[0]->password() ne $data->{password})
-    {
+    if (!@users) {
         early_response_json({result => 'badUsernameOrPassword'});
+    } elsif (@users > 1) {
+        die("multiple users with same name");
     }
 
     my $user = $users[0];
@@ -76,16 +76,17 @@ sub register {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
-    my $q = {user_name => $data->{username}};
-    if (db_search($q)->all()) {
+    my @q = ({ CLASS => 'Game::Model::User' },
+             { name => $data->{username} });
+    if (db_search(@q)->all()) {
         early_response_json({
             result => 'usernameTaken'
         });
     }
     my $user = Game::Model::User->new(
                    name => $data->{username},
-                   password => $data->{password},
-               );
+                   password => $data->{password}
+    );
     db()->store($user);
     response_json({result => 'ok'})
 }

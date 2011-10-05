@@ -26,8 +26,23 @@ sub add_extractor {
     push @extractors, $_ for @_
 }
 
+sub create_extractor {
+    no strict 'refs';
+    my ($class) = @_;
+
+    my @fields = @{"${class}::db_index"};
+    sub {
+        my ($h, $obj, $extractor, @args) = @_;
+        return unless ref($obj) eq $class;
+        for (@fields) {
+            # method call. How to write it better?
+            $h->{$_} = &{"${class}::$_"}($obj)
+        }
+    }
+}
+
 sub _register_default_extractors {
-    add_extractor(\&Game::Model::User::_db_extractor);
+    add_extractor(create_extractor('Game::Model::User'));
 }
 
 sub connect_db {

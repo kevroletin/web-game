@@ -7,6 +7,7 @@ use JSON;
 use Plack::Response;
 use Plack::Request;
 use Search::GIN::Query::Manual;
+use Search::GIN::Query::Set;
 use Game::Exception;
 
 use Exporter::Easy (
@@ -42,11 +43,19 @@ sub db {
 }
 
 sub db_search {
-    my ($q) = @_;
-    my $query = Search::GIN::Query::Manual->new(
-       values => $q
-    );
-    $db->search($query);
+    return unless @_;
+    my @sub_q =
+        map { Search::GIN::Query::Manual->new(values => $_) } @_;
+    my $q;
+    if (@sub_q == 1) {
+        $q = $sub_q[0]
+    } else {
+        $q = Search::GIN::Query::Set->new(
+            operation => 'INTERSECT',
+            subqueries => [@sub_q]
+        );
+    }
+    $db->search($q)
 }
 
 sub db_scope {

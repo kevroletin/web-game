@@ -4,6 +4,8 @@ use Moose;
 use Game::Environment qw(early_response_json);
 
 
+our @db_index = qw(sid name password);
+
 has 'sid' => ( isa => 'Str',
                is  => 'rw',
                required => 0 );
@@ -46,13 +48,6 @@ sub _validate_password {
     }
 }
 
-sub _db_extractor {
-    my ($h, $obj, $extractor, @args) = @_;
-    if ($obj->isa(__PACKAGE__)) {
-        $h->{sid} = $obj->sid();
-        $h->{user_name} = $obj->name();
-    }
-}
 
 1
 
