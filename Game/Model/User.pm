@@ -37,14 +37,14 @@ before 'password' => sub {
 sub _validate_name {
     unless (defined $_[0] &&
             $_[0] =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/) {
-        early_response_json({result => 'badUsernameOrPassword'})
+        early_response_json({result => 'badUsername'})
     }
 }
 
 sub _validate_password {
     unless (defined $_[0] &&
             $_[0] =~ /^.{6,18}$/) {
-        early_response_json({result => 'badUsernameOrPassword'})
+        early_response_json({result => 'badPassword'})
     }
 }
 

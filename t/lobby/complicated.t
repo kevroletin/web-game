@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 39;
+use Test::More tests => 38;
 
 use lib '..';
 use Tester;
@@ -373,7 +373,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -388,7 +388,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -403,7 +403,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -418,7 +418,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -433,7 +433,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -469,21 +469,6 @@ GO(
 );
 
 
-TEST("Register: bad username(contains @)");
-GO(
-'{
-"action": "register",
-"username": "Jonh@",
-"password": "password"
-}'
-,
-'{
-"result": "badUsernameOrPassword"
-}'
-, {}
-);
-
-
 TEST("Register: bad username(contains russian letters)");
 GO(
 '{
@@ -493,7 +478,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
@@ -508,7 +493,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badPassword"
 }'
 , {}
 );
@@ -523,7 +508,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badPassword"
 }'
 , {}
 );
