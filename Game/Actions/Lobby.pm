@@ -5,7 +5,8 @@ use warnings;
 use Digest::SHA1 ();
 
 use Game::Actions;
-use Game::Environment qw(db db_search early_response_json
+use Game::Environment qw(db db_search db_search_one
+                         early_response_json
                          global_user
                          is_debug if_debug
                          response response_json);
@@ -49,15 +50,12 @@ sub login {
     my @q = ({ name => $data->{username} },
              { password => $data->{password} },
              { CLASS => 'Game::Model::User' });
-    my @users = db_search(@q)->all();
+    my $user = db_search_one(@q);
 
-    if (!@users) {
+    unless ($user) {
         early_response_json({result => 'badUsernameOrPassword'});
-    } elsif (@users > 1) {
-        die("multiple users with same name");
     }
 
-    my $user = $users[0];
     $user->sid(_gen_sid());
     db->store($user);
     response_json({'result' => 'ok',

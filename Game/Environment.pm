@@ -3,6 +3,7 @@ package Game::Environment;
 use strict;
 use warnings;
 
+use Data::Dumper::Concise;
 use JSON;
 use Plack::Response;
 use Plack::Request;
@@ -13,6 +14,7 @@ use Game::Exception;
 use Exporter::Easy (
     OK => [ qw(db
                db_search
+               db_search_one
                db_scope
                early_response
                early_response_json
@@ -56,6 +58,14 @@ sub db_search {
         );
     }
     $db->search($q)
+}
+
+sub db_search_one {
+    my @res = db_search(@_)->all();
+    if (@res > 1) {
+        die "Search returned many items. Query: " . Dumper(@_)
+    }
+    $res[0]
 }
 
 sub db_scope {
