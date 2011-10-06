@@ -4,6 +4,7 @@ use warnings;
 
 use Devel::StackTrace::AsHTML;
 use Game::Actions::Lobby qw(login logout register);
+use Game::Actions::DefaultMaps qw(createDefaultMaps);
 use Game::Environment qw(init_user_by_sid is_debug
                          response response_json
                          response_raw stack_trace);
@@ -24,7 +25,8 @@ sub doSmth {
 sub _is_action_without_sid {
     $_[0] eq 'login' ||
     $_[0] eq 'register' ||
-    $_[0] eq 'resetServer'
+    $_[0] eq 'resetServer' ||
+    $_[0] eq 'createDefaultMaps'
 }
 
 sub process_request {

@@ -47,7 +47,7 @@ sub login {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
-    my @q = ({ name => $data->{username} },
+    my @q = ({ username => $data->{username} },
              { password => $data->{password} },
              { CLASS => 'Game::Model::User' });
     my $user = db_search_one(@q);
@@ -75,16 +75,12 @@ sub register {
     proto($data, 'username', 'password');
 
     my @q = ({ CLASS => 'Game::Model::User' },
-             { name => $data->{username} });
+             { username => $data->{username} });
     if (db_search(@q)->all()) {
-        early_response_json({
-            result => 'usernameTaken'
-        });
+        early_response_json({result => 'usernameTaken'});
     }
-    my $user = Game::Model::User->new(
-                   name => $data->{username},
-                   password => $data->{password}
-    );
+
+    my $user = Game::Model::User->new(params_from_proto());
     db()->store($user);
     response_json({result => 'ok'})
 }

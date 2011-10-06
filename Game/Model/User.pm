@@ -2,11 +2,9 @@ package Game::Model::User;
 use Moose;
 
 use Game::Environment qw(early_response_json);
-use Game::Exception;
-
 use Moose::Util::TypeConstraints;
 
-our @db_index = qw(sid name password);
+our @db_index = qw(sid username password);
 
 
 subtype 'Username',
@@ -32,7 +30,7 @@ has 'sid' => ( isa => 'Str',
                is  => 'rw',
                required => 0 );
 
-has 'name' => ( isa => 'Username',
+has 'username' => ( isa => 'Username',
                 is  => 'rw',
                 required => 1,
                   );
