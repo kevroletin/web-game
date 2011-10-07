@@ -19,7 +19,7 @@ subtype 'MapName',
 subtype 'PlayersNum',
     as 'Int',
     where {
-        0 < $_ && $_ <= 5
+        1 < $_ && $_ <= 5
     },
     message {
         early_response_json({result => 'badPlayersNum'})

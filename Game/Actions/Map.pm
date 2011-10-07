@@ -34,8 +34,7 @@ sub uploadMap {
     }
 
     $map = Game::Model::Map->new(params_from_proto(),
-                                 regions => $data->{regions},
-                                 id => _gen_map_id());
+                                 regions => $data->{regions});
     db()->store($map);
     response_json({result => 'ok', mapId => $map->id()});
 }

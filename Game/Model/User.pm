@@ -2,6 +2,7 @@ package Game::Model::User;
 use Moose;
 
 use Game::Environment qw(early_response_json);
+use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 
 our @db_index = qw(sid username password);
@@ -39,6 +40,9 @@ has 'password' => ( isa => 'Password',
                     is  => 'rw',
                     required => 1 );
 
+has 'activeGame' => ( isa => 'Game::Model::Game|Undef',
+                      is => 'rw',
+                      required => 0 );
 
 1
 

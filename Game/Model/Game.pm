@@ -3,8 +3,10 @@ use Moose;
 
 use Game::Environment qw(early_response_json inc_counter);
 use Game::Model::Map;
+use Game::Model::User;
 use KiokuDB::Set;
 use Moose::Util::TypeConstraints;
+use KiokuDB::Util qw(weak_set);
 
 our @db_index = qw(gameName gameId);
 
@@ -40,11 +42,21 @@ has 'gameDescr' => ( isa => 'Str|Undef',
                      is => 'rw' );
 
 has 'players' => ( does => 'KiokuDB::Set',
-                   is => 'rw' );
+                   is => 'rw',
+                   default => sub { weak_set() } );
 
-has 'gameId' => ( is => 'Int',
+has 'gameId' => ( isa => 'Int',
                   is => 'ro',
                   required => 0 );
+
+has 'state' => ( isa => 'Str',
+                 is => 'rw',
+                 default => 'waitingTheBeginning' );
+
+has 'activePlayer' => ( isa => 'Game::Model::User',
+                        is => 'rw',
+                        weak_ref => 1,
+                        required => 0 );
 
 sub BUILD {
     my ($self) = @_;

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Devel::StackTrace::AsHTML;
-use Game::Actions::Game q(createGame);
+use Game::Actions::Game qw(createGame joinGame leaveGame);
 use Game::Actions::Lobby qw(login logout register);
 use Game::Actions::Map qw(createDefaultMaps uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug

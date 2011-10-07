@@ -8,8 +8,10 @@ use Game::Environment qw(db db_search db_search_one
                          global_user
                          response response_json);
 use Game::Model::Game;
-use Scalar::Util q(looks_like_number);
-use Exporter::Easy ( OK => [q(createGame)] );
+use Exporter::Easy ( OK => [qw(createGame
+                               joinGame
+                               leaveGame)] );
+use KiokuDB::Util qw(weak_set);
 
 
 sub createGame {
@@ -36,5 +38,46 @@ sub createGame {
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
 
+sub joinGame {
+    my ($data) = @_;
+    proto($data, 'gameId');
+
+    my $game = db_search_one({ gameId => $data->{gameId} },
+                             { CLASS => 'Game::Model::Game' });
+    unless ($game) {
+        early_response_json({ result => 'badGameId' })
+    }
+
+    if (defined global_user()->activeGame()) {
+        early_response_json({ result => 'alreadyInGame' })
+    }
+
+    if ($game->state() ne 'waitingTheBeginning') {
+        early_response_json({ result => 'badGameState' })
+    }
+
+    if ($game->players()->size() eq $game->map()->playersNum()) {
+        early_response_json({ result => 'tooManyPlayers' })
+    }
+
+    global_user()->activeGame($game);
+    $game->players()->insert(global_user());
+
+    db()->store(global_user(), $game);
+    response_json({result => 'ok'})
+}
+
+
+sub leaveGame {
+    my ($data) = @_;
+
+    unless (defined global_user()->activeGame()) {
+        early_response_json({result => 'notInGame' });
+    }
+
+    global_user()->activeGame(undef);
+    db()->store(global_user());
+    response_json({result => 'ok'});
+}
 
 1
