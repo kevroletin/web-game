@@ -42,7 +42,12 @@ sub create_extractor {
 }
 
 sub _register_default_extractors {
-    add_extractor(create_extractor('Game::Model::User'));
+    for (qw(Game::Model::Counter
+            Game::Model::Game
+            Game::Model::Map
+            Game::Model::User)){
+        add_extractor(create_extractor($_))
+    }
 }
 
 sub connect_db {

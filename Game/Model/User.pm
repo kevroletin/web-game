@@ -10,7 +10,7 @@ our @db_index = qw(sid username password);
 subtype 'Username',
     as 'Str',
     where {
-        $_ =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/
+        /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/
     },
     message {
         early_response_json({result => 'badUsername'})
@@ -19,7 +19,7 @@ subtype 'Username',
 subtype 'Password',
     as 'Str',
     where {
-        $_ =~ /^.{6,18}$/
+        /^.{6,18}$/
     },
     message {
         early_response_json({result => 'badPassword'})

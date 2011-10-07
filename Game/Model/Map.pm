@@ -1,7 +1,7 @@
 package Game::Model::Map;
 use Moose;
 
-use Game::Environment qw(early_response_json);
+use Game::Environment qw(early_response_json inc_counter);
 use Moose::Util::TypeConstraints;
 
 our @db_index = qw(mapName id);
@@ -39,8 +39,8 @@ subtype 'Region',
     where {
         # TODO:
         defined $_->{adjacent} &&
-        defined $_->{landDescription} &&
-        defined $_->{population}
+        defined $_->{landDescription}
+        #defined $_->{population}
     },
     message {
         early_response_json({result => 'badRegions'})
@@ -65,6 +65,12 @@ has 'regions' => ( isa => 'ArrayRef[Region]|Undef',
 
 has 'id' => ( isa => 'Int',
               is => 'ro',
-              required => 1 );
+              required => 0 );
+
+sub BUILD {
+    my ($self) = @_;
+    $self->{id} = inc_counter('Game::Model::Map::id');
+}
+
 
 1

@@ -20,7 +20,14 @@ sub GO {
     OUT($_[1]) if $_[1];
     HOOKS($_[2]) if $_[2];
     write_log(TEST);
-    OK( already_json_test(IN, OUT, HOOKS), TEST );
+    my $res = {};
+    eval { $res = already_json_test(IN, OUT, HOOKS) };
+    if ($@) {
+        $res->{res} = 0;
+        $res->{quick} = "test died";
+        $res->{long} = $@;
+    }
+    OK( $res , TEST );
 }
 
 sub SendTests {

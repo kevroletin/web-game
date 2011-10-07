@@ -20,11 +20,6 @@ use Exporter::Easy (
                    request
                    request_json
                    raw_compare_test
-                   hook_sid_to_params
-                   hook_sid_from_params
-                   hook_sid_from_to_params
-                   hook_sid_specified
-                   params_same_sid
                    json_compare_test
                    already_json_test) ],
 );

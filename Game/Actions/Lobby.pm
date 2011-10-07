@@ -8,6 +8,7 @@ use Game::Actions;
 use Game::Environment qw(db db_search db_search_one
                          early_response_json
                          global_user
+                         inc_counter
                          is_debug if_debug
                          response response_json);
 use Game::Model::User;
@@ -20,21 +21,9 @@ sub _gen_sid {
     my $sid;
 
     if (is_debug()) {
-        my ($cnt) = db_search({CLASS => '_sidCounter'})->all();
-        if (!$cnt) {
-            package _sidCounter;
-            use Moose;
-
-            has 'value' => (is => 'rw', isa => 'Int',
-                            default => 0);
-            no Moose;
-
-            $cnt = _sidCounter->new();
-        }
-        $cnt->{value}++;
-        db->store($cnt);
-        return $cnt->{value};
+        return inc_counter('Game::Model::User::sid');
     }
+
     while (1) {
         $sid = Digest::SHA1::sha1_hex(rand() . time() .
                                       'secret#$#%#%#%#%@#KJDFSd24');

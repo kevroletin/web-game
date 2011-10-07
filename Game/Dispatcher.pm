@@ -3,8 +3,9 @@ use strict;
 use warnings;
 
 use Devel::StackTrace::AsHTML;
+use Game::Actions::Game q(createGame);
 use Game::Actions::Lobby qw(login logout register);
-use Game::Actions::DefaultMaps qw(createDefaultMaps);
+use Game::Actions::Map qw(createDefaultMaps uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug
                          response response_json
                          response_raw stack_trace);
@@ -26,7 +27,8 @@ sub _is_action_without_sid {
     $_[0] eq 'login' ||
     $_[0] eq 'register' ||
     $_[0] eq 'resetServer' ||
-    $_[0] eq 'createDefaultMaps'
+    $_[0] eq 'createDefaultMaps' ||
+    $_[0] eq 'uploadMap'
 }
 
 sub process_request {

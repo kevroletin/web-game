@@ -10,6 +10,7 @@ use Plack::Request;
 use Search::GIN::Query::Manual;
 use Search::GIN::Query::Set;
 use Game::Exception;
+use Game::Model::Counter;
 
 use Exporter::Easy (
     OK => [ qw(db
@@ -22,6 +23,7 @@ use Exporter::Easy (
                global_user
                is_debug
                if_debug
+               inc_counter
                init_user_by_sid
                request
                response
@@ -104,6 +106,16 @@ sub if_debug {
     } else {
         @_
     }
+}
+
+sub inc_counter {
+    my ($name) = @_;
+    my $cnt = db_search_one({ name => $name },
+                            { CLASS => 'Game::Model::Counter' });
+    $cnt = Game::Model::Counter->new(name => $name) unless $cnt;
+    $cnt->next();
+    db()->store($cnt);
+    $cnt->value();
 }
 
 sub init_user_by_sid {
