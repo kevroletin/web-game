@@ -11,7 +11,7 @@ use Game::Model::Game;
 use Exporter::Easy ( OK => [qw(createGame
                                joinGame
                                leaveGame)] );
-use KiokuDB::Util qw(weak_set);
+use KiokuDB::Set;
 
 
 sub createGame {
@@ -47,15 +47,12 @@ sub joinGame {
     unless ($game) {
         early_response_json({ result => 'badGameId' })
     }
-
     if (defined global_user()->activeGame()) {
         early_response_json({ result => 'alreadyInGame' })
     }
-
     if ($game->state() ne 'waitingTheBeginning') {
         early_response_json({ result => 'badGameState' })
     }
-
     if ($game->players()->size() eq $game->map()->playersNum()) {
         early_response_json({ result => 'tooManyPlayers' })
     }
@@ -67,7 +64,6 @@ sub joinGame {
     response_json({result => 'ok'})
 }
 
-
 sub leaveGame {
     my ($data) = @_;
 
@@ -75,9 +71,33 @@ sub leaveGame {
         early_response_json({result => 'notInGame' });
     }
 
+    my $game = global_user()->activeGame();
+    $game->players()->remove(global_user());
     global_user()->activeGame(undef);
-    db()->store(global_user());
+
+    db()->store(global_user(), $game);
     response_json({result => 'ok'});
+}
+
+sub setReadinessStatus {
+    my ($data) = @_;
+    proto($data, 'readinessStatus');
+
+    my $game = global_user()->activeGame();
+    unless (defined $game) {
+        early_response_json({result => 'notInGame'})
+    }
+    unless ($game->state() eq 'waitingTheBeginning') {
+        early_response_json({result => 'badGameState'})
+    }
+
+    global_user()->readinessStatus($data->{readinessStatus});
+    if ($game->ready()) {
+        $game->state('processing');
+    }
+
+    db()->store(global_user(), $game);
+    response_json({result => 'ok'})
 }
 
 1

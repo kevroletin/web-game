@@ -63,4 +63,12 @@ sub BUILD {
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
 }
 
+sub ready {
+    my ($self) = @_;
+    for my $user ($self->players()->members()) {
+        return 0 unless $user->readinessStatus()
+    }
+    1
+}
+
 1

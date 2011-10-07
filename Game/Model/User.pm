@@ -26,6 +26,15 @@ subtype 'Password',
         early_response_json({result => 'badPassword'})
     };
 
+subtype 'ReadinessStatus',
+    as 'Int',
+    where {
+        $_ == 0 || $_ == 1
+    },
+    message {
+        early_response_json({result => 'badReadinessStatus'})
+    };
+
 
 has 'sid' => ( isa => 'Str',
                is  => 'rw',
@@ -43,6 +52,16 @@ has 'password' => ( isa => 'Password',
 has 'activeGame' => ( isa => 'Game::Model::Game|Undef',
                       is => 'rw',
                       required => 0 );
+
+has 'readinessStatus' => ( isa => 'ReadinessStatus',
+                           is => 'rw',
+                           default => 0 );
+
+before 'activeGame' => sub {
+    my ($self) = @_;
+    $self->readinessStatus(0);
+};
+
 
 1
 
