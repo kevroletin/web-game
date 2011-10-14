@@ -11,6 +11,7 @@ use KiokuDB::Util qw(weak_set);
 our @db_index = qw(gameName gameId);
 
 
+# TODO: use full type names since types are global objects
 subtype 'GameName',
     as 'Str',
     where {
@@ -41,9 +42,9 @@ has 'map' => ( isa => 'Game::Model::Map',
 has 'gameDescr' => ( isa => 'Str|Undef',
                      is => 'rw' );
 
-has 'players' => ( does => 'KiokuDB::Set',
+has 'players' => ( does => 'ArrayRef[Game::Model::User]',
                    is => 'rw',
-                   default => sub { weak_set() } );
+                   default => sub { [] } );
 
 has 'gameId' => ( isa => 'Int',
                   is => 'ro',
@@ -53,22 +54,29 @@ has 'state' => ( isa => 'Str',
                  is => 'rw',
                  default => 'waitingTheBeginning' );
 
-has 'activePlayer' => ( isa => 'Game::Model::User',
-                        is => 'rw',
-                        weak_ref => 1,
-                        required => 0 );
-
 sub BUILD {
     my ($self) = @_;
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
 }
 
+sub add_player {
+    my ($self, $user) = @_;
+    push @{$self->players()}, $user
+}
+
+sub remove_player {
+    my ($self, $user) = @_;
+    my $nu = [ grep { ref($_) ne ref($user) } @{$self->players()} ];
+    $self->players($nu);
+}
+
 sub ready {
     my ($self) = @_;
-    for my $user ($self->players()->members()) {
+    for my $user (@{$self->players()}) {
         return 0 unless $user->readinessStatus()
     }
-    1
+    1 && @{$self->players()}
 }
+
 
 1

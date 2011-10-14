@@ -5,6 +5,7 @@ use warnings;
 use Game::Actions;
 use Game::Environment qw(db db_search db_search_one
                          early_response_json
+                         global_game
                          global_user
                          response response_json);
 use Game::Model::Game;
@@ -44,6 +45,8 @@ sub joinGame {
 
     my $game = db_search_one({ gameId => $data->{gameId} },
                              { CLASS => 'Game::Model::Game' });
+
+
     unless ($game) {
         early_response_json({ result => 'badGameId' })
     }
@@ -53,12 +56,13 @@ sub joinGame {
     if ($game->state() ne 'waitingTheBeginning') {
         early_response_json({ result => 'badGameState' })
     }
-    if ($game->players()->size() eq $game->map()->playersNum()) {
+
+    if (@{$game->players()} eq $game->map()->playersNum()) {
         early_response_json({ result => 'tooManyPlayers' })
     }
 
     global_user()->activeGame($game);
-    $game->players()->insert(global_user());
+    $game->add_player(global_user());
 
     db()->store(global_user(), $game);
     response_json({result => 'ok'})
@@ -67,13 +71,15 @@ sub joinGame {
 sub leaveGame {
     my ($data) = @_;
 
-    unless (defined global_user()->activeGame()) {
-        early_response_json({result => 'notInGame' });
-    }
+    use Data::Dumper;
+    print STDERR Dumper global_user();
 
-    my $game = global_user()->activeGame();
-    $game->players()->remove(global_user());
+    my $game = global_game();
+    $game->remove_player(global_user());
     global_user()->activeGame(undef);
+
+    use Data::Dumper;
+    print STDERR Dumper global_user();
 
     db()->store(global_user(), $game);
     response_json({result => 'ok'});
@@ -99,5 +105,20 @@ sub setReadinessStatus {
     db()->store(global_user(), $game);
     response_json({result => 'ok'})
 }
+
+# TODO:
+# getGameList
+
+# TODO:
+# getGameState
+
+# TODO:
+# getMapState
+
+# TODO:
+# saveGame
+
+# TODO:
+# loadGame
 
 1

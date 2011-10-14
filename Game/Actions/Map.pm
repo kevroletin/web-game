@@ -9,6 +9,7 @@ use Game::Environment qw(db db_search_one
                          global_user
                          response_json);
 use Game::Model::Map;
+use Game::Model::Region;
 use Exporter::Easy ( OK => [qw(createDefaultMaps uploadMap)] );
 
 

@@ -20,6 +20,7 @@ use Exporter::Easy (
                early_response
                early_response_json
                environment
+               global_game
                global_user
                is_debug
                if_debug
@@ -86,6 +87,12 @@ sub early_response_json {
 sub environment {
     if (@_) { $environment = $_[0] }
     $environment
+}
+
+sub global_game {
+    my $g = $global_user->activeGame();
+    early_response_json({result => 'notInGame'}) unless $g;
+    $g
 }
 
 sub global_user {

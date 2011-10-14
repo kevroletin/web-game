@@ -2,6 +2,7 @@ package Game::Model::Map;
 use Moose;
 
 use Game::Environment qw(early_response_json inc_counter);
+use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 
 our @db_index = qw(mapName id);
@@ -34,22 +35,10 @@ subtype 'TurnsNum',
         early_response_json({result => 'badTurnsNum'})
     };
 
-subtype 'Region',
-    as 'HashRef',
-    where {
-        # TODO:
-        defined $_->{adjacent} &&
-        defined $_->{landDescription}
-        #defined $_->{population}
-    },
-    message {
-        early_response_json({result => 'badRegions'})
-    };
-
 
 has 'mapName' => ( isa => 'MapName',
-                is  => 'rw',
-                required => 1 );
+                   is  => 'rw',
+                   required => 1 );
 
 has 'playersNum' => ( isa => 'PlayersNum',
                       is  => 'ro',
@@ -59,7 +48,7 @@ has 'turnsNum' => ( isa => 'TurnsNum',
                     is => 'ro',
                     required => 1 );
 
-has 'regions' => ( isa => 'ArrayRef[Region]|Undef',
+has 'regions' => ( isa => 'ArrayRef[Game::Model::Region]|Undef',
                    is => 'rw',
                    required => 0 );
 
@@ -72,5 +61,13 @@ sub BUILD {
     $self->{id} = inc_counter('Game::Model::Map::id');
 }
 
+sub region_by_id {
+    my ($self, $id) = @_;
+    my $c = find_type_constraint('Int');
+    $c->validate($id);
+    my $region = $self->regions()->[$id];
+    $c->get_message() unless $region;
+    $region
+}
 
 1

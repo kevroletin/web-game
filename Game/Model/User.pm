@@ -42,16 +42,14 @@ has 'sid' => ( isa => 'Str',
 
 has 'username' => ( isa => 'Username',
                 is  => 'rw',
-                required => 1,
-                  );
+                required => 1 );
 
 has 'password' => ( isa => 'Password',
                     is  => 'rw',
                     required => 1 );
 
 has 'activeGame' => ( isa => 'Game::Model::Game|Undef',
-                      is => 'rw',
-                      required => 0 );
+                      is => 'rw' );
 
 has 'readinessStatus' => ( isa => 'ReadinessStatus',
                            is => 'rw',

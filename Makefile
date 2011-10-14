@@ -8,7 +8,7 @@ run_server :
 	@plackup -E deployment -R app.psgi,Game,Game.pm
 
 tags:
-	@find -regex "[^#].*.\(pm\|pl\|psgi\|t\)" | etags -
+	@find -regex "./[^#\.].*.\(pm\|pl\|psgi\|t\)" | etags -
 
 clean_db :
 	@rm tmp/test.db

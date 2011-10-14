@@ -2,38 +2,41 @@ package Game::Constants::Map;
 use warnings;
 use strict;
 
+use Game::Model::Region;
+
+
 my $m1 = {
   mapName => "defaultMap1",
   playersNum => 2,
   turnsNum => 5,
-  regins => undef
+  regions => []
 };
 
 my $m2 = {
   mapName => "defaultMap2",
   playersNum => 3,
   turnsNum => 5,
-  regins => undef
+  regions => undef
 };
 
 my $m3 = {
   mapName => "defaultMap3",
   playersNum => 4,
   turnsNum => 5,
-  regins => undef
+  regions => undef
 };
 
 my $m4 = {
   mapName => "defaultMap4",
   playersNum => 5,
   turnsNum => 5,
-  regins => undef
+  regions => undef
 };
 
 my $m5 = {
   mapName => "defaultMap5",
   playersNum => 2,
-  regions => [
+  regions => [ map { Game::Model::Region->new($_) }
     {
       adjacent => [ 3, 4 ],
       landDescription => [
@@ -70,7 +73,7 @@ my $m5 = {
 my $m6 = {
   mapName => "defaultMap6",
   playersNum => 2,
-  regions => [
+  regions => [ map { Game::Model::Region->new($_) }
     {
       adjacent => [ 1, 6, 7 ],
       landDescription => [
@@ -301,11 +304,10 @@ my $m6 = {
   turnsNum => 7
 };
 
-
 my $m7 = {
   mapName => "defaultMap7",
   playersNum => 2,
-  regions => [
+  regions => [ map { Game::Model::Region->new($_) }
     {
       adjacent => [ 2 ],
       landDescription => [
@@ -342,7 +344,6 @@ my $m7 = {
   ],
   turnsNum => 5
 };
-
 
 our @maps = ($m1, $m2, $m3, $m4, $m5, $m6, $m7);
 
