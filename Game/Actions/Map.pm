@@ -26,7 +26,7 @@ sub createDefaultMaps {
 
 sub uploadMap {
     my ($data) = @_;
-    proto($data, 'mapName', 'playersNum', 'turnsNum');
+    proto($data, 'mapName', 'playersNum', 'turnsNum', 'regions');
 
     my $map = db_search_one({ mapName => $data->{mapName} },
                             { CLASS => 'Game::Model::Map' });
@@ -34,8 +34,22 @@ sub uploadMap {
         early_response_json({ result => 'mapNameTaken' })
     }
 
-    $map = Game::Model::Map->new(params_from_proto(),
-                                 regions => $data->{regions});
+    my @regions;
+    eval {
+        @regions = map { Game::Model::Region->new($_) } @{$data->{regions}};
+    };
+    if ($@) {
+        if (ref($@) eq 'Game::Exception::EarlyResponse' ) {
+            die $@
+        } else {
+            early_response_json({result => 'badJson'})
+        }
+    }
+
+    $map = Game::Model::Map->new(
+               params_from_proto('mapName', 'playersNum', 'turnsNum'),
+               regions => [@regions]
+           );
     db()->store($map);
     response_json({result => 'ok', mapId => $map->id()});
 }

@@ -71,15 +71,9 @@ sub joinGame {
 sub leaveGame {
     my ($data) = @_;
 
-    use Data::Dumper;
-    print STDERR Dumper global_user();
-
     my $game = global_game();
     $game->remove_player(global_user());
     global_user()->activeGame(undef);
-
-    use Data::Dumper;
-    print STDERR Dumper global_user();
 
     db()->store(global_user(), $game);
     response_json({result => 'ok'});

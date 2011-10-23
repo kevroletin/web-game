@@ -42,9 +42,16 @@ has 'map' => ( isa => 'Game::Model::Map',
 has 'gameDescr' => ( isa => 'Str|Undef',
                      is => 'rw' );
 
-has 'players' => ( does => 'ArrayRef[Game::Model::User]',
+has 'players' => ( isa => 'ArrayRef[Game::Model::User]',
                    is => 'rw',
                    default => sub { [] } );
+
+has 'activePlayerNum' => ( isa => 'Int',
+                           is => 'rw',
+                           default => 0 );
+
+has 'lastAttack' => ( isa => 'HashRef|Undef',
+                      is => 'rw' );
 
 has 'gameId' => ( isa => 'Int',
                   is => 'ro',
@@ -59,6 +66,11 @@ sub BUILD {
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
 }
 
+sub activePlayer {
+    my ($self) = @_;
+    $self->players()->[$self->activePlayerNum()]
+}
+
 sub add_player {
     my ($self, $user) = @_;
     push @{$self->players()}, $user
@@ -68,6 +80,12 @@ sub remove_player {
     my ($self, $user) = @_;
     my $nu = [ grep { ref($_) ne ref($user) } @{$self->players()} ];
     $self->players($nu);
+}
+
+sub next_player {
+    my ($self) = @_;
+    my $n = ($self->activePlayerNum + 1) % @{$self->players()};
+    $self->activePlayerNum($n)
 }
 
 sub ready {

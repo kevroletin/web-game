@@ -55,10 +55,40 @@ has 'readinessStatus' => ( isa => 'ReadinessStatus',
                            is => 'rw',
                            default => 0 );
 
+has 'tokensInHand' => ( isa => 'Int',
+                        is => 'rw',
+                        default => 0 );
+
+# TODO:
+has 'activeRace' => ( isa => 'Str', is => 'rw' );
+
+has 'activePower' => ( isa => 'Str', is => 'rw' );
+
+has 'declineRace' => ( isa => 'Str', is => 'rw' );
+
+has 'declinePower' => ( isa => 'Str', is => 'rw' );
+
+
 before 'activeGame' => sub {
     my ($self) = @_;
     $self->readinessStatus(0);
 };
+
+sub have_owned_regions {
+    my ($self) = @_;
+    return 0 unless $self->activeGame();
+    for (@{$self->activeGame()->map()->regions()}) {
+        return 1 if $_->owner() && $_->owner() eq $self
+    }
+    0
+}
+
+sub owned_regions {
+    my ($self) = @_;
+    return undef unless $self->activeGame();
+    grep { $_->owner() && $_->owner() eq $self
+          } @{$self->activeGame()->map()->regions()}
+}
 
 
 1

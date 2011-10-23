@@ -63,11 +63,11 @@ sub BUILD {
 
 sub region_by_id {
     my ($self, $id) = @_;
-    my $c = find_type_constraint('Int');
-    $c->validate($id);
-    my $region = $self->regions()->[$id];
-    $c->get_message() unless $region;
-    $region
+    my $region = undef;
+    my $ok = find_type_constraint('Int')->check($id);
+    $region = $self->regions()->[$id] if $ok;
+    early_response_json({result => 'badMapIp'}) unless $region;
+    $region;
 }
 
 1
