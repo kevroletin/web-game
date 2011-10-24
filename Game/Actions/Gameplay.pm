@@ -6,28 +6,63 @@ use Game::Environment qw( global_game global_user );
 use List::Util qw(sum);
 use Data::Dumper::Concise;
 
-# TODO: move code which controls transitions between
-# game states here
+
 sub _control_state {
     my ($data) = @_;
-
+    my $a = $data->{action};
     my $game = global_game();
+    my $ok = sub {
+        unless ($_[0]) {
+            early_response_json({result => 'badGameStage'})
+        }
+    };
+    my $state = sub {
+        $ok->($game->state() ~~ [@_])
+    };
+    my $curr_usr = sub {
+        $ok->($game->activePlayer() eq global_user());
+    };
+
+    if ($a eq 'conquer' ) {
+        $curr_usr->();
+        $state->('conquer', 'startMoving');
+        $ok->(global_user()->activeRace());
+    } elsif ($a eq 'decline' ) {
+        $curr_usr->();
+        $state->('startMoving');
+        $ok->($game->activeRace())
+    } elsif ($a eq 'defend' ) {
+        $state->('defend');
+        $ok->($game->lastAttack() &&
+              $game->lastAttack()->{whom} eq global_user())
+    } elsif ($a eq 'dragonAttack' ) {
+
+    } elsif ($a eq 'enchant' ) {
+
+    } elsif ($a eq 'finishTurn' ) {
+        $curr_usr->();
+        $state->('redeployed')
+    } elsif ($a eq 'redeploy' ) {
+        $curr_usr->();
+        $state->('conquer')
+    } elsif ($a eq 'selectFriend' ) {
+
+    } elsif ($a eq 'selectRace' ) {
+        $curr_usr->();
+        $ok->(!global_user()->activeRace())
+    } elsif ($a eq 'throwDice' ) {
+
+    }
 }
 
 sub conquer {
     my ($data) = @_;
     proto($data, 'regionId');
+    _control_state($data);
 
     my $game = global_game();
 
-    if ($game->state() ne 'conquer' ||
-        $game->activePlayer() ne global_user())
-    {
-        early_response_json({result => 'badGameStage'})
-    }
-
     my $reg = $game->map()->region_by_id($data->{regionId});
-
     if ('sea' ~~ $reg->landDescription()) {
         early_response_json({result => 'badRegion'})
     }
@@ -94,8 +129,8 @@ sub conquer {
 }
 
 sub decline {
-    my $game = global_game();
-    global_game();
+    my ($data) = @_;
+    _control_state($data);
 
     global_user()->declineRace(global_user()->activeRace);
     global_user()->declinePower(global_user()->activePower);
@@ -117,7 +152,6 @@ sub _regions_from_data {
     }
     my @moves;
     my $sum = 0;
-    print STDERR Dumper $data, global_game();
     for (@{$data->{regions}}) {
         my $reg = global_game()->map()->region_by_id($_->{regionId});
         unless ($reg->owner() &&
@@ -179,17 +213,9 @@ sub _redeploy_all_tokens {
 sub defend {
     my ($data) = @_;
     proto($data, 'regions');
+    _control_state($data);
+
     my $game = global_game();
-
-    if ($game->state() ne 'defend') {
-        early_response_json({result => 'badGameStage'})
-    }
-
-    unless ($game->lastAttack() &&
-            $game->lastAttack()->{whom} eq global_user())
-    {
-        early_response_json({result => 'badGameStage'})
-    }
 
     my @regions = _redeploy_tokens_in_hand($data);
     $game->lastAttack(undef);
@@ -212,25 +238,27 @@ sub enchant {
 sub finishTurn {
     my ($data) = @_;
     proto($data);
+    _control_state($data);
 
     my $game = global_game();
-    unless ($game->state() eq 'redeployed') {
-        early_response_json({result => 'badGameStage'})
-    }
+
+    my $coins = global_user()->owned_regions();
+    global_user()->coins(global_user()->coins() + $coins);
 
     $game->next_player();
     $game->state('startMoving');
 
-    db->store($game);
-    response_json({result => 'ok'})
+    db->store(global_user(), $game);
+    response_json({result => 'ok', coins => $coins})
 }
 
 sub redeploy {
     my ($data) = @_;
     proto($data, 'regions');#, 'encampments', 'fortifield', 'heroes');
+    _control_state($data);
+
     my $game = global_game();
     my @regions = _redeploy_all_tokens($data);
-
     $game->state('redeployed');
 
     db()->store(global_user(), $game, $game->map(), @regions);
@@ -244,11 +272,10 @@ sub selectFriend {
 
 sub selectRace {
     my ($data) = @_;
-    my $game = global_game();
+    proto($data, );
+    _control_state($data);
 
-    if (global_user()->activeRace()) {
-        early_response_json({result => 'badGameStage'});
-    }
+    my $game = global_game();
 
     # TODO:
     global_user()->activeRace("<dummy race>");

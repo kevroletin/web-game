@@ -14,8 +14,8 @@ use Tester::Hooks;
 init_logs('gameplay');
 ok( reset_server(), 'reset server' );
 
-my $user1 = params_same('sid', 'gameId', 'mapId');
-my $user2 = params_same('sid', 'gameId');
+my $user1 = params_same('sid', 'gameId', 'mapId', 'coins');
+my $user2 = params_same('sid', 'gameId', 'coins');
 
 #+---------------+----------------+
 #|0              |1               |
@@ -306,6 +306,47 @@ GO(
 "result": "ok"
 }',
 $user1 );
+
+
+TEST("finish turn");
+GO(
+'{
+"action": "finishTurn",
+"sid": ""
+}'
+,
+'{
+"result": "ok",
+"coins": "3"
+}',
+$user1 );
+
+
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 3
+}'
+,
+'{
+"result":"badGameStage"
+}',
+$user2 );
+
+
+TEST("Select Race");
+GO(
+'{
+"action": "selectRace",
+"sid": ""
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
 
 
 done_testing();

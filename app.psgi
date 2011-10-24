@@ -10,7 +10,7 @@ use Game;
 builder {
 #    enable 'Plack::Middleware::StackTrace';
     enable 'Plack::Middleware::AccessLog';
-    enable 'Plack::Middleware::Lint';
+#    enable 'Plack::Middleware::Lint';
 
     mount "/" => \&Client::Runner::run;
     mount "/engine" => \&Game::parse_request;

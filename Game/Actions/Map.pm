@@ -15,7 +15,7 @@ use Exporter::Easy ( OK => [qw(createDefaultMaps uploadMap)] );
 
 sub createDefaultMaps {
     for my $map (@Game::Constants::Map::maps) {
-        my $n_map = db_search_one({ name => $_->{name} },
+        my $n_map = db_search_one({ name => $map->{name} },
                                   { CLASS => 'Game::Model::Map'});
         db()->delete($n_map) if defined $n_map;
         $n_map = Game::Model::Map->new(%{$map});

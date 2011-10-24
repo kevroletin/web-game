@@ -24,8 +24,13 @@ use Exporter::Easy (
                    already_json_test) ],
 );
 
+#use LWP::Protocol::http::SocketUnixAlt;
+#LWP::Protocol::implementor( http => 'LWP::Protocol::http::SocketUnixAlt' );
+
+use LWP::ConnCache;
+
 my $url = $ENV{gameurl} ? $ENV{gameurl} :
-#                          "http://192.168.1.51/small_worlds";
+#    'http:tmp/starman.sock//engine';
                           "http://localhost:5000/engine";
 my $log_file = undef;
 my $msg_file = undef;
@@ -75,9 +80,14 @@ sub write_msg {
     print $msg_file @_
 }
 
+my $ua;
+
 sub request {
     my ($content) = @_;
-    my $ua = LWP::UserAgent->new(agent => "web-game-tester");
+    BEGIN {
+        $ua = LWP::UserAgent->new(agent => "web-game-tester");
+        $ua->conn_cache(LWP::ConnCache->new())
+    }
     my $req = HTTP::Request->new(POST => $url);
     $req->content($content);
     my $res = $ua->request($req);

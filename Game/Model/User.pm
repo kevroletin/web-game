@@ -59,6 +59,10 @@ has 'tokensInHand' => ( isa => 'Int',
                         is => 'rw',
                         default => 0 );
 
+has 'coins' => ( isa => 'Int',
+                 is => 'rw',
+                 default => 0 );
+
 # TODO:
 has 'activeRace' => ( isa => 'Str', is => 'rw' );
 
@@ -72,6 +76,7 @@ has 'declinePower' => ( isa => 'Str', is => 'rw' );
 before 'activeGame' => sub {
     my ($self) = @_;
     $self->readinessStatus(0);
+    $self->coins(0);
 };
 
 sub have_owned_regions {
