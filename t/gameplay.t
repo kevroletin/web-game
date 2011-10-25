@@ -272,7 +272,7 @@ GO(
 $user1 );
 
 
-TEST("redeploy");
+TEST("redeploy on sea");
 GO(
 '{
 "action": "redeploy",
@@ -347,6 +347,63 @@ GO(
 "result": "ok"
 }',
 $user2 );
+
+
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 3
+}'
+,
+'{
+"result":"ok"
+}',
+$user2 );
+
+
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 1
+}'
+,
+'{
+"result":"badGameStage"
+}',
+$user2 );
+
+
+TEST("defend wrong user");
+GO(
+'{
+  "action": "defend",
+  "sid": "",
+  "regions": [{"regionId": 0, "tokensNum": 3}]
+}'
+,
+'{
+"result":"badGameStage"
+}',
+$user2 );
+
+
+TEST("defend");
+GO(
+'{
+  "action": "defend",
+  "sid": "",
+  "regions": [{"regionId": 0, "tokensNum": 3}]
+}'
+,
+'{
+"result":"ok"
+}',
+$user1 );
+
 
 
 done_testing();

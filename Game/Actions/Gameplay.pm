@@ -3,7 +3,10 @@ use strict;
 use warnings;
 
 use Game::Environment qw( global_game global_user );
+use Game::Race;
+use Game::Power;
 use List::Util qw(sum);
+use Moose::Util qw( apply_all_roles );
 use Data::Dumper::Concise;
 
 
@@ -60,71 +63,13 @@ sub conquer {
     proto($data, 'regionId');
     _control_state($data);
 
-    my $game = global_game();
+    my $reg = global_game()->map()->region_by_id($data->{regionId});
+    my $race = global_user()->activeRace();
+    $race->check_is_move_possible($reg);
+    my $defender = $race->conquer($reg);
 
-    my $reg = $game->map()->region_by_id($data->{regionId});
-    if ('sea' ~~ $reg->landDescription()) {
-        early_response_json({result => 'badRegion'})
-    }
-
-    if ($reg->owner() && !$reg->inDecline() &&
-        $reg->owner() eq global_user())
-    {
-        early_response_json({result => 'badRegion'})
-    }
-
-    # TODO: move into Game::Races & Game::Power
-    for ('dragon', 'hero', 'hole') {
-        if ($_ ~~ $reg->extraItems()) {
-            early_response_json({result => 'regionIsImmune'});
-        }
-    }
-
-    my $canMove = 0;
-    for (@{$reg->adjacent()}) {
-        my $owner = $game->map()->regions()->[$_]->owner();
-        $canMove ||= $owner && $owner eq global_user();
-        last if $canMove;
-    }
-
-    if (!$canMove && !global_user()->have_owned_regions()) {
-        for (@{$reg->landDescription()}) {
-            $canMove ||=  $_ ~~ ['border', 'coast']
-        }
-    }
-
-    unless ($canMove) {
-        early_response_json({result => 'badRegion'});
-    }
-
-    my $units_cnt = 2 + $reg->tokensNum();
-    for ('fortifield', 'encampment') {
-        if (defined $reg->extraItems()->{$_}) {
-            $units_cnt += $reg->extraItems()->{$_}
-        }
-    }
-
-    # TODO: throw dice
-    if (global_user()->tokensInHand() < $units_cnt) {
-        early_response_json({result => 'noEnouthUnits'});
-    }
-
-    global_user()->{tokensInHand} -= $units_cnt;
-
-    my $defender = $reg->owner();
-    if ($defender) {
-        $defender->{tokensInHand} += $units_cnt - 1;
-        $game->lastAttack({ whom => $reg->owner(),
-                            region => $reg });
-        $game->state('defend')
-    }
-
-    $reg->owner(global_user());
-    $reg->tokensNum($units_cnt);
-
-    my @to_tore = (global_user(), $game, $reg);
-    push @to_tore, $defender if $defender;
-    db()->store(@to_tore);
+    db()->store(grep { defined $_ } global_user(), global_game(),
+                            $reg, $defender);
     response_json({result => 'ok'});
 }
 
@@ -278,12 +223,13 @@ sub selectRace {
     my $game = global_game();
 
     # TODO:
-    global_user()->activeRace("<dummy race>");
-    global_user()->activePower("<dummy power>");
+    my $race = Game::Race->new();
+    apply_all_roles($race, 'Game::Power');
+    global_user()->activeRace($race);
     global_user()->tokensInHand(10);
 
     $game->state('conquer');
-    db()->store($game, global_user());
+    db()->store($game, global_user(), $race);
     response_json({result => 'ok'});
 }
 

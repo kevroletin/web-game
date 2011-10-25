@@ -64,13 +64,9 @@ has 'coins' => ( isa => 'Int',
                  default => 0 );
 
 # TODO:
-has 'activeRace' => ( isa => 'Str', is => 'rw' );
+has 'activeRace' => ( isa => 'Game::Race', is => 'rw' );
 
-has 'activePower' => ( isa => 'Str', is => 'rw' );
-
-has 'declineRace' => ( isa => 'Str', is => 'rw' );
-
-has 'declinePower' => ( isa => 'Str', is => 'rw' );
+has 'declineRace' => ( isa => 'Game::Power', is => 'rw' );
 
 
 before 'activeGame' => sub {
