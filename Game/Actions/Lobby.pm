@@ -46,7 +46,7 @@ sub login {
     }
 
     $user->sid(_gen_sid());
-    db->store($user);
+    db->update($user);
     response_json({'result' => 'ok',
                    'sid' => $user->sid() });
 }
@@ -55,7 +55,7 @@ sub logout {
     my ($data) = @_;
 
     global_user()->sid("");
-    db->store(global_user());
+    db->update(global_user());
     response_json({result => 'ok'});
 }
 
@@ -70,7 +70,7 @@ sub register {
     }
 
     my $user = Game::Model::User->new(params_from_proto());
-    db()->store($user);
+    db()->insert_nonroot($user);
     response_json({result => 'ok'})
 }
 

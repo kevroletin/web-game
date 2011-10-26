@@ -35,7 +35,7 @@ sub createGame {
                    params_from_proto('gameName', 'gameDescr'),
                    map => $map
                );
-    db()->store($game);
+    db()->store_nonroot($game);
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
 
@@ -64,7 +64,7 @@ sub joinGame {
     global_user()->activeGame($game);
     $game->add_player(global_user());
 
-    db()->store(global_user(), $game);
+    db()->update(global_user(), $game);
     response_json({result => 'ok'})
 }
 
@@ -75,7 +75,7 @@ sub leaveGame {
     $game->remove_player(global_user());
     global_user()->activeGame(undef);
 
-    db()->store(global_user(), $game);
+    db()->update(global_user(), $game);
     response_json({result => 'ok'});
 }
 
@@ -96,7 +96,7 @@ sub setReadinessStatus {
         $game->state('processing');
     }
 
-    db()->store(global_user(), $game);
+    db()->update(global_user(), $game);
     response_json({result => 'ok'})
 }
 

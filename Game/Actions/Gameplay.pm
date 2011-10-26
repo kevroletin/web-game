@@ -68,7 +68,7 @@ sub conquer {
     $race->check_is_move_possible($reg);
     my $defender = $race->conquer($reg);
 
-    db()->store(grep { defined $_ } global_user(), global_game(),
+    db()->update(grep { defined $_ } global_user(), global_game(),
                             $reg, $defender);
     response_json({result => 'ok'});
 }
@@ -84,7 +84,7 @@ sub decline {
     my @usr_reg = global_user()->owned_regions();
     $_->tokensNum(1) for @usr_reg;
 
-    db()->store(global_user(), @usr_reg);
+    db()->update(global_user(), @usr_reg);
     response_json({result => 'ok'});
 }
 
@@ -166,7 +166,7 @@ sub defend {
     $game->lastAttack(undef);
     $game->state('conquer');
 
-    db()->store(global_user(), $game, $game->map(), @regions);
+    db()->update(global_user(), $game, $game->map(), @regions);
     response_json({result => 'ok'})
 }
 
@@ -193,7 +193,7 @@ sub finishTurn {
     $game->next_player();
     $game->state('startMoving');
 
-    db->store(global_user(), $game);
+    db->update(global_user(), $game);
     response_json({result => 'ok', coins => $coins})
 }
 
@@ -206,7 +206,7 @@ sub redeploy {
     my @regions = _redeploy_all_tokens($data);
     $game->state('redeployed');
 
-    db()->store(global_user(), $game, $game->map(), @regions);
+    db()->update(global_user(), $game, $game->map(), @regions);
     response_json({result => 'ok'})
 }
 
@@ -229,7 +229,8 @@ sub selectRace {
     global_user()->tokensInHand(10);
 
     $game->state('conquer');
-    db()->store($game, global_user(), $race);
+    db()->store_nonroot($race);
+    db()->update($game, global_user());
     response_json({result => 'ok'});
 }
 

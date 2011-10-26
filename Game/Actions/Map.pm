@@ -19,7 +19,7 @@ sub createDefaultMaps {
                                   { CLASS => 'Game::Model::Map'});
         db()->delete($n_map) if defined $n_map;
         $n_map = Game::Model::Map->new(%{$map});
-        db()->store($n_map);
+        db()->insert_nonroot($n_map);
     }
     response_json({result => 'ok'});
 }
@@ -50,9 +50,10 @@ sub uploadMap {
                params_from_proto('mapName', 'playersNum', 'turnsNum'),
                regions => [@regions]
            );
-    db()->store($map);
+    db()->insert_nonroot($map);
     response_json({result => 'ok', mapId => $map->id()});
 }
+
 
 
 1;
