@@ -9,6 +9,41 @@ use List::Util qw(sum);
 use Moose::Util qw( apply_all_roles );
 use Data::Dumper::Concise;
 
+#TODO: move to separate module or use smth. like Module::Find
+use Game::Power::Alchemist;
+use Game::Power::Berserk;
+use Game::Power::Bivouaking;
+use Game::Power::Commando;
+use Game::Power::Diplomat;
+use Game::Power::DragonMaster;
+use Game::Power::Flying;
+use Game::Power::Forest;
+use Game::Power::Fortified;
+use Game::Power::Heroic;
+use Game::Power::Hill;
+use Game::Power::Merchant;
+use Game::Power::Mounted;
+use Game::Power::Pillaging;
+use Game::Power::Seafaring;
+use Game::Power::Stout;
+use Game::Power::Swamp;
+use Game::Power::Underworld;
+use Game::Power::Wealthy;
+
+use Game::Race::Amazons;
+use Game::Race::Dwarves;
+use Game::Race::Elves;
+use Game::Race::Giants;
+use Game::Race::Halflings;
+use Game::Race::Humans;
+use Game::Race::Orcs;
+use Game::Race::Ratmen;
+use Game::Race::Skeletons;
+use Game::Race::Sorcerers;
+use Game::Race::Tritons;
+use Game::Race::Trolls;
+use Game::Race::Wizards;
+
 
 sub _control_state {
     my ($data) = @_;
@@ -226,14 +261,28 @@ sub selectRace {
 
     my $game = global_game();
 
-    # TODO:
-    my $race = Game::Race->new();
-    apply_all_roles($race, 'Game::Power');
-    global_user()->activeRace($race);
-    global_user()->tokensInHand(10);
+    my ($race, $power);
+    {
+        # FIXME: only for testing.
+        # TODO: Reimplement
+        use Module::Loaded;
+        $race = ucfirst($data->{race});
+        $power = ucfirst($data->{power});
+#        unless ($race && is_loaded("Game::Race::$race")) {
+#            early_response_json({result => 'badRace'})
+#        }
+#        unless ($power && is_loaded("Game::Power::$power")) {
+#            early_response_json({result => 'badPower'})
+#        }
+    }
+    my $pair = "Game::Race::$race"->new();
+    apply_all_roles($pair, "Game::Power::$power");
+
+    global_user()->activeRace($pair);
+    global_user()->tokensInHand($pair->tokens_cnt());
 
     $game->state('conquer');
-    db()->store_nonroot($race);
+    db()->store_nonroot($pair);
     db()->update($game, global_user());
     response_json({result => 'ok'});
 }

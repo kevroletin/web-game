@@ -2,7 +2,7 @@ package Game::Power;
 use Moose::Role;
 
 
-sub power_name { '<dummy power>' }
+requires => 'power_name';
 
 
 1

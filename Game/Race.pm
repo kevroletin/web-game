@@ -6,7 +6,13 @@ use Game::Environment qw(early_response_json
                          global_game);
 use Data::Dumper::Concise;
 
-sub race_name { '<dummy race>' }
+with( 'Game::Power' );
+
+requires => 'race_name';
+
+# TODO:
+#requires => 'tokens_cnt';
+sub tokens_cnt { 10 }
 
 
 sub _check_land_type {

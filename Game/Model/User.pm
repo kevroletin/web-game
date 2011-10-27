@@ -116,14 +116,6 @@ sub have_owned_regions {
 }
 
 sub number_in_game {
-    my ($self) = @_;
-    return undef unless $self->activeGame();
-    my $i = 0;
-    for (@{$self->activeGame()->players()}) {
-        return $i if $_ eq $self;
-        ++$i
-    }
-    die "user not in activeGame players set"
 }
 
 sub owned_regions {
