@@ -70,7 +70,7 @@ sub register {
     }
 
     my $user = Game::Model::User->new(params_from_proto());
-    db()->insert_nonroot($user);
+    db()->insert($user);
     response_json({result => 'ok'})
 }
 

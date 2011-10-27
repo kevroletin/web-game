@@ -161,12 +161,11 @@ sub defend {
     _control_state($data);
 
     my $game = global_game();
-
     my @regions = _redeploy_tokens_in_hand($data);
     $game->lastAttack(undef);
     $game->state('conquer');
 
-    db()->update(global_user(), $game, $game->map(), @regions);
+    db()->update(global_user(), $game, @regions);
     response_json({result => 'ok'})
 }
 
@@ -186,14 +185,19 @@ sub finishTurn {
     _control_state($data);
 
     my $game = global_game();
-
-    my $coins = global_user()->owned_regions();
+    my @reg = global_user()->owned_regions();
+    my $coins = 0;
+    if (global_user()->activeRace()) {
+        $coins += global_user()->activeRace()->compute_tokens(\@reg)
+    }
+    if (global_user()->declineRace()) {
+        $coins += global_user()->declineRace()->compute_tokens(\@reg)
+    }
     global_user()->coins(global_user()->coins() + $coins);
-
     $game->next_player();
     $game->state('startMoving');
 
-    db->update(global_user(), $game);
+    db()->update($game, global_user());
     response_json({result => 'ok', coins => $coins})
 }
 

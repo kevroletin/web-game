@@ -5,6 +5,7 @@ use Game::Environment qw(early_response_json inc_counter);
 use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 
+
 our @db_index = qw(mapName id);
 
 

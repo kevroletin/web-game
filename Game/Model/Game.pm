@@ -52,6 +52,8 @@ has 'activePlayerNum' => ( isa => 'Int',
 
 has 'lastAttack' => ( isa => 'HashRef|Undef',
                       is => 'rw' );
+#{ whom => Game::Model::User,
+#  region => Game::Model::Region }
 
 has 'gameId' => ( isa => 'Int',
                   is => 'ro',
@@ -59,7 +61,7 @@ has 'gameId' => ( isa => 'Int',
 
 has 'state' => ( isa => 'Str',
                  is => 'rw',
-                 default => 'waitingTheBeginning' );
+                 default => 'notStarted' );
 
 sub BUILD {
     my ($self) = @_;
@@ -76,6 +78,29 @@ sub add_player {
     push @{$self->players()}, $user
 }
 
+sub _extract_last_attack {
+    my ($self) = @_;
+    my $la = $self->lastAttack();
+    return undef unless $la;
+    { whom => $self->number_of_user($la->{whom}),
+      reg => $self->number_of_region($la->{region}) }
+}
+
+sub extract_state {
+    my ($self) = @_;
+    my $res = {};
+    $res->{activePlayerNum} = $self->activePlayerNum();
+    $res->{lastAttack} = $self->_extract_last_attack();
+    $res->{state} = $self->state();
+    my @players_st;
+    push @players_st, $_->extract_state() for @{$self->players()};
+    $res->{players} = \@players_st;
+    my @regions;
+    push @regions, $_->extract_state() for @{$self->map()->regions()};
+    $res->{regions} = \@regions;
+    $res
+}
+
 sub remove_player {
     my ($self, $user) = @_;
     my $nu = [ grep { ref($_) ne ref($user) } @{$self->players()} ];
@@ -86,6 +111,28 @@ sub next_player {
     my ($self) = @_;
     my $n = ($self->activePlayerNum + 1) % @{$self->players()};
     $self->activePlayerNum($n)
+}
+
+sub number_of_user {
+    my ($self, $user) = @_;
+    return undef unless $user;
+    my $i = 0;
+    for (@{$self->players()}) {
+        return $i if $_ eq $user;
+        ++$i
+    }
+    undef
+}
+
+sub number_of_region {
+    my ($self, $region) = @_;
+    return undef unless $region;
+    my $i = 0;
+    for (@{$self->map()->regions()}) {
+        return $i if $_ eq $region;
+        ++$i
+    }
+    undef
 }
 
 sub ready {

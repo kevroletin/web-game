@@ -39,6 +39,24 @@ sub createGame {
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
 
+sub getGameState {
+    my ($data) = @_;
+    my $game;
+    unless (defined $data->{gameId}) {
+        $game = global_game()
+    } else {
+        $game = db_search_one({ gameId => $data->{gameId} },
+                              { CLASS => 'Game::Model::Game' });
+        unless ($game) {
+            early_response_json({result => 'badGameId'})
+        }
+    }
+
+    my $state = $game->extract_state();
+    $state->{result} = 'ok';
+    response_json($state)
+}
+
 sub joinGame {
     my ($data) = @_;
     proto($data, 'gameId');
@@ -53,7 +71,7 @@ sub joinGame {
     if (defined global_user()->activeGame()) {
         early_response_json({ result => 'alreadyInGame' })
     }
-    if ($game->state() ne 'waitingTheBeginning') {
+    if ($game->state() ne 'notStarted') {
         early_response_json({ result => 'badGameState' })
     }
 
@@ -87,7 +105,7 @@ sub setReadinessStatus {
     unless (defined $game) {
         early_response_json({result => 'notInGame'})
     }
-    unless ($game->state() eq 'waitingTheBeginning') {
+    unless ($game->state() eq 'notStarted') {
         early_response_json({result => 'badGameState'})
     }
 

@@ -6,7 +6,7 @@ use Game::Environment qw(early_response_json
                          global_game);
 use Data::Dumper::Concise;
 
-sub name { '<dummy race>' }
+sub race_name { '<dummy race>' }
 
 
 sub _check_land_type {
@@ -55,7 +55,6 @@ sub _check_land_reachability {
 
 sub check_is_move_possible {
     my ($self, $reg) = @_;
-    print STDERR Dumper $reg;
     $self->_check_land_type($reg);
     $self->_check_land_ownership($reg);
     $self->_check_land_immune($reg);
@@ -107,6 +106,11 @@ sub conquer {
     #TODO: store history of all attacks
 
     $defender
+}
+
+sub compute_tokens {
+    my ($self, $reg) = @_;
+    scalar @$reg;
 }
 
 1

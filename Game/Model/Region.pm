@@ -3,8 +3,8 @@ use Moose;
 
 use Game::Environment qw(early_response_json);
 use Moose::Util::TypeConstraints;
+use Storable q(dclone);
 
-#class_type 'Game::Model::Region';
 
 subtype 'Game::Model::Region::ExtraItems',
     as 'HashRef',
@@ -65,5 +65,15 @@ has 'tokensNum' => ( isa => 'Int',
                      is => 'rw',
                      default => 0 );
 
+
+sub extract_state {
+    my ($self) = @_;
+    my $res = {};
+    $res->{tokensNum} = $self->tokensNum();
+    $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
+    $res->{inDecline} = $self->inDecline();
+    $res->{extraItems} = dclone($self->extraItems());
+    $res
+}
 
 1

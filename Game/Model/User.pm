@@ -1,7 +1,7 @@
 package Game::Model::User;
 use Moose;
 
-use Game::Environment qw(early_response_json);
+use Game::Environment qw(early_response_json inc_counter);
 use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 
@@ -63,17 +63,48 @@ has 'coins' => ( isa => 'Int',
                  is => 'rw',
                  default => 0 );
 
-# TODO:
-has 'activeRace' => ( isa => 'Game::Race', is => 'rw' );
+has 'id' => ( isa => 'Int',
+              is => 'ro',
+              required => 0 );
 
-has 'declineRace' => ( isa => 'Game::Power', is => 'rw' );
+has 'activeRace' => ( isa => 'Game::Race',
+                      is => 'rw' );
 
+has 'declineRace' => ( isa => 'Game::Race',
+                       is => 'rw' );
+
+sub BUILD {
+    my ($self) = @_;
+    $self->{id} = inc_counter('Game::Model::User::id');
+}
 
 before 'activeGame' => sub {
-    my ($self) = @_;
-    $self->readinessStatus(0);
-    $self->coins(0);
+    my ($self) = shift;
+    if (@_) {
+        $self->readinessStatus(0);
+        $self->coins(0);
+    }
 };
+
+sub extract_state {
+    my ($self) = @_;
+    return undef unless $self->activeGame();
+    my $res = {};
+    if ($self->activeGame()->state() eq 'notStarted') {
+        $res->{readinessStatus} = $self->readinessStatus()
+    }
+    $res->{tokensInHand} = $self->tokensInHand();
+    $res->{coins} = $self->coins();
+    if ($self->activeRace()) {
+        $res->{activeRace} =  $self->activeRace()->race_name();
+        $res->{activePower} =  $self->activeRace()->power_name();
+    }
+    if ($self->declineRace()) {
+        $res->{declineRace} = $self->declineRace()->race_name();
+        $res->{declinePower} = $self->declineRace()->power_name();
+    }
+    $res
+}
 
 sub have_owned_regions {
     my ($self) = @_;
@@ -82,6 +113,17 @@ sub have_owned_regions {
         return 1 if $_->owner() && $_->owner() eq $self
     }
     0
+}
+
+sub number_in_game {
+    my ($self) = @_;
+    return undef unless $self->activeGame();
+    my $i = 0;
+    for (@{$self->activeGame()->players()}) {
+        return $i if $_ eq $self;
+        ++$i
+    }
+    die "user not in activeGame players set"
 }
 
 sub owned_regions {
