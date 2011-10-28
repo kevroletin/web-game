@@ -197,7 +197,15 @@ sub pick_tokens {
     my ($self, $race_num) = @_;
     my $race = splice @{$self->racesPack()}, $race_num, 1;
     my $power = splice @{$self->powersPack()}, $race_num, 1;
-    ($race, $power)
+    my $coins = splice @{$self->bonusMoney()}, $race_num, 1;
+    push @{$self->bonusMoney()}, 0;
+    ($race, $power, $coins)
+}
+
+sub put_back_tokens {
+    my ($self, $race) = @_;
+    push @{$self->racesPack()}, $race->race_name();
+    push @{$self->powersPack()}, $race->power_name();
 }
 
 1

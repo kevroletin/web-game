@@ -174,6 +174,8 @@ GO(
 $user1 );
 
 
+=begin comment
+
 TEST("createBadgesPack");
 GO(
 '{
@@ -187,6 +189,8 @@ GO(
 "result": "ok"
 }',
 $user1 );
+
+=cut comment
 
 
 TEST("Join Game 2nd user");
@@ -451,6 +455,134 @@ GO(
 }',
 $user1 );
 
+
+TEST("redeploy");
+GO(
+'{
+"action": "redeploy",
+"sid": "",
+"regions": [
+  {"regionId": 3, "tokensNum": 10}
+]
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
+TEST("finish turn");
+GO(
+'{
+"action": "finishTurn",
+"sid": ""
+}'
+,
+'{
+"result": "ok",
+"coins": "1"
+}',
+$user2 );
+
+
+TEST("decline 1st");
+GO(
+'{
+"action": "decline",
+"sid": ""
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
+TEST("finish turn");
+GO('
+{
+"action": "finishTurn",
+"sid": ""
+}'
+,
+'{
+"result": "ok",
+"coins": "2"
+}',
+$user1 );
+
+
+TEST("decline 2nd");
+GO(
+'{
+"action": "decline",
+"sid": ""
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
+TEST("finish turn");
+GO('
+{
+"action": "finishTurn",
+"sid": ""
+}'
+,
+'{
+"result": "ok",
+"coins": "1"
+}',
+$user2 );
+
+
+TEST("Select Race 1st");
+GO(
+'{
+"action": "selectRace",
+"sid": "",
+"position": 0
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
+TEST("redeploy");
+GO(
+'{
+"action": "redeploy",
+"sid": "",
+"regions": [
+  {"regionId": 0, "tokensNum": 1},
+  {"regionId": 1, "tokensNum": 2}
+]
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
+TEST("finish turn");
+GO('
+{
+"action": "finishTurn",
+"sid": ""
+}'
+,
+'{
+"result": "ok",
+"coins": "2"
+}',
+$user1 );
 
 
 done_testing();

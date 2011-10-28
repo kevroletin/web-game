@@ -10,6 +10,11 @@ use Game::Environment qw(early_response_json
 sub tokens_cnt { 10 }
 
 
+has 'inDecline' => ( isa => 'Bool',
+                     is => 'rw',
+                     default => 0 );
+
+
 sub _check_land_type {
     my ($self, $reg) = @_;
     if ('sea' ~~ $reg->landDescription()) {
@@ -109,9 +114,9 @@ sub conquer {
     $defender
 }
 
-sub compute_tokens {
+sub compute_coins {
     my ($self, $reg) = @_;
-    scalar @$reg;
+    scalar grep { $_->inDecline() == $self->inDecline() } @$reg;
 }
 
 1

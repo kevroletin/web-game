@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 use Data::Compare;
-use Data::Dumper;
+use Data::Dumper::Concise;
 use JSON;
 use LWP;
 use LWP::UserAgent;
@@ -147,6 +147,8 @@ sub _from_json {
     return 1;
 }
 
+my $first_error;
+
 sub _json_cmp_transformer {
     my ($cmp_code, $in, $out, $res, $params) = @_;
     sub {
@@ -158,6 +160,12 @@ sub _json_cmp_transformer {
         unless (_from_json($res, $res_parsed, 'response')) {
             $res_parsed->{long} = $res_parsed->{long} .
                                   "\n\nserver returned:\n$res";
+            unless ($first_error) {
+                open my $f, '>', 'first_error.htm';
+                print $f $res;
+                close $f;
+                $first_error = 1;
+            }
             return $res_parsed;
         };
         if ($params->{res_hook}) {

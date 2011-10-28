@@ -78,7 +78,7 @@ sub _control_state {
     } elsif ($a eq 'decline' ) {
         $curr_usr->();
         $state->('startMoving');
-        $ok->($game->activeRace())
+        $ok->(global_user()->activeRace())
     } elsif ($a eq 'defend' ) {
         $state->('defend');
         $ok->($game->lastAttack() &&
@@ -89,7 +89,7 @@ sub _control_state {
 
     } elsif ($a eq 'finishTurn' ) {
         $curr_usr->();
-        $state->('redeployed')
+        $state->('redeployed', 'declined')
     } elsif ($a eq 'redeploy' ) {
         $curr_usr->();
         $state->('conquer')
@@ -123,14 +123,23 @@ sub decline {
     my ($data) = @_;
     _control_state($data);
 
-    global_user()->declineRace(global_user()->activeRace);
-    global_user()->declinePower(global_user()->activePower);
+    my $decline_race = global_user()->declineRace();
+    global_game()->put_back_tokens($decline_race) if $decline_race;
+    global_game()->state('declined');
+    global_user()->declineRace(global_user()->activeRace());
+    global_user()->declineRace()->inDecline(1);
+    global_user()->activeRace(undef);
     global_user()->tokensInHand(0);
 
     my @usr_reg = global_user()->owned_regions();
-    $_->tokensNum(1) for @usr_reg;
+    for (@usr_reg) {
+        $_->tokensNum(1);
+        $_->inDecline(1);
+    }
 
-    db()->update(global_user(), @usr_reg);
+    db()->delete($decline_race) if $decline_race;
+    db()->update(global_game(), global_user(),
+                 global_user()->declineRace(), @usr_reg);
     response_json({result => 'ok'});
 }
 
@@ -234,10 +243,10 @@ sub finishTurn {
     my @reg = global_user()->owned_regions();
     my $coins = 0;
     if (global_user()->activeRace()) {
-        $coins += global_user()->activeRace()->compute_tokens(\@reg)
+        $coins += global_user()->activeRace()->compute_coins(\@reg)
     }
     if (global_user()->declineRace()) {
-        $coins += global_user()->declineRace()->compute_tokens(\@reg)
+        $coins += global_user()->declineRace()->compute_coins(\@reg)
     }
     global_user()->coins(global_user()->coins() + $coins);
     $game->next_player();

@@ -67,10 +67,10 @@ has 'id' => ( isa => 'Int',
               is => 'ro',
               required => 0 );
 
-has 'activeRace' => ( isa => 'Game::Race',
+has 'activeRace' => ( isa => 'Game::Race|Undef',
                       is => 'rw' );
 
-has 'declineRace' => ( isa => 'Game::Race',
+has 'declineRace' => ( isa => 'Game::Race|Undef',
                        is => 'rw' );
 
 sub BUILD {
