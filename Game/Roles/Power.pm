@@ -1,8 +1,8 @@
-package Game::Power;
+package Game::Roles::Power;
 use Moose::Role;
 
 
-requires => 'power_name';
+requires 'power_name';
 
 
 1

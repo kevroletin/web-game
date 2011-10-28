@@ -344,7 +344,7 @@ GO(
 '{
 "action": "setReadinessStatus",
 "sid": "",
-"readinessStatus": 1
+"isReady": 1
 }'
 ,
 '{
@@ -358,7 +358,7 @@ GO(
 '{
 "action": "setReadinessStatus",
 "sid": "",
-"readinessStatus": 1
+"isReady": 1
 }'
 ,
 '{
@@ -372,11 +372,11 @@ GO(
 '{
 "action": "setReadinessStatus",
 "sid": "",
-"readinessStatus": 1
+"isReady": 1
 }'
 ,
 '{
-"result": "badGameState"
+"result": "badGameStage"
 }',
 $user3 );
 
@@ -386,7 +386,7 @@ GO(
 '{
 "action": "setReadinessStatus",
 "sid": "",
-"readinessStatus": 1
+"isReady": 1
 }'
 ,
 '{

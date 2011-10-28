@@ -1,13 +1,12 @@
-use Game::Actions::Gameplay;
-use strict;
+package Game::Actions::Gameplay;
 use warnings;
+use strict;
 
-use Game::Environment qw( global_game global_user );
-use Game::Race;
-use Game::Power;
+use Game::Actions;
+use Game::Environment qw( response_json early_response_json
+                          db global_game global_user );
 use List::Util qw(sum);
 use Moose::Util qw( apply_all_roles );
-use Data::Dumper::Concise;
 
 #TODO: move to separate module or use smth. like Module::Find
 use Game::Power::Alchemist;
@@ -43,6 +42,17 @@ use Game::Race::Sorcerers;
 use Game::Race::Tritons;
 use Game::Race::Trolls;
 use Game::Race::Wizards;
+
+use Exporter::Easy( OK => [qw(conquer
+                              decline
+                              defend
+                              dragonAttack
+                              enchant
+                              finishTurn
+                              redeploy
+                              selectFriend
+                              selectRace
+                              throwDice)] );
 
 
 sub _control_state {
@@ -87,6 +97,7 @@ sub _control_state {
 
     } elsif ($a eq 'selectRace' ) {
         $curr_usr->();
+        $state->('startMoving');
         $ok->(!global_user()->activeRace())
     } elsif ($a eq 'throwDice' ) {
 
@@ -256,28 +267,24 @@ sub selectFriend {
 
 sub selectRace {
     my ($data) = @_;
-    proto($data, );
+    proto($data, 'position');
     _control_state($data);
 
     my $game = global_game();
 
-    my ($race, $power);
-    {
-        # FIXME: only for testing.
-        # TODO: Reimplement
-        use Module::Loaded;
-        $race = ucfirst($data->{race});
-        $power = ucfirst($data->{power});
-#        unless ($race && is_loaded("Game::Race::$race")) {
-#            early_response_json({result => 'badRace'})
-#        }
-#        unless ($power && is_loaded("Game::Power::$power")) {
-#            early_response_json({result => 'badPower'})
-#        }
+    my $p = $data->{position};
+    unless ($p =~ /^\d+$/ && 0 <= $p && $p <= 5) {
+        early_response_json({result => 'badPosition'})
     }
-    my $pair = "Game::Race::$race"->new();
-    apply_all_roles($pair, "Game::Power::$power");
+    my $coins = $game->bonusMoney()->[$p] - $p;
+    if (global_user()->coins() + $coins < 0 ) {
+        early_response_json({result => 'badMoneyAmount'})
+    }
+    global_user()->coins(global_user()->coins + $coins);
 
+    my ($race, $power) = $game->pick_tokens($p);
+    my $pair = ("Game::Race::" . ucfirst($race))->new();
+    apply_all_roles($pair, ("Game::Power::" . ucfirst($power)));
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
 
@@ -293,3 +300,4 @@ sub throwDice {
 }
 
 1;
+

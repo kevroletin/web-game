@@ -82,7 +82,7 @@ before 'activeGame' => sub {
     my ($self) = shift;
     if (@_) {
         $self->readinessStatus(0);
-        $self->coins(0);
+        $self->coins(5);
     }
 };
 
@@ -95,6 +95,7 @@ sub extract_state {
     }
     $res->{tokensInHand} = $self->tokensInHand();
     $res->{coins} = $self->coins();
+    $res->{id} = $self->id();
     if ($self->activeRace()) {
         $res->{activeRace} =  $self->activeRace()->race_name();
         $res->{activePower} =  $self->activeRace()->power_name();

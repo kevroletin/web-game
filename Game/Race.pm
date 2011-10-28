@@ -4,14 +4,9 @@ use Moose;
 use Game::Environment qw(early_response_json
                          global_user
                          global_game);
-use Data::Dumper::Concise;
-
-with( 'Game::Power' );
-
-requires => 'race_name';
 
 # TODO:
-#requires => 'tokens_cnt';
+#requires 'tokens_cnt';
 sub tokens_cnt { 10 }
 
 

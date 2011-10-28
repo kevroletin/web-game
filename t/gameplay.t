@@ -174,6 +174,21 @@ GO(
 $user1 );
 
 
+TEST("createBadgesPack");
+GO(
+'{
+"action": "createBadgesPack",
+"sid": "",
+"races": ["amazons", "humans"],
+"powers": ["alchemist", "berserk"]
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
 TEST("Join Game 2nd user");
 $user2->{_gameId} = $user1->{_gameId};
 GO(
@@ -189,11 +204,42 @@ GO(
 $user2 );
 
 
+TEST("1st user ready");
+GO(
+'
+{
+  "action": "setReadinessStatus",
+  "sid": "",
+  "isReady": 1
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
+TEST("2nd user ready");
+GO(
+'
+{
+  "action": "setReadinessStatus",
+  "sid": "",
+  "isReady": 1
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
 TEST("Select Race");
 GO(
 '{
 "action": "selectRace",
-"sid": ""
+"sid": "",
+"position": 0
 }'
 ,
 '{
@@ -340,7 +386,8 @@ TEST("Select Race");
 GO(
 '{
 "action": "selectRace",
-"sid": ""
+"sid": "",
+"position": 0
 }'
 ,
 '{
@@ -407,3 +454,21 @@ $user1 );
 
 
 done_testing();
+
+=begin comment
+
+TEST("Select Race");
+GO(
+'{
+"action": "selectRace",
+"race": "trolls",
+"power": "commando",
+"sid": ""
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+=cut comment

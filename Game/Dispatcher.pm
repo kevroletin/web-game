@@ -3,9 +3,16 @@ use strict;
 use warnings;
 
 use Devel::StackTrace::AsHTML;
+use Game::Actions::Debug qw(resetServer
+                            doSmth
+                            setBadge
+                            createBadgesPack
+                            selectGivenRace);
 use Game::Actions::Game qw(createGame joinGame leaveGame
                            setReadinessStatus);
-use Game::Actions::Gameplay;
+use Game::Actions::Gameplay qw(conquer decline defend dragonAttack
+                               enchant finishTurn redeploy
+                               selectFriend selectRace throwDice);
 use Game::Actions::Lobby qw(login logout register);
 use Game::Actions::Map qw(createDefaultMaps uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug
@@ -13,17 +20,6 @@ use Game::Environment qw(init_user_by_sid is_debug
                          response_raw stack_trace);
 use utf8;
 
-
-# this is action handler
-sub resetServer {
-    unlink 'tmp/test.db';
-    response_json({result => 'ok'});
-}
-
-# this is action handler
-sub doSmth {
-    response_json({result => 'ok'})
-}
 
 sub _is_action_without_sid {
     $_[0] eq 'login' ||

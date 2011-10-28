@@ -99,19 +99,16 @@ sub leaveGame {
 
 sub setReadinessStatus {
     my ($data) = @_;
-    proto($data, 'readinessStatus');
+    proto($data, 'isReady');
 
-    my $game = global_user()->activeGame();
-    unless (defined $game) {
-        early_response_json({result => 'notInGame'})
-    }
+    my $game = global_game();
     unless ($game->state() eq 'notStarted') {
-        early_response_json({result => 'badGameState'})
+        early_response_json({result => 'badGameStage'})
     }
 
-    global_user()->readinessStatus($data->{readinessStatus});
+    global_user()->readinessStatus($data->{isReady});
     if ($game->ready()) {
-        $game->state('processing');
+        $game->state('startMoving');
     }
 
     db()->update(global_user(), $game);
