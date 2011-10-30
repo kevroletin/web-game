@@ -67,9 +67,7 @@ sub check_is_move_possible {
     $self->_check_land_reachability($reg);
 }
 
-sub _calculate_land_strength { 2 }
-
-sub _calculate_fortification_strength {
+sub __calculate_fortification_strength {
     my ($self, $reg) = @_;
     my $units_cnt = 0;
     for ('fortifield', 'encampment') {
@@ -80,6 +78,11 @@ sub _calculate_fortification_strength {
     $units_cnt
 }
 
+sub _calculate_land_strength {
+    my ($self, $reg) = @_;
+    $self->__calculate_fortification_strength($reg)
+}
+
 sub _kill_defender_units {
     my ($self, $reg, $units_cnt) = @_;
     $reg->owner()->{tokensInHand} += $units_cnt - 1;
@@ -88,8 +91,7 @@ sub _kill_defender_units {
 sub conquer {
     my ($self, $reg) = @_;
     my $game = global_game();
-    my $units_cnt = $self->_calculate_land_strength($reg) +
-                    $self->_calculate_fortification_strength($reg);
+    my $units_cnt = $self->_calculate_land_strength($reg);
 
     if (global_user()->tokensInHand() < $units_cnt) {
         early_response_json({result => 'noEnouthUnits'});

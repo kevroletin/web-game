@@ -9,5 +9,14 @@ with( 'Game::Roles::Race' );
 
 sub race_name { 'tritons' }
 
+sub tokens_cnt { 6 }
+
+override '_calculate_land_strength' => sub {
+    my ($self, $reg) = @_;
+    my $was = super();
+    return $was unless 'coast' ~~ $reg->landDescription();
+    $was > 1 ? $was - 1 : 1
+};
+
 
 1
