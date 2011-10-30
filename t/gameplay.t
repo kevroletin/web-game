@@ -462,7 +462,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 3, "tokensNum": 10}
+  {"regionId": 3, "tokensNum": 9}
 ]
 }'
 ,

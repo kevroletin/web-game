@@ -116,7 +116,7 @@ sub conquer {
 
 sub compute_coins {
     my ($self, $reg) = @_;
-    scalar grep { $_->inDecline() == $self->inDecline() } @$reg;
+    scalar @$reg
 }
 
 1
@@ -128,18 +128,18 @@ __END__
 =head1 Races to implement:
 
 amazons
-dwarves
+dwarves +
 elves
 giants
 halflings
-humans
+humans +
 orcs
-ratmen
+ratmen +
 skeletons
 sorcerers
 tritons
 trolls
-wizards
+wizards +
 
 =cut
 

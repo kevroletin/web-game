@@ -117,7 +117,7 @@ sub _extract_last_attack {
     my $la = $self->lastAttack();
     return undef unless $la;
     { #whom => $self->number_of_user($la->{whom}),
-      whom => $la->{whom}->id(),
+      whom => $la->{whom} ? $la->{whom}->id() : undef,
       reg => $self->number_of_region($la->{region}) }
 }
 

@@ -9,5 +9,13 @@ with( 'Game::Roles::Race' );
 
 sub race_name { 'humans' }
 
+sub tokens_cnt { 5 }
+
+override 'compute_coins' => sub {
+    my ($self, $reg) = @_;
+    return super() if $self->inDecline();
+    super() + grep { 'farmland' ~~ $_->landDescription() } @$reg;
+};
+
 
 1

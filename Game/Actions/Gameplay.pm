@@ -114,6 +114,7 @@ sub conquer {
     $race->check_is_move_possible($reg);
     my $defender = $race->conquer($reg);
 
+    global_game()->state('conquer');
     db()->update(grep { defined $_ } global_user(), global_game(),
                             $reg, $defender);
     response_json({result => 'ok'});
@@ -191,6 +192,10 @@ sub _redeploy_all_tokens {
     my ($moves, $sum) = _regions_from_data($data);
 
     my @reg = global_user()->owned_regions();
+    # TODO: sync with other teams
+    if (@$moves < @reg) {
+        early_response_json({result => 'notAllRegions'})
+    }
     my $tok_cnt = global_user->tokensInHand() +
                   sum map { $_->tokensNum() } @reg;
 
@@ -241,12 +246,20 @@ sub finishTurn {
 
     my $game = global_game();
     my @reg = global_user()->owned_regions();
+    my (@reg_a, @reg_d);
+    for (@reg) {
+        if ($_->inDecline()) {
+            push @reg_d, $_
+        } else {
+            push @reg_a, $_
+        }
+    }
     my $coins = 0;
     if (global_user()->activeRace()) {
-        $coins += global_user()->activeRace()->compute_coins(\@reg)
+        $coins += global_user()->activeRace()->compute_coins(\@reg_a)
     }
     if (global_user()->declineRace()) {
-        $coins += global_user()->declineRace()->compute_coins(\@reg)
+        $coins += global_user()->declineRace()->compute_coins(\@reg_d)
     }
     global_user()->coins(global_user()->coins() + $coins);
     $game->next_player();

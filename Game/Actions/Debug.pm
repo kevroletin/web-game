@@ -4,11 +4,14 @@ use warnings;
 
 use Game::Constants;
 use Game::Actions;
+use Game::Race::Debug;
+use Game::Power::Debug;
 use Game::Environment qw(db db_search db_search_one
                          early_response_json
                          global_game
                          global_user
                          response response_json);
+use Moose::Util qw( apply_all_roles );
 use Exporter::Easy ( EXPORT => [qw(resetServer
                                    doSmth
                                    setBadge
@@ -75,10 +78,12 @@ sub selectGivenRace {
     my $power = lc($data->{power});
     my $coins = $data->{coins};
     $coins = 0 unless $coins;
-    unless ($race && $race ~~ @Game::Constants::races) {
+    unless ($race &&
+            $race ~~ [@Game::Constants::races, 'debug']) {
         early_response_json({result => 'badRace'})
     }
-    unless ($power && $power ~~ @Game::Constants::powers) {
+    unless ($power &&
+            $power ~~ [@Game::Constants::powers, 'debug']) {
         early_response_json({result => 'badPower'})
     }
 
