@@ -111,6 +111,7 @@ sub square_map_two_users {
     $user1 );
 
     TEST("register 1st user");
+    $user1->{_number_in_game} = 0;
     GO(
     '{
     "action": "register",
@@ -156,6 +157,7 @@ sub square_map_two_users {
 
 
     TEST("register 2nd user");
+    $user2->{_number_in_game} = 0;
     GO(
     '{
     "action": "register",

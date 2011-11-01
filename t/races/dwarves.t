@@ -10,6 +10,7 @@ use Tester;
 use Tester::OK;
 use Tester::Hooks;
 use Tester::State;
+use Tester::CheckState;
 
 init_logs('races/dwarves');
 ok( reset_server(), 'reset server' );
@@ -32,6 +33,9 @@ GO(
 "result": "ok"
 }',
 $user1 );
+
+
+TOKENS_CNT(3, $user1);
 
 
 TEST("conquer");
@@ -192,6 +196,9 @@ GO('
 "coins": "2"
 }',
 $user1 );
+
+
+TOKENS_CNT(0, $user1);
 
 
 TEST("decline 2nd");

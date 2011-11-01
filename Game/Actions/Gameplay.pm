@@ -5,7 +5,6 @@ use strict;
 use Game::Actions;
 use Game::Environment qw( response_json early_response_json
                           db global_game global_user );
-use List::Util qw(sum);
 use Moose::Util qw( apply_all_roles );
 
 #TODO: move to separate module or use smth. like Module::Find
@@ -144,7 +143,7 @@ sub decline {
     response_json({result => 'ok'});
 }
 
-sub _regions_from_data {
+sub _moves_from_data {
     my  ($data) = @_;
     unless (defined $data->{regions} &&
             ref($data->{regions}) eq 'ARRAY')
@@ -153,6 +152,7 @@ sub _regions_from_data {
     }
     my @moves;
     my $sum = 0;
+    my %proc_reg;
     for (@{$data->{regions}}) {
         my $reg = global_game()->map()->region_by_id($_->{regionId});
         unless ($reg->owner() &&
@@ -163,56 +163,14 @@ sub _regions_from_data {
         unless ($_->{tokensNum} =~ /^\d+$/) {
             early_response_json(result => 'badTokensNum')
         }
+        if ($proc_reg{$reg}) {
+            early_response_json({result => 'badRegion'})
+        }
+        $proc_reg{$reg} = 1;
         push @moves, [$reg, $_->{tokensNum}];
         $sum += $_->{tokensNum}
     }
     (\@moves, $sum)
-}
-
-sub _redeploy_tokens_in_hand {
-    my ($data) = @_;
-
-    my ($moves, $sum) = _regions_from_data($data);
-
-    if ($sum > global_user()->tokensInHand()) {
-        early_response_json({result => 'notEnoughTokens'})
-    }
-    global_user()->tokensInHand(global_user()->tokensInHand - $sum);
-
-    for (@$moves) {
-        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1])
-    }
-
-    map { $_->[0] } @$moves
-}
-
-sub _redeploy_all_tokens {
-    my ($data) = @_;
-
-    my ($moves, $sum) = _regions_from_data($data);
-
-    my @reg = global_user()->owned_regions();
-    # TODO: sync with other teams
-    if (@$moves < @reg) {
-        early_response_json({result => 'notAllRegions'})
-    }
-    my $tok_cnt = global_user->tokensInHand() +
-                  sum map { $_->tokensNum() } @reg;
-
-    if ($sum > $tok_cnt) {
-        early_response_json({result => 'badTokensNum'})
-    }
-
-    global_user()->tokensInHand($tok_cnt - $sum);
-
-    for (@reg) {
-        $_->tokensNum(0)
-    }
-    for (@$moves) {
-        $_->[0]->tokensNum($_->[1])
-    }
-
-    @reg
 }
 
 sub defend {
@@ -221,7 +179,8 @@ sub defend {
     _control_state($data);
 
     my $game = global_game();
-    my @regions = _redeploy_tokens_in_hand($data);
+    my ($moves, $sum) = _regions_from_data($data);
+    my @regions = global_user()->activeRace()->redeploy_during_defend($moves, $sum);
     $game->lastAttack(undef);
     $game->state('conquer');
 
@@ -271,14 +230,15 @@ sub finishTurn {
 
 sub redeploy {
     my ($data) = @_;
-    proto($data, 'regions');#, 'encampments', 'fortifield', 'heroes');
+    proto($data, 'regions');
     _control_state($data);
 
     my $game = global_game();
-    my @regions = _redeploy_all_tokens($data);
+    my ($moves, $sum) = _moves_from_data($data);
+    my $regions = global_user()->activeRace()->redeploy($moves, $sum);
     $game->state('redeployed');
 
-    db()->update(global_user(), $game, $game->map(), @regions);
+    db()->update(global_user(), $game, $game->map(), @$regions);
     response_json({result => 'ok'})
 }
 

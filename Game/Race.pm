@@ -4,6 +4,7 @@ use Moose;
 use Game::Environment qw(early_response_json
                          global_user
                          global_game);
+use List::Util qw(sum);
 
 # TODO:
 #requires 'tokens_cnt';
@@ -80,7 +81,7 @@ sub __calculate_fortification_strength {
 
 sub _calculate_land_strength {
     my ($self, $reg) = @_;
-    $self->__calculate_fortification_strength($reg)
+    2 + $self->__calculate_fortification_strength($reg)
 }
 
 sub _kill_defender_units {
@@ -103,6 +104,7 @@ sub conquer {
         $game->state('defend');
     }
     $game->lastAttack({ whom => $reg->owner(),
+                        tokensNum => $reg->tokensNum(),
                         region => $reg });
 
     # TODO: throw dice
@@ -120,6 +122,49 @@ sub compute_coins {
     my ($self, $reg) = @_;
     scalar @$reg
 }
+
+sub redeploy_during_defend {
+    my ($self, $moves, $sum) = @_;
+
+    if ($sum > global_user()->tokensInHand()) {
+        early_response_json({result => 'notEnoughTokens'})
+    }
+    global_user()->tokensInHand(global_user()->tokensInHand - $sum);
+
+    for (@$moves) {
+        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1])
+    }
+
+    map { $_->[0] } @$moves
+}
+
+sub redeploy {
+    my ($self, $moves, $sum) = @_;
+
+    my @reg = global_user()->owned_regions();
+    # TODO: sync with other teams
+    if (@$moves < @reg) {
+        early_response_json({result => 'notAllRegions'})
+    }
+    my $tok_cnt = global_user->tokensInHand() +
+                  sum map { $_->tokensNum() } @reg;
+
+    if ($sum > $tok_cnt) {
+        early_response_json({result => 'badTokensNum'})
+    }
+
+    global_user()->tokensInHand($tok_cnt - $sum);
+
+    for (@reg) {
+        $_->tokensNum(0)
+    }
+    for (@$moves) {
+        $_->[0]->tokensNum($_->[1])
+    }
+
+    \@reg
+}
+
 
 1
 
@@ -139,7 +184,7 @@ orcs
 ratmen +
 skeletons
 sorcerers
-tritons
+tritons +
 trolls
 wizards +
 

@@ -21,7 +21,8 @@ use Exporter::Easy (
                    request_json
                    raw_compare_test
                    json_compare_test
-                   already_json_test) ],
+                   already_json_test
+                   json_custom_compare_test) ],
 );
 
 #use LWP::Protocol::http::SocketUnixAlt;
@@ -215,6 +216,12 @@ sub already_json_test {
         return _json_compare($in, $out, from_json($res))
     };
     _run_test($compare, to_json($in), @_)
+}
+
+sub json_custom_compare_test {
+    my $compare = shift;
+#    _run_json_test(\&_json_compare, @_)
+    _run_json_test($compare, @_)
 }
 
 1;

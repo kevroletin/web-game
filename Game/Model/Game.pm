@@ -52,8 +52,8 @@ has 'activePlayerNum' => ( isa => 'Int',
                            is => 'rw',
                            default => 0 );
 
-has 'lastAttack' => ( isa => 'HashRef|Undef',
-                      is => 'rw' );
+#has 'lastAttack' => ( isa => 'HashRef|Undef',
+#                      is => 'rw' );
 #{ whom => Game::Model::User,
 #  region => Game::Model::Region }
 
@@ -77,8 +77,9 @@ has 'bonusMoney' => ( isa => 'ArrayRef[Int]',
                       is => 'rw',
                       default => sub { [(0) x 6] } );
 
-# TODO:
-# has 'history' => ...
+has 'history' => ( isa => 'ArrayRef',
+                   is => 'rw',
+                   default => sub { [] } );
 
 sub BUILD {
     my ($self) = @_;
@@ -157,10 +158,25 @@ sub remove_player {
     $self->players($nu);
 }
 
+sub lastAttack {
+    my ($self) = @_;
+    push @{$self->history()}, $_[0] if @_;
+    $self->{history}->[-1]
+}
+
 sub next_player {
     my ($self) = @_;
-    my $n = ($self->activePlayerNum + 1) % @{$self->players()};
+    my $n = $self->activePlayerNum() + 1;
+    if ($n >= @{$self->players()}) {
+        $n = 0;
+        $self->next_turn();
+    }
     $self->activePlayerNum($n)
+}
+
+sub next_turn {
+    my ($self) = @_;
+    $self->history([]);
 }
 
 sub number_of_user {
