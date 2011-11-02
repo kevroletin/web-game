@@ -88,7 +88,6 @@ sub BUILD {
 
 before 'state' => sub {
     my ($self, $new_state) = @_;
-    use Data::Dumper;
     if (defined $new_state &&
         $self->state() eq 'notStarted' &&
         $new_state eq 'startMoving')
@@ -107,6 +106,14 @@ sub add_player {
     push @{$self->players()}, $user
 }
 
+sub add_to_attack_history {
+    my ($self, $reg) = @_;
+    my $h = { whom => $reg->owner(),
+              tokensNum => $reg->tokensNum(),
+              region => $reg };
+    push @{$self->history()}, $h;
+}
+
 sub _create_tokens_pack {
     my ($self) = @_;
     $self->racesPack([shuffle @Game::Constants::races]);
@@ -119,6 +126,7 @@ sub _extract_last_attack {
     return undef unless $la;
     { #whom => $self->number_of_user($la->{whom}),
       whom => $la->{whom} ? $la->{whom}->id() : undef,
+      tokensNum => $la->{tokensNum},
       reg => $self->number_of_region($la->{region}) }
 }
 
@@ -159,8 +167,8 @@ sub remove_player {
 }
 
 sub lastAttack {
-    my ($self) = @_;
-    push @{$self->history()}, $_[0] if @_;
+    my $self = shift;
+    return undef unless @{$self->history()};
     $self->{history}->[-1]
 }
 

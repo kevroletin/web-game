@@ -39,7 +39,7 @@ subtype 'Game::Model::Region::landDescription',
 
 has 'adjacent' => ( isa => 'ArrayRef[Int]',
                     is => 'rw',
-                    required => 0 );
+                    required => 1 );
 
 has 'extraItems' => ( isa => 'Game::Model::Region::ExtraItems',
                       is => 'rw',
@@ -51,8 +51,7 @@ has 'inDecline' => ( isa => 'Bool',
 
 has 'landDescription' => ( isa => 'Game::Model::Region::landDescription',
                            is => 'rw',
-                           # TODO:Fix default maps
-                           # required => 1
+                           required => 1
                          );
 
 has 'owner' => ( isa => 'Game::Model::User',
@@ -61,10 +60,16 @@ has 'owner' => ( isa => 'Game::Model::User',
                  weak_ref => 1 );
 
 
-has 'tokensNum' => ( isa => 'Int',
-                     is => 'rw',
-                     default => 0 );
+has 'population' => ( isa => 'Int',
+                      is => 'rw',
+                      required => 1 );
 
+# TODO:
+# FIXME: rename tokensNum -> population
+sub tokensNum {
+    my $self = shift;
+    $self->population(@_);
+}
 
 sub extract_state {
     my ($self) = @_;
@@ -74,6 +79,13 @@ sub extract_state {
     $res->{inDecline} = $self->inDecline();
     $res->{extraItems} = dclone($self->extraItems());
     $res
+}
+
+sub owner_race {
+    my ($self) = @_;
+    return undef unless $self->owner();
+    $self->inDecline() ? $self->owner()->declineRace() :
+                         $self->owner()->activeRace();
 }
 
 1

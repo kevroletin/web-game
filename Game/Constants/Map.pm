@@ -4,6 +4,7 @@ use strict;
 
 use Game::Model::Region;
 
+=begin comment
 
 my $m1 = {
   mapName => "defaultMap1",
@@ -345,6 +346,8 @@ my $m7 = {
   turnsNum => 5
 };
 
-our @maps = ($m1, $m2, $m3, $m4, $m5, $m6, $m7);
+=cut comment
+
+our @maps = ();#$m1, $m2, $m3, $m4, $m5, $m6, $m7);
 
 1

@@ -84,9 +84,10 @@ sub _calculate_land_strength {
     2 + $self->__calculate_fortification_strength($reg)
 }
 
-sub _kill_defender_units {
-    my ($self, $reg, $units_cnt) = @_;
-    $reg->owner()->{tokensInHand} += $units_cnt - 1;
+sub die_after_attack {
+    my ($self, $reg) = @_;
+        my $tok_cnt = $reg->owner()->tokensInHand() + $reg->tokensNum();
+    $reg->owner()->tokensInHand($tok_cnt - 1);
 }
 
 sub conquer {
@@ -100,12 +101,10 @@ sub conquer {
 
     my $defender = $reg->owner();
     if ($defender) {
-        $self->_kill_defender_units($reg, $units_cnt);
+        $reg->owner_race()->die_after_attack($reg);
         $game->state('defend');
     }
-    $game->lastAttack({ whom => $reg->owner(),
-                        tokensNum => $reg->tokensNum(),
-                        region => $reg });
+    $game->add_to_attack_history($reg);
 
     # TODO: throw dice
 

@@ -12,7 +12,7 @@ use Tester::Hooks;
 use Tester::State;
 use Tester::CheckState;
 
-init_logs('races/orcs');
+init_logs('races/elves');
 ok( reset_server(), 'reset server' );
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
@@ -25,7 +25,7 @@ GO(
 '{
 "action": "selectGivenRace",
 "sid": "",
-"race": "orcs",
+"race": "elves",
 "power": "debug"
 }'
 ,
@@ -35,7 +35,7 @@ GO(
 $user1 );
 
 
-TOKENS_CNT(5, $user1);
+TOKENS_CNT(6, $user1);
 
 
 TEST("conquer");
@@ -52,31 +52,13 @@ GO(
 $user1 );
 
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TOKENS_CNT(1, $user1);
-
-
 TEST("redeploy");
 GO(
 '{
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 1},
-  {"regionId": 1, "tokensNum": 4}
+  {"regionId": 0, "tokensNum": 4}
 ]
 }'
 ,
@@ -84,9 +66,6 @@ GO(
 "result": "ok"
 }',
 $user1 );
-
-
-TOKENS_CNT(0, $user1);
 
 
 TEST("finish turn");
@@ -98,12 +77,45 @@ GO(
 ,
 '{
 "result": "ok",
-"coins": "4"
+"coins": "1"
 }',
 $user1 );
 
 
+TOKENS_CNT(2, $user1);
+
+
+TEST("Select Race 2nd user");
+GO(
+'{
+"action": "selectGivenRace",
+"sid": "",
+"race": "elves",
+"power": "debug"
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 0
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
+TOKENS_CNT(6, $user1);
+
+
 done_testing();
-
-
 

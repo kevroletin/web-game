@@ -181,7 +181,6 @@ sub defend {
     my $game = global_game();
     my ($moves, $sum) = _regions_from_data($data);
     my @regions = global_user()->activeRace()->redeploy_during_defend($moves, $sum);
-    $game->lastAttack(undef);
     $game->state('conquer');
 
     db()->update(global_user(), $game, @regions);

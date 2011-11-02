@@ -51,7 +51,8 @@ sub TEST { if ($_[0]) { $descr = $_[0] } $descr }
 
 
 sub square_map_two_users {
-    my ($d_1, $d_2, $d_3, $d_4) = @_;
+    my ($d_1, $d_2, $d_3, $d_4, $c1, $c2, $c3, $c4) = @_;
+    $$_ ||= 0 for \$c1, \$c2, \$c3, \$c4;
 
     my $user1 = params_same('sid', 'gameId', 'mapId', 'coins');
     my $user2 = params_same('sid', 'gameId', 'coins');
@@ -85,22 +86,22 @@ sub square_map_two_users {
         {
           adjacent => [ 1, 2 ],
           landDescription => [ @$d_1 ],
-          population => 0
+          population => $c1
         },
         {
           adjacent => [ 0, 3 ],
           landDescription => [ @$d_2 ],
-          population => 0
+          population => $c2
         },
         {
           adjacent => [ 0, 3 ],
           landDescription => [ @$d_3 ],
-          population => 0
+          population => $c3
         },
         {
           adjacent => [ 1, 2 ],
           landDescription => [ @$d_4 ],
-          population => 0
+          population => $c4
         }
       ]
     }),
@@ -157,7 +158,7 @@ sub square_map_two_users {
 
 
     TEST("register 2nd user");
-    $user2->{_number_in_game} = 0;
+    $user2->{_number_in_game} = 1;
     GO(
     '{
     "action": "register",

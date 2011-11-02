@@ -11,11 +11,8 @@ sub race_name { 'orcs' }
 
 sub tokens_cnt { 5 }
 
-before 'redeploy' => sub {
-    my ($self) = @_;
-    my $extra_units = @{global_game()->history()};
-    my $new_cnt = global_user()->tokensInHand() + $extra_units;
-    global_user()->tokensInHand($new_cnt);
+override 'compute_coins' => sub {
+    super() + @{global_game()->history()}
 };
 
 1
