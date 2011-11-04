@@ -12,8 +12,8 @@ sub race_name { 'dwarves' }
 sub tokens_cnt { 3 }
 
 override 'compute_coins' => sub {
-    my ($self, $reg) = @_;
-    super() + grep { 'mine' ~~ $_->landDescription() } @$reg;
+    my ($self, $regs) = @_;
+    super() + grep { 'mine' ~~ $_->landDescription() } @$regs;
 };
 
 1

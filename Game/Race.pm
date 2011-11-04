@@ -81,7 +81,7 @@ sub __calculate_fortification_strength {
 
 sub _calculate_land_strength {
     my ($self, $reg) = @_;
-    2 + $self->__calculate_fortification_strength($reg)
+    2 + $reg->tokensNum() + $self->__calculate_fortification_strength($reg)
 }
 
 sub die_after_attack {
@@ -141,10 +141,10 @@ sub redeploy {
     my ($self, $moves, $sum) = @_;
 
     my @reg = global_user()->owned_regions();
-    # TODO: sync with other teams
-    if (@$moves < @reg) {
-        early_response_json({result => 'notAllRegions'})
-    }
+    # TODO: check is we shoul use it
+    #if (@$moves < @reg) {
+    #    early_response_json({result => 'notAllRegions'})
+    #}
     my $tok_cnt = global_user->tokensInHand() +
                   sum map { $_->tokensNum() } @reg;
 

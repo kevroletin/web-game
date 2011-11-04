@@ -113,7 +113,11 @@ sub conquer {
     $race->check_is_move_possible($reg);
     my $defender = $race->conquer($reg);
 
-    global_game()->state('conquer');
+    if ($defender && $defender->have_owned_regions()) {
+        global_game()->state('defend');
+    } else {
+        global_game()->state('conquer');
+    }
     db()->update(grep { defined $_ } global_user(), global_game(),
                             $reg, $defender);
     response_json({result => 'ok'});
@@ -179,7 +183,7 @@ sub defend {
     _control_state($data);
 
     my $game = global_game();
-    my ($moves, $sum) = _regions_from_data($data);
+    my ($moves, $sum) = _moves_from_data($data);
     my @regions = global_user()->activeRace()->redeploy_during_defend($moves, $sum);
     $game->state('conquer');
 

@@ -176,15 +176,11 @@ sub next_player {
     my ($self) = @_;
     my $n = $self->activePlayerNum() + 1;
     if ($n >= @{$self->players()}) {
-        $n = 0;
-        $self->next_turn();
+        $n = 0
+        # TODO: next turn
     }
-    $self->activePlayerNum($n)
-}
-
-sub next_turn {
-    my ($self) = @_;
     $self->history([]);
+    $self->activePlayerNum($n)
 }
 
 sub number_of_user {
