@@ -81,7 +81,9 @@ sub __calculate_fortification_strength {
 
 sub _calculate_land_strength {
     my ($self, $reg) = @_;
-    2 + $reg->tokensNum() + $self->__calculate_fortification_strength($reg)
+    my $ans = 2 + $reg->tokensNum();
+    $ans += 'mountain' ~~ $reg->landDescription();
+    $ans += $self->__calculate_fortification_strength($reg)
 }
 
 sub die_after_attack {
@@ -94,6 +96,7 @@ sub conquer {
     my ($self, $reg) = @_;
     my $game = global_game();
     my $units_cnt = $self->_calculate_land_strength($reg);
+    $units_cnt = 1 if $units_cnt <= 0;
 
     if (global_user()->tokensInHand() < $units_cnt) {
         early_response_json({result => 'noEnouthUnits'});
