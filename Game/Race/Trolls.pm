@@ -9,7 +9,8 @@ with( 'Game::Roles::Race' );
 
 sub race_name { 'trolls' }
 
-sub tokens_cnt { 0 }
+sub tokens_cnt { 5 }
 
+sub extra_defend { 1 }
 
 1

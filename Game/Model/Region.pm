@@ -86,7 +86,7 @@ sub owner_race {
     my ($self) = @_;
     return undef unless $self->owner();
     $self->inDecline() ? $self->owner()->declineRace() :
-                         $self->owner()->activeRace();
+                         $self->owner()->activeRace()
 }
 
 1

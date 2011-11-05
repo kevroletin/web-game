@@ -15,6 +15,7 @@ use Test::Harness;
                                      ratmens
                                      skeletons
                                      tritons
+                                     trolls
                                      wizards));
 }
 

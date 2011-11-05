@@ -82,11 +82,15 @@ sub __calculate_fortification_strength {
     $units_cnt
 }
 
+sub extra_defend { 0 }
+
 sub _calculate_land_strength {
     my ($self, $reg) = @_;
     my $ans = 2 + $reg->tokensNum();
     $ans += 'mountain' ~~ $reg->landDescription();
-    $ans += $self->__calculate_fortification_strength($reg)
+    $ans += $self->__calculate_fortification_strength($reg);
+    $ans += $reg->owner_race()->extra_defend() if $reg->owner();
+    $ans
 }
 
 sub die_after_attack {
