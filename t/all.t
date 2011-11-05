@@ -9,6 +9,7 @@ use Test::Harness;
                                      dwarves
                                      elves
                                      giants
+                                     halflings
                                      humans
                                      orcs
                                      ratmens

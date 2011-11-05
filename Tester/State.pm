@@ -27,8 +27,8 @@ sub OK {
 
 sub FINISH {
     my $descr = $fail_test;
-    $descr = "Create 2x2 map with 2 users" unless $descr;
-    ok($ok, $descr)
+#    $descr = "Create 2x2 map with 2 users" unless $descr;
+    ok($ok, 'Create 2x2 map with 2 users')
 #    write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
 #    write_msg($_[0]->{long} . "\n") if $_[0]->{long};
 }

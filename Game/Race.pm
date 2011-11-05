@@ -15,6 +15,9 @@ has 'inDecline' => ( isa => 'Bool',
                      is => 'rw',
                      default => 0 );
 
+sub extract_state { undef }
+
+sub load_state { }
 
 sub _check_land_type {
     my ($self, $reg) = @_;
@@ -104,8 +107,9 @@ sub conquer {
 
     my $defender = $reg->owner();
     if ($defender) {
+        my $tok_cnt = $defender->tokensInHand();
         $reg->owner_race()->die_after_attack($reg);
-        $game->state('defend');
+        $defender = undef if $tok_cnt == $defender->tokensInHand()
     }
     $game->add_to_attack_history($reg);
 
@@ -115,7 +119,7 @@ sub conquer {
 
     $reg->owner(global_user());
     $reg->tokensNum($units_cnt);
-    #TODO: store history of all attacks
+    $reg->inDecline(0);
 
     $defender
 }
@@ -138,6 +142,11 @@ sub redeploy_during_defend {
     }
 
     map { $_->[0] } @$moves
+}
+
+sub _clear_left_region {
+    my ($self, $reg) = @_;
+    $reg->owner(undef);
 }
 
 sub redeploy {
@@ -163,6 +172,9 @@ sub redeploy {
     for (@$moves) {
         $_->[0]->tokensNum($_->[1])
     }
+    for (@reg) {
+        $self->_clear_left_region($_) unless $_->tokensNum()
+    }
 
     \@reg
 }
@@ -176,18 +188,18 @@ __END__
 
 =head1 Races to implement:
 
-amazons
+amazons +
 dwarves +
-elves
-giants
+elves +
+giants +
 halflings
 humans +
-orcs
+orcs +
 ratmen +
-skeletons
+skeletons +
 sorcerers
 tritons +
-trolls
+trolls +
 wizards +
 
 =cut

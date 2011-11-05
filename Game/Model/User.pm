@@ -99,10 +99,14 @@ sub extract_state {
     if ($self->activeRace()) {
         $res->{activeRace} =  $self->activeRace()->race_name();
         $res->{activePower} =  $self->activeRace()->power_name();
+        my $st = $self->activeRace()->extract_state();
+        $res->{activeState} = $st if $st
     }
     if ($self->declineRace()) {
         $res->{declineRace} = $self->declineRace()->race_name();
         $res->{declinePower} = $self->declineRace()->power_name();
+        my $st = $self->declineRace()->extract_state();
+        $res->{declineState} = $st if $st
     }
     $res
 }

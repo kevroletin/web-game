@@ -54,7 +54,7 @@ has 'landDescription' => ( isa => 'Game::Model::Region::landDescription',
                            required => 1
                          );
 
-has 'owner' => ( isa => 'Game::Model::User',
+has 'owner' => ( isa => 'Maybe[Game::Model::User]',
                  is => 'rw',
                  required => 0,
                  weak_ref => 1 );
@@ -63,6 +63,7 @@ has 'owner' => ( isa => 'Game::Model::User',
 has 'population' => ( isa => 'Int',
                       is => 'rw',
                       required => 1 );
+
 
 # TODO:
 # FIXME: rename tokensNum -> population

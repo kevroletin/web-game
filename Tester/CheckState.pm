@@ -10,7 +10,45 @@ use Tester::OK;
 use Tester::Hooks;
 use Tester::State;
 use Exporter::Easy ( EXPORT => [qw(GAME_STATE
-                                   TOKENS_CNT)] );
+                                   TOKENS_CNT
+                                   check_user_state
+                                   check_region_state)] );
+
+# TODO: reduce copypaste
+sub check_user_state {
+    my ($checker, $params) = @_;
+    unless (defined $params->{_number_in_game}) {
+        return {res => 0,
+                quick => 'bad test',
+                long => 'bad test: player\'s order is missing'}
+    }
+    my $cmp = sub {
+        my ($in, $out, $res) = @_;
+        my $user = $res->{players}->[$params->{_number_in_game}];
+        unless (defined $user) {
+            return { res => 0,
+                     quick => 'no user in response' }
+        }
+        $checker->($user)
+    };
+    my $in = '{"action": "getGameState", "sid": ""}';
+    json_custom_compare_test($cmp, $in, '{}', $params)
+}
+
+sub check_region_state {
+    my ($checker, $land_num, $params) = @_;
+    my $cmp = sub {
+        my ($in, $out, $res) = @_;
+        my $reg = $res->{regions}->[$land_num];
+        unless (defined $reg) {
+            return { res => 0,
+                     quick => 'no such region in response' }
+        }
+        $checker->($reg)
+    };
+    my $in = '{"action": "getGameState", "sid": ""}';
+    json_custom_compare_test($cmp, $in, '{}', $params)
+}
 
 sub GAME_STATE {
     my ($state, $params) = @_;
