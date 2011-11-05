@@ -15,15 +15,6 @@ sub race_name { 'halflings' }
 
 sub tokens_cnt { 6 }
 
-sub extract_state {
-    my ($self) = @_;
-    my $res = {};
-    $res->{holes_cnt} = $self->{holes_cnt};
-    $res
-}
-
-sub load_state { } # TODO:
-
 override '_check_land_reachability' => sub {
     return 1 unless global_user()->have_owned_regions();
     super()

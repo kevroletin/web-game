@@ -6,19 +6,20 @@ use Test::Harness;
 #             "game_creation.t", #TODO: fix default maps
 #             "gameplay.t",
              (map { "races/$_.t" } qw(amazons
-                                     dwarves
-                                     elves
-                                     giants
-                                     halflings
-                                     humans
-                                     orcs
-                                     ratmens
-                                     skeletons
-                                     sorcerers
-                                     tritons
-                                     trolls
-                                     wizards)),
-             (map { "powers/$_.t" } qw (alchemist)));
+                                      dwarves
+                                      elves
+                                      giants
+                                      halflings
+                                      humans
+                                      orcs
+                                      ratmens
+                                      skeletons
+                                      sorcerers
+                                      tritons
+                                      trolls
+                                      wizards)),
+             (map { "powers/$_.t" } qw(alchemist
+                                       berserk)));
 }
 
 1;

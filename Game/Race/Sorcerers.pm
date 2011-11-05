@@ -15,17 +15,6 @@ sub race_name { 'sorcerers' }
 
 sub tokens_cnt { 5 }
 
-sub extract_state {
-    my ($self) = @_;
-    my $res = {};
-    # TODO: try to make unblessed copy or use introspection
-    # to determine object fields
-    $res->{enchanted} = $self->{enchanted};
-    $res
-}
-
-sub load_state { } # TODO:
-
 sub enchant {
     my ($self, $reg) = @_;
     if ($self->enchanted()) {

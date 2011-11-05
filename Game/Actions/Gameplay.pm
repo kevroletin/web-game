@@ -53,7 +53,8 @@ use Exporter::Easy( OK => [qw(conquer
                               selectRace
                               throwDice)] );
 
-
+# TODO: remove startMoving state. Use information from
+# game->history() instead
 sub _control_state {
     my ($data) = @_;
     my $a = $data->{action};
@@ -109,7 +110,9 @@ sub _control_state {
         $state->('startMoving');
         $ok->(!global_user()->activeRace())
     } elsif ($a eq 'throwDice' ) {
-
+        $curr_usr->();
+        $state->('startMoving', 'conquer');
+        $power->('berserk')
     }
 }
 
@@ -292,12 +295,15 @@ sub selectRace {
     $game->state('conquer');
     db()->store_nonroot($pair);
     db()->update($game, global_user());
-    response_json({result => 'ok'});
+    response_json({result => 'ok'})
 }
 
 sub throwDice {
     my ($data) = @_;
     proto($data, );
+    _control_state($data);
+
+    global_user()->activeRace()->throwDice();
 }
 
 1;

@@ -20,6 +20,10 @@ use Exporter::Easy ( EXPORT => [qw(resetServer
 
 
 sub resetServer {
+    my ($data) = @_;
+    if (defined $data->{randSeed}) {
+        srand($data->{randSeed})
+    }
     unlink 'tmp/test.db';
     response_json({result => 'ok'});
 }

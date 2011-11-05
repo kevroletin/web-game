@@ -54,8 +54,9 @@ sub square_map_two_users {
     my ($d_1, $d_2, $d_3, $d_4, $c1, $c2, $c3, $c4) = @_;
     $$_ ||= 0 for \$c1, \$c2, \$c3, \$c4;
 
-    my $user1 = params_same('sid', 'gameId', 'mapId', 'coins');
-    my $user2 = params_same('sid', 'gameId', 'coins');
+    my @fields_to_save = ('sid', 'gameId', 'mapId', 'coins');
+    my $user1 = params_same(@fields_to_save);
+    my $user2 = params_same(@fields_to_save);
 
     #+---------------+----------------+
     #|0              |1               |

@@ -11,9 +11,16 @@ has 'inDecline' => ( isa => 'Bool',
                      is => 'rw',
                      default => 0 );
 
-sub extract_state { undef }
+sub extract_state {
+    my ($self) = @_;
+    my %h = %$self;
+    \%h
+}
 
-sub load_state { }
+sub load_state {
+    my ($class) = shift;
+    $class->new(@_)
+}
 
 sub _check_land_type {
     my ($self, $reg) = @_;

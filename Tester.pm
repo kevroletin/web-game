@@ -48,8 +48,12 @@ sub close_logs {
 }
 
 sub reset_server {
+    my ($rand_seed) = @_;
+    my $in = defined $rand_seed ?
+        '{"action": "resetServer", "randSeed": "' . $rand_seed .'"}' :
+        '{"action": "resetServer"}';
     my $r = json_compare_test(
-        '{"action": "resetServer"}',
+        $in,
         '{"result": "ok"}'
     );
     $r->{res}
@@ -220,7 +224,6 @@ sub already_json_test {
 
 sub json_custom_compare_test {
     my $compare = shift;
-#    _run_json_test(\&_json_compare, @_)
     _run_json_test($compare, @_)
 }
 
