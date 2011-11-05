@@ -6,10 +6,6 @@ use Game::Environment qw(early_response_json
                          global_game);
 use List::Util qw(sum);
 
-# TODO:
-#requires 'tokens_cnt';
-sub tokens_cnt { 10 }
-
 
 has 'inDecline' => ( isa => 'Bool',
                      is => 'rw',

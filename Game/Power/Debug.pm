@@ -8,6 +8,8 @@ with( 'Game::Roles::Power' );
 
 sub power_name { 'dummy' }
 
+sub _power_tokens_cnt { 0 }
+
 #around 'tokens_cnt' => sub {
 #    my ($orig, $self) = @_;
 #    $self->$orig() + 5

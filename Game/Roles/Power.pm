@@ -4,6 +4,11 @@ use Moose::Role;
 
 requires 'power_name';
 
+override 'tokens_cnt' => sub {
+    my ($self) = @_;
+    super() + $self->_power_tokens_cnt()
+};
+
 
 1
 

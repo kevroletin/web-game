@@ -5,7 +5,7 @@ use Test::Harness;
              "lobby/complicated.t",
 #             "game_creation.t", #TODO: fix default maps
 #             "gameplay.t",
-             map { "races/$_.t" } qw(amazons
+             (map { "races/$_.t" } qw(amazons
                                      dwarves
                                      elves
                                      giants
@@ -17,7 +17,8 @@ use Test::Harness;
                                      sorcerers
                                      tritons
                                      trolls
-                                     wizards));
+                                     wizards)),
+             (map { "powers/$_.t" } qw (alchemist)));
 }
 
 1;
