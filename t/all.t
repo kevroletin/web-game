@@ -14,6 +14,7 @@ use Test::Harness;
                                      orcs
                                      ratmens
                                      skeletons
+                                     sorcerers
                                      tritons
                                      trolls
                                      wizards));

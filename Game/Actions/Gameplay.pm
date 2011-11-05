@@ -69,6 +69,14 @@ sub _control_state {
     my $curr_usr = sub {
         $ok->($game->activePlayer() eq global_user());
     };
+    my $race = sub {
+        $ok->($game->activePlayer()->activeRace() &&
+              $game->activePlayer()->activeRace()->race_name() eq $_[0]);
+    };
+    my $power = sub {
+        $ok->($game->activePlayer()->activeRace() &&
+              $game->activePlayer()->activeRace()->power_name() eq $_[0]);
+    };
 
     if ($a eq 'conquer' ) {
         $curr_usr->();
@@ -85,7 +93,9 @@ sub _control_state {
     } elsif ($a eq 'dragonAttack' ) {
 
     } elsif ($a eq 'enchant' ) {
-
+        $curr_usr->();
+        $race->('sorcerers');
+        $state->('startMoving', 'conquer')
     } elsif ($a eq 'finishTurn' ) {
         $curr_usr->();
         $state->('redeployed', 'declined')
@@ -198,7 +208,13 @@ sub dragonAttack {
 
 sub enchant {
     my ($data) = @_;
-    proto($data, );
+    proto($data, 'regionId');
+    _control_state($data);
+
+    my $reg = global_game()->map()->region_by_id($data->{regionId});
+    global_user()->activeRace()->enchant($reg);
+
+    response_json({result => 'ok'})
 }
 
 sub finishTurn {

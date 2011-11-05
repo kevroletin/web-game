@@ -44,15 +44,21 @@ sub _check_land_immune {
     }
 }
 
-sub _check_land_reachability {
+sub _region_is_adjacent_with_our {
     my ($self, $reg) = @_;
-    my $canMove = 0;
+    my $ok = 0;
     my $map = global_game()->map();
     for (@{$reg->adjacent()}) {
         my $owner = $map->regions()->[$_]->owner();
-        $canMove ||= $owner && $owner eq global_user();
-        last if $canMove;
+        $ok ||= $owner && $owner eq global_user();
+        last if $ok;
     }
+    $ok
+}
+
+sub _check_land_reachability {
+    my ($self, $reg) = @_;
+    my $canMove = $self->_region_is_adjacent_with_our($reg);
     if (!$canMove && !global_user()->have_owned_regions()) {
         for (@{$reg->landDescription()}) {
             $canMove ||=  $_ ~~ ['border', 'coast']
