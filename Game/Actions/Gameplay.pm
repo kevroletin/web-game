@@ -10,7 +10,7 @@ use Moose::Util qw( apply_all_roles );
 #TODO: move to separate module or use smth. like Module::Find
 use Game::Power::Alchemist;
 use Game::Power::Berserk;
-use Game::Power::Bivouaking;
+use Game::Power::Bivouacking;
 use Game::Power::Commando;
 use Game::Power::Diplomat;
 use Game::Power::DragonMaster;
@@ -160,6 +160,32 @@ sub decline {
     response_json({result => 'ok'});
 }
 
+sub __move_pairs_from_array {
+    my ($arr, $field, $error_msg) = @_;
+    return (undef, undef) unless $arr;
+    my %proc_reg;
+    my @res;
+    my $sum = 0;
+    for (@{$arr}) {
+        my $reg = global_game()->map()->region_by_id($_->{regionId});
+        unless ($reg->owner() &&
+                $reg->owner() eq global_user())
+        {
+            early_response_json({result => 'badRegion'})
+        }
+        unless ($_->{$field} =~ /^\d+$/) {
+            early_response_json(result => $error_msg)
+        }
+        if ($proc_reg{$reg}) {
+            early_response_json({result => 'badRegion'})
+        }
+        $proc_reg{$reg} = 1;
+        push @res, [$reg, $_->{$field}];
+        $sum += $_->{$field}
+    }
+    (\@res, $sum)
+}
+
 sub _moves_from_data {
     my  ($data) = @_;
     unless (defined $data->{regions} &&
@@ -167,27 +193,20 @@ sub _moves_from_data {
     {
         early_response_json({result => 'badJson'})
     }
-    my @moves;
-    my $sum = 0;
-    my %proc_reg;
-    for (@{$data->{regions}}) {
-        my $reg = global_game()->map()->region_by_id($_->{regionId});
-        unless ($reg->owner() &&
-                $reg->owner() eq global_user())
-        {
-            early_response_json({result => 'badRegion'})
-        }
-        unless ($_->{tokensNum} =~ /^\d+$/) {
-            early_response_json(result => 'badTokensNum')
-        }
-        if ($proc_reg{$reg}) {
-            early_response_json({result => 'badRegion'})
-        }
-        $proc_reg{$reg} = 1;
-        push @moves, [$reg, $_->{tokensNum}];
-        $sum += $_->{tokensNum}
+    my ($units, $units_sum) =
+        __move_pairs_from_array($data->{regions},
+                                'tokensNum',
+                                'badTokensNum');
+    my ($enc, $enc_sum) =
+        __move_pairs_from_array($data->{encampments},
+                                'encampmentsNum',
+                                'badEncampmentsNum');
+    {
+        units_moves => $units,
+        units_sum => $units_sum,
+        encampments => $enc,
+        encampments_sum => $enc_sum
     }
-    (\@moves, $sum)
 }
 
 sub defend {
@@ -195,12 +214,12 @@ sub defend {
     proto($data, 'regions');
     _control_state($data);
 
-    my $game = global_game();
-    my ($moves, $sum) = _moves_from_data($data);
-    my @regions = global_user()->activeRace()->redeploy_during_defend($moves, $sum);
-    $game->state('conquer');
+    my $moves = _moves_from_data($data);
+    global_user()->activeRace()->defend($moves);
+    global_game()->state('conquer');
 
-    db()->update(global_user(), $game, @regions);
+    db()->update(global_user(), global_game(),
+                 map { $_->[0] } @{$moves->{units_moves}});
     response_json({result => 'ok'})
 }
 
@@ -255,12 +274,11 @@ sub redeploy {
     proto($data, 'regions');
     _control_state($data);
 
-    my $game = global_game();
-    my ($moves, $sum) = _moves_from_data($data);
-    my $regions = global_user()->activeRace()->redeploy($moves, $sum);
-    $game->state('redeployed');
+    my $moves = _moves_from_data($data);
+    my $reg = global_user()->activeRace()->redeploy($moves);
+    global_game()->state('redeployed');
 
-    db()->update(global_user(), $game, $game->map(), @$regions);
+    db()->update(global_user(), global_game(), @$reg);
     response_json({result => 'ok'})
 }
 

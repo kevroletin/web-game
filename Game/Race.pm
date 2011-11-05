@@ -4,7 +4,7 @@ use Moose;
 use Game::Environment qw(early_response_json
                          global_user
                          global_game);
-use List::Util qw(sum);
+use List::Util qw( sum );
 
 
 has 'inDecline' => ( isa => 'Bool',
@@ -142,51 +142,41 @@ sub compute_coins {
     scalar @$reg
 }
 
-sub redeploy_during_defend {
-    my ($self, $moves, $sum) = @_;
-
-    if ($sum > global_user()->tokensInHand()) {
-        early_response_json({result => 'notEnoughTokens'})
-    }
-    global_user()->tokensInHand(global_user()->tokensInHand - $sum);
-
-    for (@$moves) {
-        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1])
-    }
-
-    map { $_->[0] } @$moves
-}
-
 sub _clear_left_region {
     my ($self, $reg) = @_;
     $reg->owner(undef);
 }
 
+sub _redeploy_units {
+    my ($self, $moves) = @_;
+
+    for (@{$moves->{units_moves}}) {
+        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1])
+    }
+}
+
+sub defend {
+    my ($self, $moves) = @_;
+    $self->_redeploy_units($moves);
+    global_user()->tokensInHand(global_user()->tokensInHand - $moves->{units_sum});
+}
+
 sub redeploy {
-    my ($self, $moves, $sum) = @_;
+    my ($self, $moves) = @_;
 
     my @reg = global_user()->owned_regions();
-    # TODO: check is we shoul use it
-    #if (@$moves < @reg) {
-    #    early_response_json({result => 'notAllRegions'})
-    #}
-    my $tok_cnt = global_user->tokensInHand() +
+    my $tok_cnt = global_user()->tokensInHand() +
                   sum map { $_->tokensNum() } @reg;
 
-    if ($sum > $tok_cnt) {
+    if ($moves->{units_sum} > $tok_cnt) {
         early_response_json({result => 'badTokensNum'})
     }
 
-    global_user()->tokensInHand($tok_cnt - $sum);
-
+    global_user()->tokensInHand($tok_cnt - $moves->{units_sum});
+    $_->tokensNum(0) for @reg;
+    $self->_redeploy_units($moves);
     for (@reg) {
-        $_->tokensNum(0)
-    }
-    for (@$moves) {
-        $_->[0]->tokensNum($_->[1])
-    }
-    for (@reg) {
-        $self->_clear_left_region($_) unless $_->tokensNum()
+        $_->owner_race()->_clear_left_region($_) unless $_->tokensNum()
     }
 
     \@reg

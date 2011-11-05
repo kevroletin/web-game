@@ -22,7 +22,7 @@ wizards
 our @powers = qw(
 alchemist
 berserk
-bivouaking
+bivouacking
 commando
 diplomat
 dragonMaster

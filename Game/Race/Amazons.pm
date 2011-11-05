@@ -16,22 +16,12 @@ override 'conquer' => sub {
         return super()
     }
     global_user()->tokensInHand(global_user()->tokensInHand() + 4);
-    my $res = eval {
-        super()
-    };
-    return $res unless $@;
-    global_user()->tokensInHand(global_user()->tokensInHand() - 4);
-    die $@
+    super()
 };
 
 override 'redeploy' => sub {
     global_user()->tokensInHand(global_user()->tokensInHand() - 4);
-    my $res = eval {
-        super()
-    };
-    return $res unless $@;
-    global_user()->tokensInHand(global_user()->tokensInHand() + 4);
-    die $@
+    super()
 };
 
 
