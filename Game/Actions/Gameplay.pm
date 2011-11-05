@@ -140,6 +140,9 @@ sub decline {
     my ($data) = @_;
     _control_state($data);
 
+    my @usr_reg = global_user()->owned_regions();
+    $_->owner_race()->decline_region($_) for @usr_reg;
+
     my $decline_race = global_user()->declineRace();
     global_game()->put_back_tokens($decline_race) if $decline_race;
     global_game()->state('declined');
@@ -148,19 +151,13 @@ sub decline {
     global_user()->activeRace(undef);
     global_user()->tokensInHand(0);
 
-    my @usr_reg = global_user()->owned_regions();
-    for (@usr_reg) {
-        $_->tokensNum(1);
-        $_->inDecline(1);
-    }
-
     db()->delete($decline_race) if $decline_race;
     db()->update(global_game(), global_user(),
                  global_user()->declineRace(), @usr_reg);
     response_json({result => 'ok'});
 }
 
-sub __move_pairs_from_array {
+sub __moves_pairs_from_array {
     my ($arr, $field, $error_msg) = @_;
     return (undef, undef) unless $arr;
     my %proc_reg;
@@ -194,11 +191,11 @@ sub _moves_from_data {
         early_response_json({result => 'badJson'})
     }
     my ($units, $units_sum) =
-        __move_pairs_from_array($data->{regions},
+        __moves_pairs_from_array($data->{regions},
                                 'tokensNum',
                                 'badTokensNum');
     my ($enc, $enc_sum) =
-        __move_pairs_from_array($data->{encampments},
+        __moves_pairs_from_array($data->{encampments},
                                 'encampmentsNum',
                                 'badEncampmentsNum');
     {

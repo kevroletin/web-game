@@ -44,7 +44,7 @@ sub IS_REG_HAVE_HOLE {
             "there is hole" : "there isn't hole";
         my $in_test = $should_have ? "should be" : "shouldn't be";
         { res => 0, quick => $in_resp,
-          logn => "$in_resp but it $in_test\n" . Dumper($reg) }
+          long => "$in_resp but it $in_test\n" . Dumper($reg) }
     };
     OK( check_region_state($reg_cmp, $reg_num, $params),
         "check halfling's hole in region" )

@@ -102,12 +102,6 @@ sub _calculate_land_strength {
     $ans
 }
 
-sub die_after_attack {
-    my ($self, $reg) = @_;
-        my $tok_cnt = $reg->owner()->tokensInHand() + $reg->tokensNum();
-    $reg->owner()->tokensInHand($tok_cnt - 1);
-}
-
 sub conquer {
     my ($self, $reg) = @_;
     my $game = global_game();
@@ -121,7 +115,7 @@ sub conquer {
     my $defender = $reg->owner();
     if ($defender) {
         my $tok_cnt = $defender->tokensInHand();
-        $reg->owner_race()->die_after_attack($reg);
+        $reg->owner_race()->clear_reg_and_die($reg);
         $defender = undef if $tok_cnt == $defender->tokensInHand()
     }
     $game->add_to_attack_history($reg);
@@ -142,16 +136,34 @@ sub compute_coins {
     scalar @$reg
 }
 
+sub clear_reg_and_die {
+    my ($self, $reg) = @_;
+    my $tok_cnt = $reg->owner()->tokensInHand() + $reg->tokensNum();
+    $reg->owner()->tokensInHand($tok_cnt - 1);
+}
+
 sub _clear_left_region {
     my ($self, $reg) = @_;
     $reg->owner(undef);
+}
+
+sub _clear_region_before_redeploy {
+    my ($self, $reg) = @_;
+    $reg->owner(undef);
+    $reg->tokensNum(0);
+    $reg->inDecline(0);
+}
+
+sub _clear_declined_region {
+    my ($self, $reg) = @_;
 }
 
 sub _redeploy_units {
     my ($self, $moves) = @_;
 
     for (@{$moves->{units_moves}}) {
-        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1])
+        $_->[0]->tokensNum($_->[0]->tokensNum() + $_->[1]);
+        $_->[0]->owner(global_user())
     }
 }
 
@@ -173,13 +185,25 @@ sub redeploy {
     }
 
     global_user()->tokensInHand($tok_cnt - $moves->{units_sum});
-    $_->tokensNum(0) for @reg;
+    for (@reg) {
+        $self->_clear_region_before_redeploy($_);
+    }
     $self->_redeploy_units($moves);
     for (@reg) {
-        $_->owner_race()->_clear_left_region($_) unless $_->tokensNum()
+        $self->_clear_left_region($_) unless $_->tokensNum()
     }
 
     \@reg
+}
+
+sub decline_region {
+    my ($self, $reg) = @_;
+    if ($self->inDecline) {
+        $self->_clear_declined_region($reg)
+    } else {
+        $reg->tokensNum(1);
+        $reg->inDecline(1);
+    }
 }
 
 

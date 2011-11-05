@@ -11,7 +11,7 @@ sub race_name { 'elves' }
 
 sub tokens_cnt { 6 }
 
-sub die_after_attack {
+sub clear_reg_and_die {
     my ($self, $reg) = @_;
     my $tok_cnt = $reg->owner()->tokensInHand() + $reg->tokensNum();
     $reg->owner()->tokensInHand($tok_cnt);
