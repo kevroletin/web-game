@@ -13,7 +13,7 @@ use Game::Actions::Game qw(createGame joinGame leaveGame
 use Game::Actions::Gameplay qw(conquer decline defend dragonAttack
                                enchant finishTurn redeploy
                                selectFriend selectRace throwDice);
-use Game::Actions::Lobby qw(login logout register);
+use Game::Actions::Lobby qw(getUserInfo login logout register);
 use Game::Actions::Map qw(createDefaultMaps uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug
                          response response_json
@@ -22,11 +22,12 @@ use utf8;
 
 
 sub _is_action_without_sid {
-    $_[0] eq 'login' ||
-    $_[0] eq 'register' ||
-    $_[0] eq 'resetServer' ||
-    $_[0] eq 'createDefaultMaps' ||
-    $_[0] eq 'uploadMap'
+    $_[0] ~~ [qw(login
+                 register
+                 resetServer
+                 createDefaultMaps
+                 uploadMap
+                 getUserInfo)]
 }
 
 sub process_request {

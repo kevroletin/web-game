@@ -19,6 +19,7 @@ use Test::Harness;
                                       trolls
                                       wizards)),
              (map { "powers/$_.t" } qw(alchemist
+                                       diplomat
                                        berserk
                                        bivouacking)));
 }

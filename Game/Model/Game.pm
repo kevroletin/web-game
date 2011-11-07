@@ -52,11 +52,6 @@ has 'activePlayerNum' => ( isa => 'Int',
                            is => 'rw',
                            default => 0 );
 
-#has 'lastAttack' => ( isa => 'HashRef|Undef',
-#                      is => 'rw' );
-#{ whom => Game::Model::User,
-#  region => Game::Model::Region }
-
 has 'gameId' => ( isa => 'Int',
                   is => 'ro',
                   required => 0 );
@@ -80,6 +75,10 @@ has 'bonusMoney' => ( isa => 'ArrayRef[Int]',
 has 'history' => ( isa => 'ArrayRef',
                    is => 'rw',
                    default => sub { [] } );
+
+has 'raceStateStorage' => ( isa => 'HashRef',
+                            is => 'rw',
+                            default => sub { {} } );
 
 sub BUILD {
     my ($self) = @_;
@@ -144,6 +143,13 @@ sub _extract_visible_tokens {
     \@res
 }
 
+sub _copy_races_state_storage {
+    my ($self, $state) =@_;
+    for (keys %{$self->raceStateStorage()}) {
+        $state->{$_} = $self->raceStateStorage()->{$_}
+    }
+}
+
 sub extract_state {
     my ($self) = @_;
     my $res = {};
@@ -157,12 +163,13 @@ sub extract_state {
     push @regions, $_->extract_state() for @{$self->map()->regions()};
     $res->{regions} = \@regions;
     $res->{visibleTokenBadges} = $self->_extract_visible_tokens();
+    $self->_copy_races_state_storage($res);
     $res
 }
 
 sub remove_player {
     my ($self, $user) = @_;
-    my $nu = [ grep { ref($_) ne ref($user) } @{$self->players()} ];
+    my $nu = [ grep { $_ ne $user } @{$self->players()} ];
     $self->players($nu);
 }
 

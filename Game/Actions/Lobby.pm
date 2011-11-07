@@ -9,12 +9,13 @@ use Game::Environment qw(db db_search db_search_one
                          early_response_json
                          global_user
                          inc_counter
+                         init_user_by_sid
                          is_debug if_debug
                          response response_json);
 use Game::Model::User;
 
 use Exporter::Easy (
-    OK => [qw(login logout register)]
+    OK => [qw(getUserInfo login logout register)]
 );
 
 sub _gen_sid {
@@ -30,6 +31,36 @@ sub _gen_sid {
         last unless (db_search({ sid => $sid })->all());
     }
     $sid
+}
+
+sub getUserInfo {
+    my ($data) = @_;
+    my ($user, $err);
+    if (defined $data->{userId}) {
+        $user = db_search_one({ CLASS => 'Game::Model::User' },
+                              { id => $data->{userId} });
+        $err = 'badUserId'
+    } elsif (defined $data->{username}) {
+        $user = db_search_one({ CLASS => 'Game::Model::User' },
+                              { username => $data->{username} });
+        $err = 'badUsername'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $user = global_user();
+        $err = 'badSid'
+    } else {
+        $err = 'badJson'
+    }
+    unless ($user) {
+        early_response_json({result => $err})
+    }
+    my $game = $user->activeGame() ? $user->activeGame()->gameId() :
+                                     undef;
+    my $h = { username => $user->{username},
+              activeGame => $game,
+              userId => $user->id(),
+              result => 'ok' };
+    response_json($h)
 }
 
 sub login {

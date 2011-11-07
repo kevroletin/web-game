@@ -20,7 +20,7 @@ my $fail_test;
 
 sub OK {
     $ok &&= $_[0]->{res};
-    $fail_test =  $_[1] unless $ok;
+    $fail_test = \@_ unless $ok;
 #    write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
 #    write_msg($_[0]->{long} . "\n") if $_[0]->{long};
 }
@@ -28,9 +28,12 @@ sub OK {
 sub FINISH {
     my $descr = $fail_test;
 #    $descr = "Create 2x2 map with 2 users" unless $descr;
-    ok($ok, 'Create 2x2 map with 2 users')
-#    write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
-#    write_msg($_[0]->{long} . "\n") if $_[0]->{long};
+    ok($ok, 'Create 2x2 map with 2 users');
+    if ($fail_test) {
+        $_ = $fail_test;
+        write_msg("\n*** $_->[1]  ***:  ", $_->[0]->{quick} . "\n");
+        write_msg($_->[0]->{long} . "\n") if $_->[0]->{long};
+    }
 }
 
 sub GO {
@@ -54,7 +57,8 @@ sub square_map_two_users {
     my ($d_1, $d_2, $d_3, $d_4, $c1, $c2, $c3, $c4) = @_;
     $$_ ||= 0 for \$c1, \$c2, \$c3, \$c4;
 
-    my @fields_to_save = ('sid', 'gameId', 'mapId', 'coins');
+    my @fields_to_save = ('sid', 'gameId', 'mapId', 'coins',
+                          'activeGame', 'userId');
     my $user1 = params_same(@fields_to_save);
     my $user2 = params_same(@fields_to_save);
 
@@ -245,6 +249,37 @@ sub square_map_two_users {
     "result": "ok"
     }',
     $user2 );
+
+    TEST("1st getUserInfo");
+    GO(
+    '{
+      "action": "getUserInfo",
+      "sid": ""
+    }'
+    ,
+    '{
+      "userId" : "",
+      "activeGame" : "",
+      "result" : "ok",
+      "username" : "user1"
+    }',
+    $user1 );
+
+    TEST("2nd getUserInfo");
+    GO(
+    '{
+      "action": "getUserInfo",
+      "sid": ""
+    }'
+    ,
+    '{
+      "userId" : "",
+      "activeGame" : "",
+      "result" : "ok",
+      "username" : "user2"
+    }',
+    $user2 );
+
 
     FINISH();
 

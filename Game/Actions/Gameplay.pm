@@ -104,7 +104,9 @@ sub _control_state {
         $curr_usr->();
         $state->('conquer')
     } elsif ($a eq 'selectFriend' ) {
-
+        $curr_usr->();
+        $power->('diplomat');
+        $state->('redeployed');
     } elsif ($a eq 'selectRace' ) {
         $curr_usr->();
         $state->('startMoving');
@@ -281,7 +283,19 @@ sub redeploy {
 
 sub selectFriend {
     my ($data) = @_;
-    proto($data, );
+    proto($data, 'userId');
+    _control_state($data);
+
+    my $friend;
+    for (@{global_game()->players()}) {
+        $friend = $_ if $data->{userId} eq $_->id()
+    }
+    unless ($friend) {
+        early_response_json({result => 'badUserId'})
+    }
+
+    global_user()->activeRace()->selectFriend($friend);
+    response_json({result => 'ok'})
 }
 
 sub selectRace {
