@@ -197,6 +197,23 @@ sub __fortified_reg_from_data {
     global_game()->map()->region_by_id($reg_id)
 }
 
+sub __heroes_regs_from_date {
+    my ($data) = @_;
+    return undef unless defined $data->{heroes};
+    unless (ref($data->{heroes}) eq 'ARRAY') {
+        early_response_json({result => 'badJson'})
+    }
+    my @res;
+    for (@{$data->{heroes}}) {
+        last if @res > 2;
+        push @res, global_game()->map()->region_by_id($_);
+    }
+    if (@res == 2 && $res[0] eq $res[1] || @res > 2) {
+        early_response_json({result => 'badSetHeroCommand'})
+    }
+    \@res
+}
+
 sub _moves_from_data {
     my  ($data) = @_;
     unless (defined $data->{regions} &&
@@ -213,11 +230,12 @@ sub _moves_from_data {
                                 'encampmentsNum',
                                 'badEncampmentsNum');
     {
+        encampments => $enc,
+        encampments_sum => $enc_sum,
         fortified_reg => __fortified_reg_from_data($data),
+        heroes_regs => __heroes_regs_from_date($data),
         units_moves => $units,
         units_sum => $units_sum,
-        encampments => $enc,
-        encampments_sum => $enc_sum
     }
 }
 

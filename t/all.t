@@ -24,6 +24,7 @@ use Test::Harness;
                                        dragonMaster
                                        forest
                                        fortified
+                                       heroic
                                        bivouacking)));
 }
 
