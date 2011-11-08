@@ -78,8 +78,8 @@ sub selectGivenRace {
     }
     my $game = global_game();
 
-    my $race = lc($data->{race});
-    my $power = lc($data->{power});
+    my $race = $data->{race};
+    my $power = $data->{power};
     my $coins = $data->{coins};
     $coins = 0 unless $coins;
     unless ($race &&

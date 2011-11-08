@@ -9,8 +9,10 @@ use Tester;
 use Tester::OK;
 use Tester::Hooks;
 use Tester::State;
+use Data::Dumper::Concise;
 use Exporter::Easy ( EXPORT => [qw(GAME_STATE
                                    TOKENS_CNT
+                                   REGION_EXTRA_ITEM
                                    check_user_state
                                    check_region_state)] );
 
@@ -48,6 +50,26 @@ sub check_region_state {
     };
     my $in = '{"action": "getGameState", "sid": ""}';
     json_custom_compare_test($cmp, $in, '{}', $params)
+}
+
+
+sub REGION_EXTRA_ITEM {
+    my ($item, $cnt, $reg_num, $params) = @_;
+    my $reg_cmp = sub {
+        my ($reg) = @_;
+        my $eic = $reg->{extraItems}->{$item};
+        if ($cnt == 0 && !defined $eic ||
+            defined $eic && $cnt == $eic) {
+            return { res => 1, quick => 'ok' }
+        }
+        my $in_resp = defined $eic ?
+            "$item in resp $eic != $cnt " :
+            "there isn't $item";
+        { res => 0, quick => $in_resp,
+          long => "$in_resp\n" . Dumper($reg) }
+    };
+    OK( check_region_state($reg_cmp, $reg_num, $params),
+        "check extra items: $item" )
 }
 
 sub GAME_STATE {

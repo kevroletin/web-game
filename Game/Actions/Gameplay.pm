@@ -92,7 +92,9 @@ sub _control_state {
         $ok->($game->lastAttack() &&
               $game->lastAttack()->{whom} eq global_user())
     } elsif ($a eq 'dragonAttack' ) {
-
+        $curr_usr->();
+        $state->('conquer');
+        $power->('dragonMaster');
     } elsif ($a eq 'enchant' ) {
         $curr_usr->();
         $race->('sorcerers');
@@ -224,7 +226,14 @@ sub defend {
 
 sub dragonAttack {
     my ($data) = @_;
-    proto($data, );
+    proto($data, 'regionId');
+    _control_state($data);
+
+    my $reg = global_game()->map()->region_by_id($data->{regionId});
+
+    global_user()->activeRace()->dragonAttack($reg);
+
+    response_json({result => 'ok'})
 }
 
 sub enchant {

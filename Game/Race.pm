@@ -102,6 +102,18 @@ sub _calculate_land_strength {
     $ans
 }
 
+sub __kill_region_owner {
+    my ($self, $reg) = @_;
+    my $defender = $reg->owner();
+    if ($defender) {
+        my $tok_cnt = $defender->tokensInHand();
+        $reg->owner_race()->clear_reg_and_die($reg);
+        $defender = undef if $tok_cnt == $defender->tokensInHand()
+    }
+    global_game()->add_to_attack_history($reg);
+    $defender
+}
+
 sub conquer {
     my ($self, $reg) = @_;
     my $game = global_game();
@@ -112,13 +124,7 @@ sub conquer {
         early_response_json({result => 'noEnouthUnits'});
     }
 
-    my $defender = $reg->owner();
-    if ($defender) {
-        my $tok_cnt = $defender->tokensInHand();
-        $reg->owner_race()->clear_reg_and_die($reg);
-        $defender = undef if $tok_cnt == $defender->tokensInHand()
-    }
-    $game->add_to_attack_history($reg);
+    my $defender = $self->__kill_region_owner($reg);
 
     # TODO: throw dice
 
