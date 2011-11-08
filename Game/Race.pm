@@ -98,7 +98,9 @@ sub _calculate_land_strength {
     my $ans = 2 + $reg->tokensNum();
     $ans += 'mountain' ~~ $reg->landDescription();
     $ans += $self->__calculate_fortification_strength($reg);
-    $ans += $reg->owner_race()->extra_defend() if $reg->owner();
+    if ($reg->owner()) {
+        $ans += $reg->owner_race()->extra_defend($reg)
+    }
     $ans
 }
 
@@ -184,7 +186,7 @@ sub redeploy {
 
     my @reg = global_user()->owned_regions();
     my $tok_cnt = global_user()->tokensInHand() +
-                  sum map { $_->tokensNum() } @reg;
+                  sum 0, map { $_->tokensNum() } @reg;
 
     if ($moves->{units_sum} > $tok_cnt) {
         early_response_json({result => 'badTokensNum'})

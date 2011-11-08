@@ -9,7 +9,7 @@ use Storable q(dclone);
 subtype 'Game::Model::Region::ExtraItems',
     as 'HashRef',
     where {
-        my $a = [ 'dragon', 'fortifield', 'hero',
+        my $a = [ 'dragon', 'fortified', 'hero',
                   'encampment', 'hole' ];
         my $ok = 1;
         for my $k (keys %$_) { $ok &&= $k ~~ $a }

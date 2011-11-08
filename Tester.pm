@@ -170,6 +170,10 @@ sub _json_cmp_transformer {
                 print $f $res;
                 close $f;
                 $first_error = 1;
+                print STDERR
+                    "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
+                    "~    may be server is died    ~",
+                    "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
             }
             return $res_parsed;
         };

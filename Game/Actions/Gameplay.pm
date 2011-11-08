@@ -187,6 +187,16 @@ sub __moves_pairs_from_array {
     (\@res, $sum)
 }
 
+sub __fortified_reg_from_data {
+    my ($data) = @_;
+    return undef unless defined $data->{fortified};
+    my $reg_id = $data->{fortified}{regionId};
+    unless (defined $reg_id) {
+        early_response_json({result => 'badJson'})
+    }
+    global_game()->map()->region_by_id($reg_id)
+}
+
 sub _moves_from_data {
     my  ($data) = @_;
     unless (defined $data->{regions} &&
@@ -203,6 +213,7 @@ sub _moves_from_data {
                                 'encampmentsNum',
                                 'badEncampmentsNum');
     {
+        fortified_reg => __fortified_reg_from_data($data),
         units_moves => $units,
         units_sum => $units_sum,
         encampments => $enc,

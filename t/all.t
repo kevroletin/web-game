@@ -19,9 +19,11 @@ use Test::Harness;
                                       trolls
                                       wizards)),
              (map { "powers/$_.t" } qw(alchemist
+                                       berserk
                                        diplomat
                                        dragonMaster
-                                       berserk
+                                       forest
+                                       fortified
                                        bivouacking)));
 }
 

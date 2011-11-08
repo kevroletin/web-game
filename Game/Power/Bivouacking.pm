@@ -13,7 +13,7 @@ sub _power_tokens_cnt { 5 }
 
 after '_redeploy_units' => sub {
     my ($self, $moves) = @_;
-    my $enc_cnt = sum grep { $_ }
+    my $enc_cnt = sum 0, grep { $_ }
         map { $_->extraItems()->{encampment} }
             global_user()->owned_regions();
     $enc_cnt += $moves->{encampments_sum};
@@ -22,7 +22,9 @@ after '_redeploy_units' => sub {
     }
     for (@{$moves->{encampments}}) {
         my ($reg, $cnt) = @{$_};
-        unless ($reg->owner() && $reg->owner() eq global_user()) {
+        unless ($reg->owner() &&
+                $reg->owner() eq global_user())
+        {
             early_response_json({result => 'badRegion'})
         }
         my $ei = $reg->extraItems();
