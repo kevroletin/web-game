@@ -30,6 +30,7 @@ use Test::Harness;
                                        merchant
                                        mounted
                                        pillaging
+                                       seafaring
                                        stout)));
 }
 
