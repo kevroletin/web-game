@@ -31,7 +31,9 @@ use Test::Harness;
                                        mounted
                                        pillaging
                                        seafaring
-                                       stout)));
+                                       stout
+                                       swamp
+                                       underworld)));
 }
 
 1;
