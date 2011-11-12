@@ -85,7 +85,12 @@ sub _control_state {
         $ok->(global_user()->activeRace());
     } elsif ($a eq 'decline' ) {
         $curr_usr->();
-        $state->('startMoving');
+        my $race = $game->activePlayer()->activeRace();
+        if ($race && $race->power_name() eq 'stout') {
+            $state->('startMoving', 'redeployed');
+        } else {
+            $state->('startMoving');
+        }
         $ok->(global_user()->activeRace())
     } elsif ($a eq 'defend' ) {
         $state->('defend');
@@ -144,20 +149,9 @@ sub decline {
     my ($data) = @_;
     _control_state($data);
 
-    my @usr_reg = global_user()->owned_regions();
-    $_->owner_race()->decline_region($_) for @usr_reg;
-
-    my $decline_race = global_user()->declineRace();
-    global_game()->put_back_tokens($decline_race) if $decline_race;
     global_game()->state('declined');
-    global_user()->declineRace(global_user()->activeRace());
-    global_user()->declineRace()->inDecline(1);
-    global_user()->activeRace(undef);
-    global_user()->tokensInHand(0);
+    global_user()->activeRace()->decline();
 
-    db()->delete($decline_race) if $decline_race;
-    db()->update(global_game(), global_user(),
-                 global_user()->declineRace(), @usr_reg);
     response_json({result => 'ok'});
 }
 
@@ -303,6 +297,13 @@ sub finishTurn {
     $game->state('startMoving');
 
     db()->update($game, global_user());
+
+    # TODO: may be move most of this action handler into
+    # Race.pm->finishTurn
+    if (global_user()->activeRace()) {
+        global_user()->activeRace()->turnFinished()
+    }
+
     response_json({result => 'ok', coins => $coins})
 }
 

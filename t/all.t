@@ -20,12 +20,14 @@ use Test::Harness;
                                       wizards)),
              (map { "powers/$_.t" } qw(alchemist
                                        berserk
+                                       bivouacking
                                        diplomat
                                        dragonMaster
                                        forest
                                        fortified
                                        heroic
-                                       bivouacking)));
+                                       hill
+                                       stout)));
 }
 
 1;

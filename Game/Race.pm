@@ -1,7 +1,7 @@
 package Game::Race;
 use Moose;
 
-use Game::Environment qw(early_response_json
+use Game::Environment qw(db early_response_json
                          global_user
                          global_game);
 use List::Util qw( sum );
@@ -204,7 +204,7 @@ sub redeploy {
     \@reg
 }
 
-sub decline_region {
+sub _decline_region {
     my ($self, $reg) = @_;
     if ($self->inDecline) {
         $self->_clear_declined_region($reg)
@@ -214,6 +214,24 @@ sub decline_region {
     }
 }
 
+sub decline {
+    my ($self) = @_;
+    my @usr_reg = global_user()->owned_regions();
+    $_->owner_race()->_decline_region($_) for @usr_reg;
+
+    my $decline_race = global_user()->declineRace();
+    global_game()->put_back_tokens($decline_race) if $decline_race;
+    global_user()->declineRace($self);
+    $self->inDecline(1);
+    global_user()->activeRace(undef);
+    global_user()->tokensInHand(0);
+
+    db()->delete($decline_race) if $decline_race;
+    db()->update(global_game(), global_user(),
+                 global_user()->declineRace(), @usr_reg);
+}
+
+sub turnFinished { }
 
 1
 

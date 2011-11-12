@@ -19,6 +19,8 @@ our ($descr, $in, $out, $hooks) = (('') x 4);
 sub OK {
     write_log($_[1]);
     ok($_[0]->{res}, $_[1]);
+    $_[0]->{quick} ||= $_[0]->{res} ? 'ok' : 'not ok';
+    $_[0]->{long} ||= $_[0]->{quick};
     write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
     write_msg($_[0]->{long} . "\n") if $_[0]->{long};
 }
