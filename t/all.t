@@ -27,6 +27,8 @@ use Test::Harness;
                                        fortified
                                        heroic
                                        hill
+                                       merchant
+                                       mounted
                                        stout)));
 }
 
