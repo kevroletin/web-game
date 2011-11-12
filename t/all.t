@@ -29,6 +29,7 @@ use Test::Harness;
                                        hill
                                        merchant
                                        mounted
+                                       pillaging
                                        stout)));
 }
 
