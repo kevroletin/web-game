@@ -21,8 +21,10 @@ use Test::Harness;
              (map { "powers/$_.t" } qw(alchemist
                                        berserk
                                        bivouacking
+                                       commando
                                        diplomat
                                        dragonMaster
+                                       flying
                                        forest
                                        fortified
                                        heroic
@@ -33,7 +35,9 @@ use Test::Harness;
                                        seafaring
                                        stout
                                        swamp
-                                       underworld)));
+                                       underworld
+                                       wealthy))
+            );
 }
 
 1;
