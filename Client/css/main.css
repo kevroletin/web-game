@@ -1,0 +1,31 @@
+
+div#header {
+    border-bottom: 1px black solid;
+    height: 150px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
+div#field {
+    margin: 160px 0 0 300px;
+    padding:1em 1em 5em; /* bottom padding for footer */
+}
+
+div#panel {
+    border-right: 1px black solid;
+    rigth: 0;
+    position: fixed;
+    top: 150px;
+    width: 290px;
+}
+
+div#panel li:hover {
+    background-color: gray;
+}
+
+div#footer {
+    margin: 20px 0 0 0;
+    border-top: 1px black solid;
+}

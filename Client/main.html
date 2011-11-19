@@ -1,0 +1,61 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf8" />
+  <title>web-game</title>
+  <!-- link rel="stylesheet" type="text/css" href="css/reset-min.css" / -->
+  <!-- link rel="stylesheet" type="text/css" href="css/reset-fonts-grids.css" / -->
+  <link rel="stylesheet" type="text/css" href="css/main.css" />
+
+<!-- LIVERELOAD -->
+  <script src="livereload/src/content.js"></script>
+  <script src="livereload/src/background.js"></script>
+  <script src="livereload/src/xbrowser/livereload.js"></script>
+
+<!-- jQuery -->
+<!-- script src="js/external/jquery-1.7.min.js"></script -->
+<script src="http://code.jquery.com/jquery-1.7.min.js"></script>
+
+<!-- Game -->
+  <script src="js/constants.js"></script>
+  <script src="js/log.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/forms.js"></script>
+  <script src="js/modes.js"></script>
+  <script src="js/main.js"></script>
+
+<!-- INIT -->
+  <script>
+    window.onload = function(){
+      game.init();
+      game.exec();
+      livereload.run();
+    };
+  </script>
+
+  
+</head>
+<body>
+  
+  <div id="header">
+  </div>
+
+  <div id="panel">
+    <h2>Select action</h2>
+
+    <ul>
+      <li onclick="ui.setLoginMod()">Login</li>
+      <li onclick="ui.setRegisterMod()">Register</li>
+    </ul>
+  </div>
+
+  <div id="field">
+    
+  </div>
+
+  <div id="footer">
+    [Footer]
+  </div>
+  
+</body>
+</html>
