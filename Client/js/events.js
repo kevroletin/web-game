@@ -4,9 +4,14 @@ var events = {
   exec: function(ev_full_name, data) {
     log.d.info('event exec: ' + ev_full_name);
     var ev = get_obj_field(this.storage, ev_full_name);
-    if (is_null(ev)) { return 0; }
-    var i;
-    for (i = 0; i < ev.length; ++i) {
+    if (is_null(ev)) { 
+      var msg = 'attempt to execute undefined event: ' + 
+                 ev_full_name;
+      log.d.warn(msg);
+      log.d.info(msg);
+      return 0; 
+    }
+    for (var i = 0; i < ev.length; ++i) {
       log.d.info('    ' + ev[i].name);
       ev[i].fun(data);
     }

@@ -70,3 +70,11 @@ function delete_obj_field(obj, field_name) {
   return t;
 }
 
+function in_arr(elem, array) {
+  for (var i in array) {
+    if (elem == array[i]) {
+      return true;
+    }
+  }
+  return false;
+}

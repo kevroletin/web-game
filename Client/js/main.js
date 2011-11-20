@@ -8,25 +8,37 @@ var ui = {
   _curr_modes: {major: null, minor: []},
   
 
-  setMode: function(new_mode) {
+  set_major_mode: function(new_mode) {
+    log.d.info("ui -> " + new_mode +" major mode");
+
     var menu = $("#menu");
     var content = $("#field");
-    this._curr_modes = 
-      major_modes.change_mode(menu, content, 
-                              this._curr_modes, 
-                              new_mode);
+    major_modes.change_mode(menu, content, 
+                            ui._curr_modes, 
+                            new_mode);
+    this.create_menu();
   },
-  setRegisterMod: function() { 
-    log.d.info("register");
-    
-    major_modes.get('register').init($("#field"));
-  },
-  setLoginMod: function() { 
-    log.d.info("ui -> login mode");
+  
+  set_minor_mode: function(new_mode) {
+    log.d.info("ui -> " + new_mode +" minor mode");
 
-    major_modes.get('login').init($("#field"));
+    if (minor_modes.enable(ui._curr_modes, new_mode)) {
+      this.create_menu();
+    }
   },
-  setSelectGameMode: function() { /* TODO */ }
+  
+  disable_minor_mode: function(mode) {
+    /* TODO */
+  },
+  
+  create_menu: function() {
+    var modes_list = 
+      major_modes.available_modes(ui._curr_modes);
+    var m = ui_elements.menu(modes_list);
+    var menu = $("#menu");
+    menu.empty().append(m);
+  }
+
 };
 
 var protocol = {
@@ -36,7 +48,17 @@ var game = {
 
   init: function() {
     net.init();
-    ui.setMode('login');
+// TODO: remove
+    events.reg_h('login.success', 'tmp_save_sid', 
+                 function(resp) { 
+                   log.d.info('sid saved in game object');
+                   game.sid = resp.sid; });
+
+    events.reg_h('login.success', 'ui_set_logined_mode', 
+                 function() { ui.set_minor_mode('logined')});
+    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
+                 ui.create_menu);
+    ui.set_major_mode('login');
     log.d.info('Game core initialized');
   }
 

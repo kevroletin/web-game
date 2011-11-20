@@ -81,3 +81,15 @@ var ui_forms = {
   }
 
 };
+
+var ui_elements = {
+  menu: function(modes_list) {
+    var m = $("<ul>");
+    for (var i = 0; i < modes_list.length; ++i) {
+      var mod = modes_list[i];
+      m.append('<li onclick="ui.set_major_mode(\'' + mod.name +
+               '\')">' + mod.obj.descr + '</li>');
+    }
+    return m;
+  }
+};
