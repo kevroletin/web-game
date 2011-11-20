@@ -1,7 +1,7 @@
 
 div#header {
     border-bottom: 1px black solid;
-    height: 150px;
+    height: 0px;
     position: fixed;
     top: 0;
     left: 0;
@@ -9,7 +9,7 @@ div#header {
 }
 
 div#field {
-    margin: 160px 0 0 300px;
+    margin: 0px 0 0 300px;
     padding:1em 1em 5em; /* bottom padding for footer */
 }
 
@@ -17,7 +17,7 @@ div#panel {
     border-right: 1px black solid;
     rigth: 0;
     position: fixed;
-    top: 150px;
+    top: 0px;
     width: 290px;
 }
 

@@ -5,24 +5,26 @@ var ui = {
   toolbar: undefined,
   gameinfo: undefined,
 
-  setMode: function() { /* TODO */ },
+  _curr_modes: {major: null, minor: []},
+  
+
+  setMode: function(new_mode) {
+    var menu = $("#menu");
+    var content = $("#field");
+    this._curr_modes = 
+      major_modes.change_mode(menu, content, 
+                              this._curr_modes, 
+                              new_mode);
+  },
   setRegisterMod: function() { 
     log.d.info("register");
     
-    $("#field")
-      .empty()
-      .append(ui_forms.gen_form('register'));
+    major_modes.get('register').init($("#field"));
   },
   setLoginMod: function() { 
     log.d.info("ui -> login mode");
 
-    $("#field")
-      .empty()
-      .append(ui_forms.gen_form('login'));
-    reg_event_h('login.success', 'store_sid',
-                function(data) { 
-                  log.d.info('sid: ' + data.sid);
-                });
+    major_modes.get('login').init($("#field"));
   },
   setSelectGameMode: function() { /* TODO */ }
 };
@@ -34,6 +36,7 @@ var game = {
 
   init: function() {
     net.init();
+    ui.setMode('login');
     log.d.info('Game core initialized');
   }
 

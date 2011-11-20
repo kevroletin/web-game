@@ -23,7 +23,7 @@ var ui_forms = {
     _on_resp: function (resp) {
       $('p#msg_box')[0].textContent = resp.result;
       if (resp.result == 'ok') {
-        exec('login.success', resp);
+        events.exec('login.success', resp);
       }
     }
   },
