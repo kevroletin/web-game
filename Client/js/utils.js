@@ -29,3 +29,44 @@ var net = {
   }
 
 };
+
+function is_null(obj) {
+  return typeof obj == "undefined" || obj == null
+}
+
+function get_obj_field(obj, field_name) {
+  var f = field_name.split('.');
+  var t = obj;
+  var i;
+  for (i = 0; i < f.length && !is_null(t); ++i) {
+    t = t[f[i]];
+  }
+  return t;
+}
+
+function set_obj_field(obj, field_name, value) {
+  var f = field_name.split('.');
+  var t = obj;
+  var i;
+  for (i = 0; i < f.length - 1 && !is_null(t); ++i) {
+    if (is_null(t[f[i]])) { 
+      t[f[i]] = {};
+    }
+    t = t[f[i]];
+  }
+  t[f[f.length - 1]] = value;
+  return value;
+}
+
+function delete_obj_field(obj, field_name) {
+  var f = field_name.split('.');
+  var t = obj;
+  var i;
+  for (i = 0; i < f.length - 1 && !is_null(t); ++i) {
+    if (is_null(t[f[i]])) { return 0; }
+    t = t[f[i]];
+  }
+  delete t[f[f.length - 1]];
+  return t;
+}
+

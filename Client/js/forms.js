@@ -22,6 +22,9 @@ var ui_forms = {
     },
     _on_resp: function (resp) {
       $('p#msg_box')[0].textContent = resp.result;
+      if (resp.result == 'ok') {
+        exec('login.success', resp);
+      }
     }
   },
 
@@ -40,7 +43,7 @@ var ui_forms = {
                 username: name, 
                 password: pasw };
       net.send(q, this['_on_resp'] );
-
+      
       return false;
     },
     _show_err: function(field, err) {

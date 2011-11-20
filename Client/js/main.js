@@ -11,7 +11,7 @@ var ui = {
     
     $("#field")
       .empty()
-      .append(ui_forms.gen_form('register'));    
+      .append(ui_forms.gen_form('register'));
   },
   setLoginMod: function() { 
     log.d.info("ui -> login mode");
@@ -19,13 +19,15 @@ var ui = {
     $("#field")
       .empty()
       .append(ui_forms.gen_form('login'));
+    reg_event_h('login.success', 'store_sid',
+                function(data) { 
+                  log.d.info('sid: ' + data.sid);
+                });
   },
   setSelectGameMode: function() { /* TODO */ }
 };
 
 var protocol = {
-  _send: function(msg) { $.ajax({data: msg})},
-
 };
 
 var game = {
@@ -33,14 +35,7 @@ var game = {
   init: function() {
     net.init();
     log.d.info('Game core initialized');
-  },
-
-  exec: function() {
-    log.d.info("main loop -> started");
-/* main programm loop */    
-    log.d.info("main loop <- finished");
-  },
-
+  }
 
 };
 
