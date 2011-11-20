@@ -11,7 +11,11 @@ use Game::Environment qw(db db_search db_search_one
 use Game::Model::Game;
 use Exporter::Easy ( OK => [qw(createGame
                                joinGame
-                               leaveGame)] );
+                               leaveGame
+                               getGameState
+                               getGameList
+                               leaveGame
+                               setReadinessStatus)] );
 use KiokuDB::Set;
 
 
@@ -55,6 +59,12 @@ sub getGameState {
     my $state = $game->extract_state();
     $state->{result} = 'ok';
     response_json($state)
+}
+
+sub getGameList {
+    my @q = db_search({ CLASS => 'Game::Model::Game' })->all();
+    my @games = map { $_->short_info() } @q;
+    response_json({result => 'ok', games => \@games});
 }
 
 sub joinGame {
@@ -114,9 +124,6 @@ sub setReadinessStatus {
     db()->update(global_user(), $game);
     response_json({result => 'ok'})
 }
-
-# TODO:
-# getGameList
 
 # TODO:
 # getGameState

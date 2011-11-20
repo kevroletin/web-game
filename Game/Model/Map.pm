@@ -62,6 +62,14 @@ sub BUILD {
     $self->{id} = inc_counter('Game::Model::Map::id');
 }
 
+sub short_info {
+    my ($s) = @_;
+    my %h = %{$s};
+    $h{regionsNum} = @{$h{regions}};
+    delete $h{regions};
+    \%h;
+}
+
 sub region_by_id {
     my ($self, $id) = @_;
     my $region = undef;

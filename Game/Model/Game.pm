@@ -80,6 +80,11 @@ has 'raceStateStorage' => ( isa => 'HashRef',
                             is => 'rw',
                             default => sub { {} } );
 
+# TODO: process game turn during gameplay
+has 'turn' => ( isa => 'Int',
+                is => 'rw',
+                default => 0 );
+
 sub BUILD {
     my ($self) = @_;
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
@@ -165,6 +170,21 @@ sub extract_state {
     $res->{visibleTokenBadges} = $self->_extract_visible_tokens();
     $self->_copy_races_state_storage($res);
     $res
+}
+
+sub short_info {
+    my ($s) = @_;
+    my $res = {
+        gameId => $s->gameId(),
+        gameName => $s->gameName(),
+        gameDescr => $s->gameDescr(),
+        maxPlayersNum => $s->map()->playersNum(),
+        activePlayerId => $s->activePlayer()->id(),
+        state => $s->state(),
+        turn => $s->turn(),
+        turnsNum => $s->map()->turnsNum(),
+        mapId => $s->map()->id()
+    };
 }
 
 sub remove_player {

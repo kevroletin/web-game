@@ -4,13 +4,17 @@ use warnings;
 
 use Game::Actions;
 use Game::Constants::Map;
-use Game::Environment qw(db db_search_one
+use Game::Environment qw(db
+                         db_search
+                         db_search_one
                          early_response_json
                          global_user
                          response_json);
 use Game::Model::Map;
 use Game::Model::Region;
-use Exporter::Easy ( OK => [qw(createDefaultMaps uploadMap)] );
+use Exporter::Easy ( OK => [qw(createDefaultMaps
+                               getMapList
+                               uploadMap)] );
 
 
 sub createDefaultMaps {
@@ -22,6 +26,12 @@ sub createDefaultMaps {
         db()->insert_nonroot($n_map);
     }
     response_json({result => 'ok'});
+}
+
+sub getMapList {
+    my @q = db_search({ CLASS => 'Game::Model::Map' })->all();
+    my @maps = map { $_->short_info() } @q;
+    response_json({result => 'ok', maps => \@maps});
 }
 
 sub uploadMap {

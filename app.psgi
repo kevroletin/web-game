@@ -8,7 +8,7 @@ use Client::Runner;
 use Game;
 
 builder {
-    enable 'Plack::Middleware::StackTrace';
+#    enable 'Plack::Middleware::StackTrace';
     enable 'Plack::Middleware::AccessLog';
 
     mount '/client' =>

@@ -28,7 +28,11 @@ var ui = {
   },
   
   disable_minor_mode: function(mode) {
-    /* TODO */
+    log.d.info("ui <- " + mode +" disable minor mode");
+
+    if (minor_modes.disable(ui._curr_modes, mode)) {
+      this.create_menu();
+    }
   },
   
   create_menu: function() {
@@ -49,13 +53,21 @@ var game = {
   init: function() {
     net.init();
 // TODO: remove
-    events.reg_h('login.success', 'tmp_save_sid', 
+    events.reg_h('state.store_sid', 'tmp_save_sid', 
                  function(resp) { 
-                   log.d.info('sid saved in game object');
+                   log.d.info('sid saved into game object');
                    game.sid = resp.sid; });
+    events.reg_h('state.clear_sid', 'tmp_clear_sid', 
+                 function() { 
+                   log.d.info('sid deleted from game object');
+                   delete game.sid; });
 
     events.reg_h('login.success', 'ui_set_logined_mode', 
                  function() { ui.set_minor_mode('logined')});
+    events.reg_h('logout.success', 'ui_set_logined_mode', 
+                 function() { ui.disable_minor_mode('logined')});
+
+
     events.reg_h('ui.refresh_menu', 'ui_create_menu', 
                  ui.create_menu);
     ui.set_major_mode('login');

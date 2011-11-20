@@ -41,14 +41,10 @@ var major_modes = {
         content.empty()
           .append(ui_forms.gen_form('login'));
 
-        var h_sid = function(data) { 
-          log.d.info('sid: ' + data.sid);
+        var h = function(data) { 
+          events.exec('state.store_sid', data);
         };
-        var h_ui = function() {
-          events.exec('ui.refresh_menu');
-        };
-        events.reg_h('login.success', 'store_sid', h_sid);
-        events.reg_h('login.success', 'logined_update_ui', h_ui);
+        events.reg_h('login.success', 'store_sid', h);
       },
       uninit: function() {
         events.del_h('login.success', 'store_sid');
@@ -63,7 +59,11 @@ var major_modes = {
       init: function(content) {
         var q = { action: "logout",
                   sid: game.sid };
-        net.send(q, function() { events.exec('loguot.success') });
+
+        net.send(q, function() { events.exec('logout.success') });
+      },
+      uninit: function() {
+
       },
       in_menu: true,
     },
@@ -82,7 +82,31 @@ var major_modes = {
     games_list: {
       descr: 'Games list',
       in_menu: true,
+      init: function(content) {
+        content.empty();
+        var h = function(resp) {
+          /* TODO: rework and move to another module */
+          var t = $('<table id="gamesList">');
+          if (resp.games.length == 0) { return 0; }
+          
+          var tr = $('<tr>');
+          for (var i in resp.games[0]) {
+            tr.append($('<th>' + i + '</th>'));
+          }
+          t.append(tr);
 
+          for (var i in resp.games) {
+            var tr = $('<tr>');
+            for (var prop in resp.games[i]) {
+              tr.append($('<td>' + resp.games[i][prop] +
+                          '</td>'));
+            }
+            t.append(tr);
+          }
+          content.append(t);
+        }
+        net.send({action: 'getGameList'}, h );
+      }
     },
 
     explore_game: {
@@ -93,7 +117,6 @@ var major_modes = {
     users_list: {
       descr: 'Users list',
       in_menu: true,
-
     },
 
     explore_user: {
@@ -104,6 +127,33 @@ var major_modes = {
     maps_list: {
       descr: 'Maps list',
       in_menu: true,
+
+      init: function(content) {
+        content.empty();
+        var h = function(resp) {
+          /* TODO: rework and move to another module */
+          var t = $('<table id="gamesList">');
+          if (resp.maps.length == 0) { return 0; }
+          
+          var tr = $('<tr>');
+          for (var i in resp.maps[0]) {
+            tr.append($('<th>' + i + '</th>'));
+          }
+          t.append(tr);
+
+          for (var i in resp.maps) {
+            var tr = $('<tr>');
+            for (var prop in resp.maps[i]) {
+              tr.append($('<td>' + resp.maps[i][prop] +
+                          '</td>'));
+            }
+            t.append(tr);
+          }
+          content.append(t);
+        }
+        net.send({action: 'getMapList'}, h );
+      }
+
     },
 
     explore_map: {
@@ -129,22 +179,30 @@ var minor_modes = {
   },
 
   disable: function(curr_modes, mode) {
-    if (!(mode in curr_modes.minor)) {
-      return curr_modes;
+    if (!(in_arr(mode, curr_modes.minor))) {
+      log.d.info('mode ' + mode + ' is not active');
+      return 0;
     }
-    for (var i = 0; i < curr_modes.minor; ++i) {
+    var len = curr_modes.minor.length;
+    for (var i = 0; i < len; ++i) {
       if (curr_modes.minor[i] == mode) {
         curr_modes.minor.splice(i, 1);
-        break;
+        --i;
+        --len;
       }
     }
-    return curr_modes;
+    if (!is_null(this.storage[mode].uninit)) {
+      this.storage[mode].uninit();
+    }
+    return 1;
   },
 
   storage: {
     logined: {
       init: function() { 
-        /* noting to do. Ui updates will be done via events */
+      },
+      uninit: function() {
+        events.exec('state.clear_sid');
       }
     },
   }

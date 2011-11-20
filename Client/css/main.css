@@ -2,7 +2,7 @@
 div#header {
     border-bottom: 1px black solid;
     height: 0px;
-    position: fixed;
+/*    position: fixed; */
     top: 0;
     left: 0;
     width: 100%;
@@ -28,4 +28,17 @@ div#panel li:hover {
 div#footer {
     margin: 20px 0 0 0;
     border-top: 1px black solid;
+}
+
+table#gamesList {
+    border: 1px black solid;
+    border-collapse: collapse;
+}
+
+table#gamesList th {
+    border: 1px black solid;
+}
+
+table#gamesList td {
+    border: 1px black solid;
 }

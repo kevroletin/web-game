@@ -8,13 +8,20 @@ use Game::Actions::Debug qw(resetServer
                             setBadge
                             createBadgesPack
                             selectGivenRace);
-use Game::Actions::Game qw(createGame joinGame leaveGame
+use Game::Actions::Game qw(createGame
+                           joinGame
+                           leaveGame
+                           getGameState
+                           getGameList
+                           leaveGame
                            setReadinessStatus);
 use Game::Actions::Gameplay qw(conquer decline defend dragonAttack
                                enchant finishTurn redeploy
                                selectFriend selectRace throwDice);
 use Game::Actions::Lobby qw(getUserInfo login logout register);
-use Game::Actions::Map qw(createDefaultMaps uploadMap);
+use Game::Actions::Map qw(createDefaultMaps
+                          getMapList
+                          uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug
                          response response_json
                          response_raw stack_trace);
@@ -27,7 +34,9 @@ sub _is_action_without_sid {
                  resetServer
                  createDefaultMaps
                  uploadMap
-                 getUserInfo)]
+                 getUserInfo
+                 getGameList
+                 getMapList)]
 }
 
 sub process_request {
@@ -60,6 +69,7 @@ sub process_request {
     if (ref($@) eq 'Game::Exception::EarlyResponse') {
         response_raw($@->{msg})
     } else {
+        response()->content_type('text/html; charset=utf-8');
         my $str = stack_trace()->as_html();
         utf8::encode($str) if utf8::is_utf8($str);
         response_raw($str);
