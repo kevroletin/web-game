@@ -36,6 +36,8 @@ sub _is_action_without_sid {
                  uploadMap
                  getUserInfo
                  getGameList
+                 getGameState
+                 getGameInfo
                  getMapList)]
 }
 

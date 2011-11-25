@@ -8,14 +8,15 @@ var ui = {
   _curr_modes: {major: null, minor: []},
   
 
-  set_major_mode: function(new_mode) {
+  set_major_mode: function(new_mode, params) {
     log.d.info("ui -> " + new_mode +" major mode");
+    log.d.dump(params, 'params');
 
     var menu = $("#menu");
     var content = $("#field");
     major_modes.change_mode(menu, content, 
                             ui._curr_modes, 
-                            new_mode);
+                            new_mode, params);
     this.create_menu();
   },
   

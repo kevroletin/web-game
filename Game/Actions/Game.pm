@@ -43,17 +43,32 @@ sub createGame {
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
 
+sub _get_game_by_id {
+    my ($id) = @_;
+    my $game = db_search_one({ gameId => $id },
+                             { CLASS => 'Game::Model::Game' });
+    unless ($game) {
+        early_response_json({result => 'badGameId'})
+    }
+    $game
+}
+
+sub getGameInfo {
+    my ($data) = @_;
+    proto('gameId');
+
+    my $game = _get_game_by_id($data->{gameId});
+    my $res = $game->full_info();
+    response_json({result => 'ok', gameInfo => $res})
+}
+
 sub getGameState {
     my ($data) = @_;
     my $game;
     unless (defined $data->{gameId}) {
         $game = global_game()
     } else {
-        $game = db_search_one({ gameId => $data->{gameId} },
-                              { CLASS => 'Game::Model::Game' });
-        unless ($game) {
-            early_response_json({result => 'badGameId'})
-        }
+        $game = _get_game_by_id($data->{gameId})
     }
 
     my $state = $game->extract_state();

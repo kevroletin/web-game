@@ -1,2 +1,6 @@
 Task::Plack
 Task::KiokuDB
+Task::Moose
+
+Data::Dumper::Concise
+Starman

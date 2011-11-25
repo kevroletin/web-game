@@ -130,6 +130,28 @@ sub owned_regions {
           } @{$self->activeGame()->map()->regions()}
 }
 
+sub short_info {
+    my ($s) = @_;
+    unless ($s->activeGame()) {
+        return { username => $s->username,
+                 id => $s->id }
+    }
+    my $res = {
+        username => $s->username,
+        id => $s->id,
+        activeGameId => $s->activeGame->activeGame()->gameId(),
+        activeGameName => $s->activeGame->activeGame()->gameName(),
+        readinessStatus => $s->readinessStatus(),
+        tokensInHand => $s->tokensInHand(),
+        coins => $s->coins(),
+        activeRace => $s->activeRace()->race_name(),
+        activePower => $s->activeRace()->power_name(),
+        declineRace => $s->declineRace()->race_name(),
+        declinePower => $s->declineRace()->power_name()
+    };
+    $res
+}
+
 
 1
 

@@ -1,7 +1,7 @@
 
 var major_modes = {
 
-  change_mode: function(menu, content, curr_modes, new_m) {
+  change_mode: function(menu, content, curr_modes, new_m, params) {
     /* TODO: raise error if we want to go into major mode which
        can not be used with active minor mode */
     /* TODO: disable needed minor modes */
@@ -10,7 +10,7 @@ var major_modes = {
         !is_null(this.storage[curr_modes.major].uninit)) {
       this.storage[curr_modes.major].uninit();
     }
-    this.storage[new_m].init(content);
+    this.storage[new_m].init(content, params);
     curr_modes.major = new_m;
     return curr_modes;
   },
@@ -39,7 +39,7 @@ var major_modes = {
       in_menu: true,
       init: function(content) {
         content.empty()
-          .append(ui_forms.gen_form('login'));
+          .append(ui_forms.login.gen_form());
 
         var h = function(data) { 
           events.exec('state.store_sid', data);
@@ -73,7 +73,7 @@ var major_modes = {
       in_menu: true,
       init: function(content) {
         content.empty()
-          .append(ui_forms.gen_form('register'));
+          .append(ui_forms.register.gen_form());
       },
       uninit: function() {
       }
@@ -83,28 +83,11 @@ var major_modes = {
       descr: 'Games list',
       in_menu: true,
       init: function(content) {
-        content.empty();
         var h = function(resp) {
-          /* TODO: rework and move to another module */
-          var t = $('<table id="gamesList">');
-          if (resp.games.length == 0) { return 0; }
-          
-          var tr = $('<tr>');
-          for (var i in resp.games[0]) {
-            tr.append($('<th>' + i + '</th>'));
-          }
-          t.append(tr);
-
-          for (var i in resp.games) {
-            var tr = $('<tr>');
-            for (var prop in resp.games[i]) {
-              tr.append($('<td>' + resp.games[i][prop] +
-                          '</td>'));
-            }
-            t.append(tr);
-          }
-          content.append(t);
-        }
+          content.empty();
+          var f = ui_forms.game_list.gen_form(resp.games);
+          content.append(f);
+        };
         net.send({action: 'getGameList'}, h );
       }
     },
@@ -112,6 +95,24 @@ var major_modes = {
     explore_game: {
       descr: 'Explore game',
       in_menu: false,
+      init: function(content, gameId) {
+        content.empty();
+        log.d.dump('retrive game info for gameId: ' + gameId);
+        var h = function(resp) {
+          var g = resp.gameInfo;
+          content.append('<pre>' + JSON.stringify(g, null,  "  ") + 
+                         '</pre>')
+          content.append('<h2>' + g.gameName + '</h2>');
+          content.append('<h4>Players:</h4>');
+          for (var i = 0; i < g.players.length; ++i) {
+            var d = $('<div id="player_descr">');
+            var p = g.players[i];
+            d.textContent = JSON.stringify(p);
+            content.append(d);
+          }
+        }
+        net.send({action: 'getGameInfo', gameId: gameId}, h );
+      }
     },
 
     users_list: {

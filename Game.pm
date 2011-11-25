@@ -33,7 +33,7 @@ sub setup_environment {
     is_debug($ENV{environment} &&
              $ENV{environment} eq 'debug');
     response(Plack::Response->new(200));
-    response()->content_type('text/html; charset=utf-8');
+    response()->content_type('text/x-json; charset=utf-8');
     request(Plack::Request->new($env));
     # TODO: Process errors
     Game::Model::connect_db();

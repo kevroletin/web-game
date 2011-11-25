@@ -1,11 +1,38 @@
 
 var ui_forms = {
 
+  _gen_simple_form: function(form_name) {
+    var obj = this[form_name];
+    var f = 
+      $('<form id="' + obj.id + '"' +
+        'onSubmit=\"ui_forms.' + form_name +
+        '.checker(this); return false\" />');
+    var i, field, field_t, ff, t;
+    ff = 
+      $('<fieldset>').append(
+        $('<legend>' + obj.descr +'</legend>'),
+        $('<p id="msg_box"></p>'));
+    t =
+      $('<table>');
+    for (i = 0; i < obj.fields.length; ++i) {
+      field = obj.fields[i];
+      field_t = field.type ? field.type : 'text';
+      t.append('<tr><td>' + field.descr + '</td><td>' +
+               '<input name="' + field.name + '" type="' + field_t + 
+               '" /></td></tr>');
+    }
+    ff.append(t);
+    ff.append('<input type="submit" name=\"ok\" value=\"ok\" />');
+    f.append(ff);
+    return f;
+  },
+
   login: {
     id: "login",
     descr: "Login",
     fields: [{name: "username", descr: "Username"},
              {name: "password", descr: "Password", type: "password"}],
+    gen_form: function() { return ui_forms._gen_simple_form('login'); },
     checker: function(f) {
       var name = f['username'].value;
       var pasw = f['password'].value;
@@ -34,6 +61,7 @@ var ui_forms = {
     fields: [{name: "username", descr: "Username"},
              {name: "password", descr: "Password", type: "password"},
              {name: "password2", descr: "Password2", type: "password"}],
+    gen_form: function() { return ui_forms._gen_simple_form('register'); },
     checker: function(f) {
       var name = f['username'].value;
       var pasw = f['password'].value;
@@ -54,31 +82,39 @@ var ui_forms = {
     }
   },
 
-  gen_form: function(form_name) {
-    var obj = this[form_name];
-    var f = 
-      $('<form id="' + obj.id + '"' +
-        'onSubmit=\"ui_forms.' + form_name +
-        '.checker(this); return false\" />');
-    var i, field, field_t, ff, t;
-    ff = 
-      $('<fieldset>').append(
-        $('<legend>' + obj.descr +'</legend>'),
-        $('<p id="msg_box"></p>'));
-    t =
-      $('<table>');
-    for (i = 0; i < obj.fields.length; ++i) {
-      field = obj.fields[i];
-      field_t = field.type ? field.type : 'text';
-      t.append('<tr><td>' + field.descr + '</td><td>' +
-               '<input name="' + field.name + '" type="' + field_t + 
-               '" /></td></tr>');
+  game_list: {
+    gen_form: function(game_list) {
+      /* TODO: rework and move to another module */
+      var t = $('<table id="gamesList">');
+      if (game_list.length == 0) { return 0; }
+      
+      var tr = $('<tr>');
+      var a = ['Название', 'Описание', 'Состояние', 'Игроков'];
+      for (var i in a) {
+        tr.append($('<th>' + a[i] + '</th>'));
+      }
+      t.append(tr);
+      
+      for (var i in game_list) {
+        var g = game_list[i];
+        var tr = $('<tr>');
+        var td = [];
+        var a = '<a onclick="ui.set_major_mode(\'explore_game\', ' + 
+                g.gameId + '); return false;" href="#">' + 
+                g.gameName + '<a>';
+        td.push(a);
+        td.push(g.gameDescr);
+        td.push(g.state);
+        td.push(g.maxPlayersNum + '/' + g.playersNum);
+        for (var j in td) {
+          tr.append($('<td>' + td[j] + '</td>'));
+        }
+        t.append(tr);
+      }
+      return t;
     }
-    ff.append(t);
-    ff.append('<input type="submit" name=\"ok\" value=\"ok\" />');
-    f.append(ff);
-    return f;
-  }
+
+  },
 
 };
 

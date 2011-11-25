@@ -178,13 +178,28 @@ sub short_info {
         gameId => $s->gameId(),
         gameName => $s->gameName(),
         gameDescr => $s->gameDescr(),
+        playersNum => scalar @{$s->players()},
         maxPlayersNum => $s->map()->playersNum(),
         activePlayerId => $s->activePlayer()->id(),
-        state => $s->state(),
         turn => $s->turn(),
         turnsNum => $s->map()->turnsNum(),
-        mapId => $s->map()->id()
+        mapId => $s->map()->id(),
+        mapName => $s->map()->mapName()
     };
+}
+
+sub full_info {
+    my ($s) = @_;
+    my $state = $s->extract_state();
+    my $s_i = $s->short_info();
+    for my $k (keys %{$s_i}) {
+        $state->{$k} = $s_i->{$k}
+    }
+    for my $i (0 .. $#{$s->players()}) {
+        $state->{players}->[$i]->{name} =
+            $s->players()->[$i]->{username}
+    }
+    $state
 }
 
 sub remove_player {
