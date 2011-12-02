@@ -1,30 +1,38 @@
-
 var ui_forms = {
 
   _gen_simple_form: function(form_name) {
+
     var obj = this[form_name];
-    var f = 
-      $('<form id="' + obj.id + '"' +
-        'onSubmit=\"ui_forms.' + form_name +
-        '.checker(this); return false\" />');
-    var i, field, field_t, ff, t;
-    ff = 
-      $('<fieldset>').append(
-        $('<legend>' + obj.descr +'</legend>'),
-        $('<p id="msg_box"></p>'));
-    t =
-      $('<table>');
-    for (i = 0; i < obj.fields.length; ++i) {
-      field = obj.fields[i];
-      field_t = field.type ? field.type : 'text';
-      t.append('<tr><td>' + field.descr + '</td><td>' +
-               '<input name="' + field.name + '" type="' + field_t + 
-               '" /></td></tr>');
-    }
-    ff.append(t);
-    ff.append('<input type="submit" name=\"ok\" value=\"ok\" />');
-    f.append(ff);
-    return f;
+    var f = make('form')
+
+
+    f.attr('id', obj.id).
+      attr('onSubmit', 'ui_forms.' + form_name + 
+                       '.checker(this); return false');
+    var ff = f.append('fieldset');
+    ff.append('legend').text(obj.descr);
+    ff.append('p').attr('id', 'msg_box');
+
+    t = ff.append('table');
+    
+    ff.selectAll('tr').data(obj.fields)
+      .enter()
+      .append('tr')
+      .each(function(d) {
+        var tr = d3.select(this)
+        tr.append('td')
+          .text(d.descr);
+        tr.append('td')
+          .append('input')
+            .attr('name', d.name)
+            .attr('type', d.type ? d.type : 'text');
+      });
+    ff.append('input')
+      .attr('name', 'ok')
+      .attr('type', 'submit')
+      .attr('value', 'ok');
+
+    return f.node();
   },
 
   login: {
@@ -48,8 +56,10 @@ var ui_forms = {
       log.ui.error(field + ': ' + err);
     },
     _on_resp: function (resp) {
-      $('p#msg_box')[0].textContent = resp.result;
+      d3.select('p#msg_box').text(resp.result);
       if (resp.result == 'ok') {
+        state.store('sid', resp.sid);
+        events.exec('state.sid_stored');
         events.exec('login.success', resp);
       }
     }
@@ -78,40 +88,40 @@ var ui_forms = {
       log.ui.error(field + ': ' + err);
     },
     _on_resp: function (resp) {
-      $('p#msg_box')[0].textContent = resp.result;
+      d3.select('p#msg_box').text(resp.result);
     }
   },
 
   game_list: {
     gen_form: function(game_list) {
-      /* TODO: rework and move to another module */
-      var t = $('<table id="gamesList">');
-      if (game_list.length == 0) { return 0; }
-      
-      var tr = $('<tr>');
-      var a = ['Название', 'Описание', 'Состояние', 'Игроков'];
-      for (var i in a) {
-        tr.append($('<th>' + a[i] + '</th>'));
-      }
-      t.append(tr);
-      
-      for (var i in game_list) {
-        var g = game_list[i];
-        var tr = $('<tr>');
-        var td = [];
-        var a = '<a onclick="ui.set_major_mode(\'explore_game\', ' + 
-                g.gameId + '); return false;" href="#">' + 
-                g.gameName + '<a>';
-        td.push(a);
-        td.push(g.gameDescr);
-        td.push(g.state);
-        td.push(g.maxPlayersNum + '/' + g.playersNum);
-        for (var j in td) {
-          tr.append($('<td>' + td[j] + '</td>'));
-        }
-        t.append(tr);
-      }
-      return t;
+
+      var t = make('table');
+      t.append('tr').selectAll('th')
+        .data(['Название', 'Описание', 'Состояние', 'Игроков'])
+        .enter()
+        .append('th')
+          .text(String);
+   
+      t.selectAll('td').data(game_list).enter()
+        .append('tr')
+        .each(function(d) {
+          var tr = d3.select(this);
+          var on_txt = 'ui.set_major_mode(\'explore_game\', ' + 
+                        d.gameId + '); return false;'
+          tr.append('a')
+            .attr('onclick', on_txt)
+            .attr('href', '#')
+            .text(d.gameName);
+          
+          tr.selectAll(null).data(
+              [d.gameDescr, d.state, 
+               d.maxPlayersNum + '/' + d.playersNum])
+            .enter()
+            .append('td')
+            .text(String);
+        });
+
+      return t.node();
     }
 
   },
@@ -120,12 +130,17 @@ var ui_forms = {
 
 var ui_elements = {
   menu: function(modes_list) {
-    var m = $("<ul>");
-    for (var i = 0; i < modes_list.length; ++i) {
-      var mod = modes_list[i];
-      m.append('<li onclick="ui.set_major_mode(\'' + mod.name +
-               '\')">' + mod.obj.descr + '</li>');
-    }
-    return m;
+    var m = make('ul');
+    m.selectAll('li')
+      .data(modes_list).enter()
+      .append('li')
+        .attr('onclick',
+              function(d) { 
+                return 'ui.set_major_mode(\'' + d.name + '\')' 
+              })
+        .attr('id', function(d) { return 'nav_' + d.name + '' })
+        .text(function(d) { return d.obj.descr });
+
+    return m.node();
   }
 };

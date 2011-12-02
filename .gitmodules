@@ -1,3 +1,6 @@
 [submodule "Client/livereload"]
 	path = Client/livereload
 	url = https://github.com/mockko/livereload.git
+[submodule "Client/d3"]
+	path = Client/d3
+	url = https://github.com/mbostock/d3.git

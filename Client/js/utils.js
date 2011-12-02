@@ -1,34 +1,41 @@
-
 var net = {
-
-  init: function () {
-    $.ajaxSetup({url: server_url(),
-                 type: 'POST',
-                 processData: 0});
-  },
   send: function(msg, on_resp) { 
-    $.ajax({url: server_url(),
-            type: 'POST',
-            processData: 0,
-            crossDomain: true,
-            data: JSON.stringify(msg),
-            complete: this._on_resp_wrapper(on_resp)});
-  },
-  _on_resp_wrapper: function(fun) {
-    return function(data, textStatus, jqXHR) {
-      /* TODO: process server errors 
-         if (data.status != 200 ) {
-           log.d.err('server is down');
-           log.ui.err('server is down');
-         }
-      */
-      //var text = data.;
-      //JSON.parse(str)
-      return fun(JSON.parse(data.responseText));
+    var h = function(text) {
+      on_resp(text ? JSON.parse(text) : null);
     };
+    this._send_raw(JSON.stringify(msg),
+                   "application/json", 
+                   h);
+  },
+  _send_raw: function(msg, mime, callback) {
+    var req = new XMLHttpRequest;
+    if (mime && req.overrideMimeType) req.overrideMimeType(mime);
+    req.open("POST", server_url(), true);
+    req.onreadystatechange = function() {
+      if (req.readyState === 4) callback(req.responseText);
+    };
+    req.send(msg);
   }
-
 };
+
+var state = {
+  store: function(key, value) {
+    this.storage[key] = value;
+  },
+  get: function(key) {
+    return this.storage[key];
+  },
+  delete: function(key) {
+    delete this.storage[key];
+  },
+  storage: {}
+};
+
+function make(tag) {
+  // TODO: use createElementNS instead
+  var elem = document.createElement(tag);
+  return d3.select(elem);
+}
 
 function is_null(obj) {
   return typeof obj == "undefined" || obj == null
