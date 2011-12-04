@@ -8,8 +8,8 @@ div#header {
     width: 100%;
 }
 
-div#field {
-    margin: 0px 0 0 300px;
+div#content {
+    margin: 0px 0 0 160px;
     padding:1em 1em 5em; /* bottom padding for footer */
 }
 
@@ -18,7 +18,7 @@ div#panel {
     rigth: 0;
     position: fixed;
     top: 0px;
-    width: 290px;
+    width: 150px;
 }
 
 div#panel li:hover {
@@ -41,4 +41,14 @@ table#gamesList th {
 
 table#gamesList td {
     border: 1px black solid;
+}
+
+div#players {
+    float: left;
+}
+
+div.player {
+    border: 1px solid black;
+    margin: 2px;
+    padding: 2px;
 }

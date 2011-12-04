@@ -1,0 +1,38 @@
+body {
+/*    background-color: red; */
+}
+
+.playfield {
+
+}
+
+/* map region */
+.m_r {
+    stroke: transparent;
+    stroke-width: 0px;
+}
+
+/* map regin type */
+.m_r_t_sea{
+    fill: blue;
+}
+
+.m_r_t_mountain{
+    fill: gray;
+}
+
+.m_r_t_farmland{
+    fill: yellow;
+}
+
+.m_r_t_forest{
+    fill: green;
+}
+
+.m_r_t_hill{
+    fill: brown;
+}
+
+.m_r_t_swamp{
+    fill: black;
+}

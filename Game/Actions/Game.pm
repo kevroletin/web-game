@@ -5,6 +5,7 @@ use warnings;
 use Game::Actions;
 use Game::Environment qw(db db_search db_search_one
                          early_response_json
+                         init_user_by_sid
                          global_game
                          global_user
                          response response_json);
@@ -55,9 +56,17 @@ sub _get_game_by_id {
 
 sub getGameInfo {
     my ($data) = @_;
-    proto('gameId');
 
-    my $game = _get_game_by_id($data->{gameId});
+    my ($game, $err);
+    if (defined $data->{gameId}) {
+        $game = _get_game_by_id($data->{gameId});
+        $err = 'badGameId'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $game = global_game()
+    }
+    early_response_json({result => $err}) unless $game;
+
     my $res = $game->full_info();
     response_json({result => 'ok', gameInfo => $res})
 }

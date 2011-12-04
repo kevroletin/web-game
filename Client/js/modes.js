@@ -106,7 +106,7 @@ var major_modes = {
 
     users_list: {
       descr: 'Users list',
-      in_menu: true,
+      in_menu: false,
     },
 
     explore_user: {
@@ -121,11 +121,8 @@ var major_modes = {
       init: function(content) {
         var c = d3.select(content).text('');
         var h = function(resp) {
-          var g = resp.maps;
-          c.append('h2')
-            .text("Maps list");
-          c.append('pre')
-            .text(JSON.stringify(g, null,  "  ")); 
+          d3.select(content).text('').node()
+            .appendChild(ui_forms.maps_list.gen_form(resp.maps));
         }
         net.send({action: 'getMapList'}, h );
       }
@@ -135,6 +132,17 @@ var major_modes = {
     explore_map: {
       descr: 'Explore map',
       in_menu: false,
+      init: function(content, mapId) {
+        var c = d3.select(content).text('');
+        log.d.dump('retrive game info for gameId: ' + mapId);
+        var h = function(resp) {
+          var m = resp.mapInfo;
+          c.append('h2')
+            .text(m.mapName);
+          content.appendChild(playfield.create(m));
+        }
+        net.send({action: 'getMapInfo', mapId: mapId}, h );
+      }
     },
 
     play_game: {
@@ -144,19 +152,28 @@ var major_modes = {
         minor_m: ['in_game']
       },
       init: function(content) {
-        content.empty();
-        log.d.dump('retrive game state for gameId: ' + 
-                   state.get('gameId'));
-        var h = function(resp) {
-          content.append('<pre>' + JSON.stringify(resp, null,  "  ") + 
-                         '</pre>')
-        }
-        net.send({action: 'getGameState', 
-                  sid: state.get('sid')}, h );
+        var c = d3.select(content).text('');
+
+        var hg = function(resp) {
+          log.d.dump(resp);
+          state.store('net.getGameInfo', resp);
+          c.node().
+            appendChild(ui_elements.game_info(resp.gameInfo));
+        };
+        net.send({action: 'getGameInfo', 
+                  sid: state.get('sid')}, hg );
+
+        var hm = function(resp) {
+          state.store('net.getMapInfo', resp);
+          var svg = playfield.create(resp.mapInfo);
+          c.node().appendChild(svg);
+          playfield
+            .apply_game_state(svg, state.get('net.getGameInfo').gameInfo);
+        };
+        net.send({action: 'getMapInfo', 
+                  sid: state.get('sid')}, hm );
       }
     },
-
-
   }
   
 };

@@ -90,6 +90,9 @@ sub environment {
 }
 
 sub global_game {
+    unless ($global_user) {
+        early_response_json({result => 'badSid'})
+    }
     my $g = $global_user->activeGame();
     early_response_json({result => 'notInGame'}) unless $g;
     $g

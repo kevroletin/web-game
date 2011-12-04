@@ -8,12 +8,15 @@ use Game::Environment qw(db
                          db_search
                          db_search_one
                          early_response_json
+                         init_user_by_sid
                          global_user
+                         global_game
                          response_json);
 use Game::Model::Map;
 use Game::Model::Region;
 use Exporter::Easy ( OK => [qw(createDefaultMaps
                                getMapList
+                               getMapInfo
                                uploadMap)] );
 
 
@@ -32,6 +35,31 @@ sub getMapList {
     my @q = db_search({ CLASS => 'Game::Model::Map' })->all();
     my @maps = map { $_->short_info() } @q;
     response_json({result => 'ok', maps => \@maps});
+}
+
+sub getMapInfo {
+    my ($data) = @_;
+    my ($map, $err);
+    if (defined $data->{mapId}) {
+        $map = db_search_one({ id => $data->{mapId} },
+                             { CLASS => 'Game::Model::Map' });
+        $err = 'badMapId'
+    } elsif (defined $data->{mapName}) {
+        $map = db_search_one({ mapName => $data->{mapName} },
+                             { CLASS => 'Game::Model::Map' });
+        $err = 'badMapName'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $map = global_game()->map();
+        $err = 'notInGame'
+    } else {
+        $err = 'badJson'
+    }
+    unless ($map) {
+        early_response_json({result => $err})
+    }
+    response_json({ result => 'ok',
+                    mapInfo => $map->full_info() });
 }
 
 sub uploadMap {

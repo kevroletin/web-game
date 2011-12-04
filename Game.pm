@@ -58,6 +58,9 @@ sub parse_request {
         Game::Dispatcher::process_request($data, $env);
     }
 
+    use Data::Dumper;
+    print Dumper(response()->body());
+    
     response()->finalize();
 };
 

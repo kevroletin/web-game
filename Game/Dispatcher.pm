@@ -20,6 +20,7 @@ use Game::Actions::Gameplay qw(conquer decline defend dragonAttack
                                selectFriend selectRace throwDice);
 use Game::Actions::Lobby qw(getUserInfo login logout register);
 use Game::Actions::Map qw(createDefaultMaps
+                          getMapInfo
                           getMapList
                           uploadMap);
 use Game::Environment qw(init_user_by_sid is_debug
@@ -38,7 +39,8 @@ sub _is_action_without_sid {
                  getGameList
                  getGameState
                  getGameInfo
-                 getMapList)]
+                 getMapList
+                 getMapInfo)]
 }
 
 sub process_request {

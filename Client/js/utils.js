@@ -32,13 +32,32 @@ var state = {
 };
 
 function make(tag) {
-  // TODO: use createElementNS instead
-  var elem = document.createElement(tag);
+  var elem;
+  var name = d3.ns.qualify(tag);
+
+  if (name.local) {
+    elem = document.createElementNS(name.space, name.local)
+  } else {
+    elem = document.createElement(name)
+  }
+    
   return d3.select(elem);
 }
 
 function is_null(obj) {
   return typeof obj == "undefined" || obj == null
+}
+
+function zero_if_null(obj) {
+  return is_null(obj) ? 0 : obj;
+}
+
+function zero_or_one(obj) {
+  return is_null(obj) ? 0 : 1;
+}
+
+function choose(obj, arr) {
+  return arr[zero_or_one(obj)];
 }
 
 function get_obj_field(obj, field_name) {
@@ -85,3 +104,10 @@ function in_arr(elem, array) {
   }
   return false;
 }
+
+function determine_race(gameState, reg) {
+  if (is_null(reg.owner)) return null;
+  var p = gameState.players[reg.owner - 1];
+  return reg.inDecline ? p.declineRace + '_d' : p.activeRace;
+}
+

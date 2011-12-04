@@ -90,21 +90,51 @@ sub square_map_two_users {
       regions => [
         {
           adjacent => [ 1, 2 ],
+          coordinates => [
+            [0, 0],
+            [0, 100],
+            [100, 100],
+            [100, 0]
+          ],
+          bonusCoords => [10, 60],
+          raceCoords => [10, 10],
+          powerCoords => [60, 10],
           landDescription => [ @$d_1 ],
           population => $c1
         },
         {
           adjacent => [ 0, 3 ],
+          coordinates => [
+            [0, 100],
+            [0, 200],
+            [100, 200],
+            [100, 100]
+          ],
+          raceCoords => [10, 110],
           landDescription => [ @$d_2 ],
           population => $c2
         },
         {
           adjacent => [ 0, 3 ],
+          coordinates => [
+            [100, 0],
+            [100, 100],
+            [200, 100],
+            [200, 0]
+          ],
+          raceCoords => [110, 10],
           landDescription => [ @$d_3 ],
           population => $c3
         },
         {
           adjacent => [ 1, 2 ],
+          coordinates => [
+            [100, 100],
+            [100, 200],
+            [200, 200],
+            [200, 100]
+          ],
+          raceCoords => [110, 110],
           landDescription => [ @$d_4 ],
           population => $c4
         }

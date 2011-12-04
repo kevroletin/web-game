@@ -9,6 +9,9 @@ var log = {
       var t = '';
       if (descr) { t = descr + ': ' }
       console.info(t + JSON.stringify(obj))
+    },
+    pretty: function(obj, descr) { 
+      console.info(JSON.stringify(obj, null, ' '))
     }
   },
   ui: {
@@ -16,5 +19,4 @@ var log = {
     warn: function(msg) { alert('[warn] ' + msg) },
     error: function(msg) { alert('[error] ' + msg) },
   }
-
 };

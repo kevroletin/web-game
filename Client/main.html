@@ -6,6 +6,8 @@
   <!-- link rel="stylesheet" type="text/css" href="css/reset-min.css" / -->
   <!-- link rel="stylesheet" type="text/css" href="css/reset-fonts-grids.css" / -->
   <link rel="stylesheet" type="text/css" href="css/main.css" />
+  <link rel="stylesheet" type="text/css" href="css/playfield.css" />
+
 
 <!-- LIVERELOAD -->
   <script src="livereload/src/content.js"></script>
@@ -27,6 +29,12 @@
 <!-- INIT -->
   <script>
     window.onload = function(){
+    
+    // for debug with moz repl
+      $ = function(tag) {
+        return d3.selectAll(tag)[0];
+      };
+
       game.init();
       livereload.run();
     };
@@ -45,7 +53,7 @@
     </div>
   </div>
 
-  <div id="field">
+  <div id="content">
     
   </div>
 

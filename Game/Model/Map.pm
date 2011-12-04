@@ -66,8 +66,17 @@ sub short_info {
     my ($s) = @_;
     my %h = %{$s};
     $h{regionsNum} = @{$h{regions}};
+    $h{mapId} = $h{id}; delete $h{id};
     delete $h{regions};
     \%h;
+}
+
+sub full_info {
+    my ($s) = @_;
+    my $r = $s->short_info();
+    $r->{regions} =
+        [map { $_->extract_const_descr()} @{$s->regions()}];
+    $r
 }
 
 sub region_by_id {

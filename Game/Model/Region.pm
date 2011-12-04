@@ -64,6 +64,22 @@ has 'population' => ( isa => 'Int',
                       is => 'rw',
                       required => 1 );
 
+has 'coordinates' => ( isa => 'ArrayRef[ArrayRef[Int]]',
+                       is => 'rw',
+                       default => sub { [] } );
+
+has 'bonusCoords' => ( isa => 'ArrayRef[Int]',
+                       is => 'rw',
+                       default => sub { [] } );
+
+has 'raceCoords' => ( isa => 'ArrayRef[Int]',
+                      is => 'rw',
+                      default => sub { [] } );
+
+has 'powerCoords' => ( isa => 'ArrayRef[Int]',
+                       is => 'rw',
+                       default => sub { [] } );
+
 
 # TODO:
 # FIXME: rename tokensNum -> population
@@ -80,6 +96,18 @@ sub extract_state {
     $res->{inDecline} = $self->inDecline();
     $res->{extraItems} = dclone($self->extraItems());
     $res
+}
+
+sub extract_const_descr {
+    my ($s) = @_;
+    my $r = {};
+    $r->{adjacent} = $s->{adjacent};
+    $r->{coordinates} = $s->{coordinates};
+    $r->{landDescription} = $s->{landDescription};
+    $r->{bonusCoords} = $s->{bonusCoords};
+    $r->{raceCoords} = $s->{raceCoords};
+    $r->{powerCoords} = $s->{powerCoords};
+    $r
 }
 
 sub owner_race {

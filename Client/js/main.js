@@ -13,7 +13,7 @@ var ui = {
     log.d.dump(params, 'params');
 
     var menu = document.getElementById("menu");
-    var content = document.getElementById("field");
+    var content = document.getElementById("content");
     major_modes.change_mode(menu, content, 
                             ui._curr_modes, 
                             new_mode, params);
@@ -81,7 +81,11 @@ var game = {
 
 /*    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
                  ui.create_menu); */
-    ui.set_major_mode('login');
+//    ui.set_major_mode('login');
+    state.store('sid', '1');
+    state.store('gameId', 1)
+
+    ui.set_major_mode('play_game');
     log.d.info('Game core initialized');
   }
 
