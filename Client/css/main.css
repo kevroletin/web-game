@@ -52,3 +52,7 @@ div.player {
     margin: 2px;
     padding: 2px;
 }
+
+div.active_player {
+    background-color: gray;
+}

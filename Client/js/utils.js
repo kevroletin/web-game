@@ -1,5 +1,8 @@
 var net = {
   send: function(msg, on_resp) { 
+    if (is_null(msg.sid)) {
+      msg.sid = state.get('sid');
+    }
     var h = function(text) {
       on_resp(text ? JSON.parse(text) : null);
     };
@@ -48,16 +51,24 @@ function is_null(obj) {
   return typeof obj == "undefined" || obj == null
 }
 
+function no_if_null(obj) {
+  return is_null(obj) ? 'no' : obj;
+}
+
 function zero_if_null(obj) {
   return is_null(obj) ? 0 : obj;
 }
 
 function zero_or_one(obj) {
-  return is_null(obj) ? 0 : 1;
+  return is_null(obj) ? 0 : obj ? 1 : 0;
 }
 
 function choose(obj, arr) {
   return arr[zero_or_one(obj)];
+}
+
+function yes_or_no(obj) {
+  return choose(obj, ['no', 'yes']);
 }
 
 function get_obj_field(obj, field_name) {

@@ -178,57 +178,116 @@ ui_elements.menu = function(modes_list) {
   return m.node();
 };
 
-ui_elements.game_info = function(gameInfo) {
-  log.d.pretty(gameInfo);
+ui_elements._append_player_info = function(gameInfo, data_enter) {
 
-  var d = make('div').attr('id', 'game_info');
-  d.append('h1').text(gameInfo.gameName);
-  d.append('div').attr('id', 'players').selectAll('div')
-    .data(gameInfo.players)
-  .enter()
+  function u_inf_game_not_started(d, t) {
+    t.append('div')
+      .classed('readiness_status', 1)
+      .text('ready: ' + yes_or_no(d.readinessStatus));
+    if (d.id == state.get('userId')) {
+      t.append('form')
+        .attr('onsubmit', 'return false;')
+        .append('input')
+        .attr('type', 'submit')
+        .attr('name', 'readiness')
+        .attr('value', 
+              choose(d.readinessStatus, ['ready', 'wait']))
+        .on('click', function(d) {
+          var t = d3.select(this);
+          a = ['ready', 'wait'],
+          val = zero_or_one(this.value == 'ready');
+          
+          t.attr('value', a[val]);
+          var q = {action: 'setReadinessStatus',         
+                   isReady: val};
+          var h = function(resp) {
+            if (resp.result == 'ok') {
+              t.attr('value', a[val])
+            } else {
+              var e = 'Problem with setting readiness status';
+              alert(e);
+              log.d.error(e);
+              log.d.dump(q, 'query');
+              log.d.dump(resp, 'response');
+            }
+          };
+          net.send(q, h);
+          return false;
+        });
+    }
+  }
+
+  function u_inf_game_started(d, t) {
+    t.append('div')
+      .classed('in_decline', 1)
+      .text('in decline: ' + 
+            choose(d.inDecline, ['no', 'yes']));
+    t.append('div')
+      .classed('tokens_in_hand', 1)
+      .text('tokens in hand: ' + zero_if_null(d.tokensInHand));
+    t.append('div')
+      .classed('active_race', 1)
+      .text('active race: ' + no_if_null(d.activeRace));
+    t.append('div')
+      .classed('active_power', 1)
+      .text('active power: ' + no_if_null(d.activePower));
+      t.append('div')
+      .classed('decline_race', 1)
+      .text('decline race: ' + no_if_null(d.declineRace));
+    t.append('div')
+      .classed('decline_power', 1)
+      .text('decline power: ' + no_if_null(d.declinePower));
+  }
+
+  data_enter
     .append('div')
     .attr('id', function(d, i) { return 'player_' + i })
     .classed('player', 1)
+    .classed('active_player', 
+             function(d, i) { return i == gameInfo.activePlayerNum; })
     .each(function(d) {
       var t = d3.select(this);
       t.append('div')
        .classed('username', 1)
        .text(d.name);
-      t.append('div')
-       .classed('in_decline', 1)
-       .text('in decline: ' + 
-              choose(d.inDecline, ['no', 'yes']));
-      t.append('div')
-       .classed('tokens_in_hand', 1)
-       .text('tokens in hand: ' + zero_if_null(d.tokensInHand));
-      t.append('div')
-       .classed('active_race', 1)
-        .text('active race: ' + d.activeRace);
-      t.append('div')
-       .classed('active_power', 1)
-        .text('active power: ' + d.activePower);
-      t.append('div')
-       .classed('decline_race', 1)
-        .text('decline race: ' + d.declineRace);
-      t.append('div')
-       .classed('decline_power', 1)
-        .text('decline power: ' + d.declinePower);
+
+      if (gameInfo.state == 'notStarted') {
+        u_inf_game_not_started(d, t);
+      } else {
+        u_inf_game_started(d, t);
+      }
     });
+};
+
+ui_elements.game_info = function(d, gameInfo) {
+  d.append('h1').text(gameInfo.gameName);
+  d.append('div').text('game state: ' + gameInfo.state);
+  var data = d.append('div').attr('id', 'players')
+    .selectAll('div')
+    .data(gameInfo.players);
+  this._append_player_info(gameInfo, data.enter());
 
   return d.node();
 };
 
+ui_elements.update_game_info = function(d, gameState) {
+  // TODO:
+  var data = d.selectAll('div.player').data(gameState.players);
+  this._append_player_info(gameState, data.enter());
+  data.exit().remove();
+  data
+    .each(function(d) {});
+};
+
 var playfield = {};
 
-playfield.create = function(map) {
+playfield.create = function(svg, map) {
 
-  var svg = make('svg')
-             .attr('xmlns', "http://www.w3.org/2000/svg") 
-//             .attr('xmlns:xlink', "http://www.w3.org/1999/xlink")
-             .classed('playfield', 1)
-             .attr('width', 500)
-             .attr('height', 500);
-
+  svg.attr('xmlns', "http://www.w3.org/2000/svg") 
+    .attr('class', 'playfield')
+    .attr('width', 500)
+    .attr('height', 500);
+  
   var reg = svg.append('g').attr('id', 'regions');
   var tks = svg.append('g').attr('id', 'tokens');
   

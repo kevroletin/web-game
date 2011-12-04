@@ -153,25 +153,36 @@ var major_modes = {
       },
       init: function(content) {
         var c = d3.select(content).text('');
+            div_game_info = c.append('div')
+                             .attr('id', 'game_info');
+            div_playfield = c.append('div')
+                             .attr('id', 'playfield_container')
+            ans_cnt = 0;
 
         var hg = function(resp) {
-          log.d.dump(resp);
           state.store('net.getGameInfo', resp);
-          c.node().
-            appendChild(ui_elements.game_info(resp.gameInfo));
+          ui_elements.game_info(div_game_info, resp.gameInfo);
+          if (++ans_cnt == 2) {
+            events.exec('game.ui_initialized');
+          }
         };
         net.send({action: 'getGameInfo', 
                   sid: state.get('sid')}, hg );
 
         var hm = function(resp) {
           state.store('net.getMapInfo', resp);
-          var svg = playfield.create(resp.mapInfo);
-          c.node().appendChild(svg);
+          var svg = div_playfield.append('svg');
+          playfield.create(svg, resp.mapInfo);
           playfield
-            .apply_game_state(svg, state.get('net.getGameInfo').gameInfo);
+            .apply_game_state(
+              svg.node(), state.get('net.getGameInfo').gameInfo);
+          if (++ans_cnt == 2) {
+            events.exec('game.ui_initialized');
+          }
         };
         net.send({action: 'getMapInfo', 
                   sid: state.get('sid')}, hm );
+
       }
     },
   }
@@ -220,7 +231,7 @@ var minor_modes = {
         return 1;
       },
       uninit: function() {
-        events.exec('state.clear_sid');
+        events.exec('state');
       }
     },
     
@@ -230,6 +241,60 @@ var minor_modes = {
       },
       uninit: function() {
       }
+    },
+
+    game_started: {
+      available_if: {
+        minor_m: ['in_game']
+      },
+      init : function() {
+        return 0;
+      },
+      uninit: function() {}
+    },
+
+    attack: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['redeploy', 'defend', 'waiting']
+      },
+      init : function() {
+        return 0;
+      },
+      uninit: function() {}
+    },
+
+    redeploy: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['attack', 'defend', 'waiting']
+      },
+      init : function() {
+        return 0;
+      },
+      uninit: function() {}
+    },
+
+    defend: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['attack', 'redeploy', 'waiting']
+      },
+      init : function() {
+        return 0;
+      },
+      uninit: function() {}
+    },
+
+    waiting: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['attack', 'redeploy', 'defend']
+      },
+      init : function() {
+        return 0;
+      },
+      uninit: function() {}
     }
   }
 };
