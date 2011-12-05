@@ -106,7 +106,7 @@ var ui_forms = {
         .append('tr')
         .each(function(d) {
           var tr = d3.select(this);
-          var on_txt = 'ui.set_major_mode(\'explore_game\', ' + 
+          var on_txt = 'major_modes.change(\'explore_game\', ' + 
                         d.gameId + '); return false;'
           tr.append('a')
             .attr('onclick', on_txt)
@@ -139,7 +139,7 @@ var ui_forms = {
         .append('tr')
         .each(function(d) {
           var tr = d3.select(this);
-          var on_txt = 'ui.set_major_mode(\'explore_map\', ' + 
+          var on_txt = 'major_modes.change(\'explore_map\', ' + 
                         d.mapId + '); return false;'
           tr.append('a')
             .attr('onclick', on_txt)
@@ -170,7 +170,7 @@ ui_elements.menu = function(modes_list) {
     .append('li')
     .attr('onclick',
           function(d) { 
-            return 'ui.set_major_mode(\'' + d.name + '\')' 
+            return 'major_modes.change(\'' + d.name + '\')' 
           })
     .attr('id', function(d) { return 'nav_' + d.name + '' })
     .text(function(d) { return d.obj.descr });
@@ -271,12 +271,27 @@ ui_elements.game_info = function(d, gameInfo) {
 };
 
 ui_elements.update_game_info = function(d, gameState) {
-  // TODO:
-  var data = d.selectAll('div.player').data(gameState.players);
-  this._append_player_info(gameState, data.enter());
-  data.exit().remove();
-  data
-    .each(function(d) {});
+  var data = d.selectAll('div.player')
+    .data(gameState.players)
+    .classed('active_player', 
+             function(d, i) { return i == gameState.activePlayerNum; })
+    .each(function(d) {
+      var t = d3.select(this);
+      t.select('div.in_decline')
+        .text('in decline: ' + 
+              choose(d.inDecline, ['no', 'yes']));
+      t.select('div.tokens_in_hand')
+        .text('tokens in hand: ' + 
+              zero_if_null(d.tokensInHand));
+      t.select('div.active_race')
+        .text('active race: ' + no_if_null(d.activeRace));
+      t.select('div.active_power', 1)
+        .text('active power: ' + no_if_null(d.activePower));
+      t.select('div.decline_race', 1)
+        .text('decline race: ' + no_if_null(d.declineRace));
+      t.select('div.decline_power', 1)
+        .text('decline power: ' + no_if_null(d.declinePower));
+    });
 };
 
 var playfield = {};
@@ -333,6 +348,8 @@ playfield.create = function(svg, map) {
         .attr('attributeName', 'stroke')
         .attr('to', 'transparent')
         .attr('begin', 'm_r_' + i + '.mouseout');
+      ps.on('click', 
+            function(d) { events.exec('game.region.click', i)});
     });
 
   return svg.node();

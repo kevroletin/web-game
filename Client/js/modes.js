@@ -1,10 +1,17 @@
 
+var curr_modes = {major: null, minor: []};
+
 var major_modes = {
 
-  change_mode: function(menu, content, curr_modes, new_m, params) {
+  change: function(new_m, params) {
+    log.d.info("|new major mode| -> " + new_m);
+    log.d.dump(params, 'params');
+
     /* TODO: raise error if we want to go into major mode which
-       can not be used with active minor mode */
-    /* TODO: disable needed minor modes */
+       can not be used with active minor mode or
+       disable needed minor modes */
+    var menu = document.getElementById("menu");
+    var content = document.getElementById("content");
 
     if (!is_null(curr_modes.major) &&
         !is_null(this.storage[curr_modes.major].uninit)) {
@@ -12,15 +19,16 @@ var major_modes = {
     }
     this.storage[new_m].init(content, params);
     curr_modes.major = new_m;
-    return curr_modes;
+
+    ui.create_menu();
   },
   
-  available_modes: function(curr_modes) {
+  available_modes: function() {
     var res = [];
     for (var i in this.storage) {
       var m = this.storage[i];
       if (!(is_null(m.in_menu) || !m.in_menu) &&
-           _check_if_mod_available(curr_modes, m))
+           _check_if_mod_available(m))
       {
         res.push({name: i, obj: this.storage[i]});
       }
@@ -173,8 +181,7 @@ var major_modes = {
           state.store('net.getMapInfo', resp);
           var svg = div_playfield.append('svg');
           playfield.create(svg, resp.mapInfo);
-          playfield
-            .apply_game_state(
+          playfield.apply_game_state(
               svg.node(), state.get('net.getGameInfo').gameInfo);
           if (++ans_cnt == 2) {
             events.exec('game.ui_initialized');
@@ -191,40 +198,6 @@ var major_modes = {
 
 var minor_modes = {
 
-  enable: function(curr_modes, mode, params) {
-    if (in_arr(mode, curr_modes.minor)) {
-      return 0;
-    }
-    if (!_check_if_mod_available(curr_modes, mode)) {
-      return 0;
-    }
-    if (!this.storage[mode].init(params)) {
-      return 0;
-    }
-    curr_modes.minor.push(mode);
-    return 1;
-  },
-
-  disable: function(curr_modes, mode) {
-    if (!(in_arr(mode, curr_modes.minor))) {
-      log.d.info('mode ' + mode + ' is not active');
-      return 0;
-    }
-    // TODO: disable modes which are depended on this mode
-    var len = curr_modes.minor.length;
-    for (var i = 0; i < len; ++i) {
-      if (curr_modes.minor[i] == mode) {
-        curr_modes.minor.splice(i, 1);
-        --i;
-        --len;
-      }
-    }
-    if (!is_null(this.storage[mode].uninit)) {
-      this.storage[mode].uninit();
-    }
-    return 1;
-  },
-
   storage: {
     logined: {
       init: function() { 
@@ -236,6 +209,9 @@ var minor_modes = {
     },
     
     in_game: {
+      available_if: {
+        minor_m: ['logined']
+      },
       init: function() {
         return 1;
       },
@@ -247,7 +223,7 @@ var minor_modes = {
       available_if: {
         minor_m: ['in_game']
       },
-      init : function() {
+      init: function() {
         return 0;
       },
       uninit: function() {}
@@ -299,7 +275,78 @@ var minor_modes = {
   }
 };
 
-function _check_if_mod_available(curr_modes, m_obj) {
+minor_modes.have = function(mode) {
+  return in_arr(mode, curr_modes.minor);
+}; 
+
+minor_modes.enable = function(mode, params) {
+  log.d.info("|minor mode| -> " + mode);
+  log.d.dump(params, 'params');
+
+  if (in_arr(mode, curr_modes.minor)) {
+    log.d.warn('mode already enabled');
+    return 0;
+  }
+  if (!_check_if_mod_available(mode)) {
+    log.d.warn('mode is not avaible');
+    return 0;
+  }
+
+  curr_modes.minor.push(mode);
+
+  if (!this.storage[mode].init(params)) {
+    return 0;
+  }
+
+  ui.create_menu();
+
+  return 1;
+};
+
+minor_modes.disable = function(mode) {
+  log.d.info("|minor mode| -- " + mode);
+
+  if (!(in_arr(mode, curr_modes.minor))) {
+    log.d.info('mode ' + mode + ' is not active');
+    return 0;
+  }
+
+  var len = curr_modes.minor.length;
+  for (var i = 0; i < len; ++i) {
+    var mi_name = curr_modes.minor[i];
+    if (mi_name == mode) {
+      curr_modes.minor.splice(i, 1);
+      --i;
+      --len;
+    }
+  }
+
+  var len = curr_modes.minor.length;
+  for (var i = 0; i < len; ++i) {
+    var mi_name = curr_modes.minor[i];
+    var mi = minor_modes.storage[mi_name];
+    if (!is_null(mi.available_if) &&
+        !is_null(mi.available_if.minor_m))
+    {
+      if (in_arr(mode, mi.available_if.minor_m)) {
+        log.d.info('depended mode disabled: ' + mi_name);
+        minor_modes.disable(mi_name);
+        i = 0;
+        len = curr_modes.minor.length;
+      }
+    }
+  }
+
+  if (!is_null(this.storage[mode].uninit)) {
+    this.storage[mode].uninit();
+  }
+
+  ui.create_menu();
+
+  return 1;
+};
+
+function _check_if_mod_available(m_obj) {
   if (is_null(m_obj.available_if)) {
     return true;
   }

@@ -250,8 +250,6 @@ sub square_map_two_users {
     }',
     $user2 );
 
-=begin
-
     TEST("1st user ready");
     GO(
     '
@@ -266,8 +264,6 @@ sub square_map_two_users {
     }',
     $user1 );
 
-=cut
-
     TEST("2nd user ready");
     GO(
     '
@@ -281,8 +277,6 @@ sub square_map_two_users {
     "result": "ok"
     }',
     $user2 );
-
-exit();
 
     TEST("1st getUserInfo");
     GO(

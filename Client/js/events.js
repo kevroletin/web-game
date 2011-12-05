@@ -3,6 +3,7 @@ var events = {
 
   exec: function(ev_full_name, data) {
     log.d.info('event exec: ' + ev_full_name);
+    if (!is_null(data)) log.d.dump(data, 'params');
     var ev = get_obj_field(this.storage, ev_full_name);
     if (is_null(ev)) { 
       var msg = 'attempt to execute undefined event: ' + 
