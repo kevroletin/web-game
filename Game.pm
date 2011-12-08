@@ -6,6 +6,7 @@ use Devel::StackTrace;
 use JSON;
 use Plack::Response;
 use Plack::Request;
+use Game::Constants;
 
 use Game::Environment qw(environment is_debug if_debug
                          request response response_json
@@ -46,6 +47,9 @@ sub parse_request {
 
     my $json = request()->raw_body();
 
+    use Data::Dumper;
+#    print Dumper($json);
+
     my $data = '';
     eval {
         $data = from_json($json)
@@ -59,8 +63,8 @@ sub parse_request {
     }
 
     use Data::Dumper;
-    print Dumper(response()->body());
-    
+#    print Dumper(response()->body());
+
     response()->finalize();
 };
 

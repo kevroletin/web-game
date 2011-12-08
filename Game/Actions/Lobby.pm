@@ -37,9 +37,6 @@ sub getUserInfo {
     my ($data) = @_;
     my ($user, $err);
 
-    use Data::Dumper;
-    print STDERR Dumper $data;
-    
     if (defined $data->{userId}) {
         $user = db_search_one({ CLASS => 'Game::Model::User' },
                               { id => $data->{userId} });

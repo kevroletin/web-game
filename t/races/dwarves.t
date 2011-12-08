@@ -11,13 +11,21 @@ use Tester::OK;
 use Tester::Hooks;
 use Tester::State;
 use Tester::CheckState;
+use Data::Compare;
+use Data::Dumper::Concise;
 
 init_logs('races/dwarves');
-ok( reset_server(), 'reset server' );
+reset_server();
 
-my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'mine', 'mountain'], ['border', 'mine'],
-  ['border', 'hill'], ['border', 'hill']);
+
+my @map = (
+    ['border', 'mine', 'mountain'], ['border', 'mine'],
+    ['border', 'hill'], ['border', 'hill'] );
+
+my ($user1, $user2);
+
+Tester::State::square_map_two_users_debug_state(
+    $user1, $user2, @map );
 
 
 TEST("Select Race");

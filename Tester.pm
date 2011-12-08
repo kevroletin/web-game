@@ -8,7 +8,9 @@ use JSON;
 use LWP;
 use LWP::UserAgent;
 use Exporter::Easy (
-    EXPORT => [ qw(init_logs
+    EXPORT => [ qw(before_request
+                   after_request
+                   init_logs
                    close_logs
                    reset_server
                    open_log
@@ -22,8 +24,22 @@ use Exporter::Easy (
                    raw_compare_test
                    json_compare_test
                    already_json_test
+                   custom_compare_test
                    json_custom_compare_test) ],
 );
+
+my $before_request;
+my $after_request;
+
+sub before_request {
+    $before_request = $_[0] if $_[0];
+    $before_request
+}
+
+sub after_request {
+    $after_request = $_[0] if $_[0];
+    $after_request
+}
 
 #use LWP::Protocol::http::SocketUnixAlt;
 #LWP::Protocol::implementor( http => 'LWP::Protocol::http::SocketUnixAlt' );
@@ -94,13 +110,24 @@ sub request {
         $ua->conn_cache(LWP::ConnCache->new())
     }
     my $req = HTTP::Request->new(POST => $url);
+
+    my ($br, $ar) = ($before_request, $after_request);
+    ($before_request, $after_request) = ((undef) x 2);
+
+    $br->() if $br;
+
     $req->content($content);
     my $res = $ua->request($req);
+
+    $ar->() if $ar;
+
     if ($log_file) {
         print $log_file "\n***REQUEST***\n" . $req->content();
         print $log_file "\n***RESPONSE***\n" . $res->content();
         print $log_file "\n";
     }
+
+    ($before_request, $after_request) = ($br, $ar);
     $res
 }
 
@@ -224,6 +251,11 @@ sub already_json_test {
         return _json_compare($in, $out, from_json($res))
     };
     _run_test($compare, to_json($in), @_)
+}
+
+sub custom_compare_test {
+    my $compare = shift;
+    _run_test($compare, @_)
 }
 
 sub json_custom_compare_test {

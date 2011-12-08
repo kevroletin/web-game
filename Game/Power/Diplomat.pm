@@ -1,13 +1,23 @@
 package Game::Power::Diplomat;
 use Moose::Role;
 
-use Game::Environment qw(db early_response_json global_user global_game);
+use Game::Environment qw(db early_response_json
+                         global_user global_game);
 
 with( 'Game::Roles::Power' );
 
 
 has 'friendId' => ( isa => 'Maybe[Str]',
                     is => 'rw' );
+
+after 'load_state' => sub {
+    my ($self, $state, $owner_user) = @_;
+    return unless defined $self->friendId();
+    global_game()->raceStateStorage()->{friends} = {
+        diplomat => $owner_user->id(),
+        friend => $self->friendId()
+    };
+};
 
 sub power_name { 'diplomat' }
 

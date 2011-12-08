@@ -1,11 +1,13 @@
 package Game::Model::User;
 use Moose;
 
-use Game::Environment qw(early_response_json inc_counter);
+use Game::Constants qw(races_with_debug powers_with_debug);
+use Game::Environment qw(assert early_response_json inc_counter);
 use Game::Model::Game;
 use Moose::Util::TypeConstraints;
+use Moose::Util qw( apply_all_roles );
 
-our @db_index = qw(sid username password);
+our @db_index = qw(id sid username password);
 
 
 subtype 'Username',
@@ -118,6 +120,40 @@ sub have_owned_regions {
         return 1 if $_->owner() && $_->owner() eq $self
     }
     0
+}
+
+sub load_state {
+    my ($s, $d) = @_;
+    $d->{readinessStatus} = 1 unless $d->{readinessStatus};
+
+    my $create_pair = sub {
+        my ($race, $power, $state) = @_;
+        return undef if !defined $race && !defined $power;
+        assert((defined $race && defined $power),
+               'incompletePair',
+               race => $race, power => $power);
+        assert(($race ~~ races_with_debug()), 'badRace',
+               race => $race);
+        assert(($power ~~ powers_with_debug()), 'badPower',
+               power => $power);
+
+        $race = "Game::Race::" . ucfirst($race);
+        $power = "Game::Power::" . ucfirst($power);
+        my $pair = $race->new();
+        apply_all_roles($pair, $power);
+        $pair->load_state($state, $s);
+        $pair
+    };
+
+    $s->readinessStatus($d->{readinessStatus});
+    $s->tokensInHand($d->{tokensInHand});
+    $s->coins($d->{coins});
+    $s->activeRace( $create_pair->($d->{activeRace},
+                                   $d->{activePower},
+                                   $d->{activeState}) );
+    $s->declineRace( $create_pair->($d->{declineRace},
+                                    $d->{declinePower},
+                                    $d->{declineState}) );
 }
 
 sub number_in_game {

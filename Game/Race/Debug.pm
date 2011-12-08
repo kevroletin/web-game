@@ -7,7 +7,7 @@ extends( 'Game::Race' );
 with( 'Game::Roles::Race' );
 
 
-sub race_name { 'dummy' }
+sub race_name { 'debug' }
 
 sub tokens_cnt { 0 }
 

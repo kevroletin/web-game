@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(db db_search db_search_one
+use Game::Environment qw(assert db db_search db_search_one
                          early_response_json
                          init_user_by_sid
                          global_game
@@ -16,11 +16,10 @@ use Exporter::Easy ( OK => [qw(createGame
                                getGameState
                                getGameList
                                leaveGame
+                               loadGame
                                setReadinessStatus)] );
-use KiokuDB::Set;
 
-
-sub createGame {
+sub _construct_new_game {
     my ($data) = @_;
     proto($data, 'gameName', 'mapId');
 
@@ -40,6 +39,14 @@ sub createGame {
                    params_from_proto('gameName', 'gameDescr'),
                    map => $map
                );
+    $game
+}
+
+sub createGame {
+    my ($data) = @_;
+
+    my $game = _construct_new_game($data);
+
     db()->store_nonroot($game);
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
@@ -74,10 +81,13 @@ sub getGameInfo {
 sub getGameState {
     my ($data) = @_;
     my $game;
-    unless (defined $data->{gameId}) {
+    if (defined $data->{gameId}) {
+        $game = _get_game_by_id($data->{gameId})
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
         $game = global_game()
     } else {
-        $game = _get_game_by_id($data->{gameId})
+        assert(0, 'badJson')
     }
 
     my $state = $game->extract_state();
@@ -97,7 +107,6 @@ sub joinGame {
 
     my $game = db_search_one({ gameId => $data->{gameId} },
                              { CLASS => 'Game::Model::Game' });
-
 
     unless ($game) {
         early_response_json({ result => 'badGameId' })
@@ -129,6 +138,29 @@ sub leaveGame {
 
     db()->update(global_user(), $game);
     response_json({result => 'ok'});
+}
+
+sub loadGame {
+    my ($data) = @_;
+    proto($data, 'gameState');
+
+    assert(!global_user()->activeGame(), 'alreadyInGame');
+# TODO: it's bad if one user can load game. If you want to
+# allow loading of active game you should add possibility
+# to ask all users about game loading
+
+    assert(ref($data->{gameState}) eq 'HASH', 'badGameSave',
+           descr => 'notHash');
+
+    my $game = _construct_new_game({
+                   gameName => $data->{gameName},
+                   gameDescr => $data->{gameDescr},
+                   mapId => $data->{gameState}->{mapId} });
+
+    $game->load_state($data->{gameState});
+    db()->store_nonroot($game);
+
+    response_json({result => 'ok'})
 }
 
 sub setReadinessStatus {

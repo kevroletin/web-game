@@ -132,6 +132,7 @@ GO(
 }',
 $user2 );
 
+exit();
 
 TEST("redeploy");
 GO(

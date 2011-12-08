@@ -6,17 +6,41 @@ use warnings;
 use Test::More;
 
 use JSON;
+use Data::Compare;
+use Data::Dumper::Concise;
 
 use lib '..';
 use Tester;
 #use Tester::OK;
 use Tester::Hooks;
+use Exporter::Easy (
+    EXPORT => [ qw( get_game_state ) ],
+);
 
 
 my ($descr, $in, $out, $hooks) = (('') x 4);
 
 my $ok = 1;
 my $fail_test;
+
+sub get_game_state {
+    my ($user) = @_;
+    my $state;
+    my $in = { action => 'getGameState',
+               sid => $user->{_sid} };
+    my $out = { result => 'ok' };
+    my $h = sub {
+        $state = $_[2];
+        defined $state->{result} && $state->{result} eq 'ok'
+    };
+    my $ok = json_custom_compare_test($h, to_json($in), '{}', {});
+    ok( $ok, 'Get game state' );
+
+    write_msg("\n*** Get game state  ***:", $ok);
+    write_msg(Dumper($state)) unless $ok;
+    exit unless $ok;
+    $state
+}
 
 sub OK {
     $ok &&= $_[0]->{res};
@@ -53,7 +77,7 @@ sub HOOKS { if ($_[0]) { $hooks = $_[0] } $hooks }
 sub TEST { if ($_[0]) { $descr = $_[0] } $descr }
 
 
-sub square_map_two_users {
+sub register_two_users_and_create_square_map {
     my ($d_1, $d_2, $d_3, $d_4, $c1, $c2, $c3, $c4) = @_;
     $$_ ||= 0 for \$c1, \$c2, \$c3, \$c4;
 
@@ -61,6 +85,66 @@ sub square_map_two_users {
                           'activeGame', 'userId');
     my $user1 = params_same(@fields_to_save);
     my $user2 = params_same(@fields_to_save);
+
+    TEST("register 1st user");
+    $user1->{_number_in_game} = 0;
+    GO(
+    '{
+    "action": "register",
+    "username": "user1",
+    "password": "password1"
+    }'
+    ,
+    '{
+    "result": "ok"
+    }'
+    , {} );
+
+
+    TEST("login 1st user");
+    GO(
+    '{
+    "action": "login",
+    "username": "user1",
+    "password": "password1"
+    }'
+    ,
+    '{
+    "result": "ok",
+    "sid": ""
+    }'
+    , $user1 );
+
+
+    TEST("register 2nd user");
+    $user2->{_number_in_game} = 1;
+    GO(
+    '{
+    "action": "register",
+    "username": "user2",
+    "password": "password2"
+    }'
+    ,
+    '{
+    "result": "ok"
+    }'
+    , {} );
+
+
+    TEST("login 2nd user");
+    GO(
+    '{
+    "action": "login",
+    "username": "user2",
+    "password": "password2"
+    }'
+    ,
+    '{
+    "result": "ok",
+    "sid": ""
+    }'
+    , $user2 );
+
 
     #+---------------+----------------+
     #|0              |1               |
@@ -146,35 +230,13 @@ sub square_map_two_users {
     }',
     $user1 );
 
-    TEST("register 1st user");
-    $user1->{_number_in_game} = 0;
-    GO(
-    '{
-    "action": "register",
-    "username": "user1",
-    "password": "password1"
-    }'
-    ,
-    '{
-    "result": "ok"
-    }'
-    , {} );
+    ($user1, $user2)
 
+}
 
-    TEST("login 1st user");
-    GO(
-    '{
-    "action": "login",
-    "username": "user1",
-    "password": "password1"
-    }'
-    ,
-    '{
-    "result": "ok",
-    "sid": ""
-    }'
-    , $user1 );
-
+sub square_map_two_users {
+    my ($user1, $user2) =
+        register_two_users_and_create_square_map(@_);
 
     TEST("Create Game 1st user");
     GO(
@@ -190,36 +252,6 @@ sub square_map_two_users {
     "gameId": ""
     }',
     $user1 );
-
-
-    TEST("register 2nd user");
-    $user2->{_number_in_game} = 1;
-    GO(
-    '{
-    "action": "register",
-    "username": "user2",
-    "password": "password2"
-    }'
-    ,
-    '{
-    "result": "ok"
-    }'
-    , {} );
-
-
-    TEST("login 2nd user");
-    GO(
-    '{
-    "action": "login",
-    "username": "user2",
-    "password": "password2"
-    }'
-    ,
-    '{
-    "result": "ok",
-    "sid": ""
-    }'
-    , $user2 );
 
 
     TEST("Join Game");
@@ -312,6 +344,61 @@ sub square_map_two_users {
     FINISH();
 
     ($user1, $user2)
+}
+
+sub square_map_two_users_debug_state {
+    my $p_user1 = \$_[0];
+    my $p_user2 = \$_[1];
+    my ($user1, $user2) = (shift, shift);
+    my $map = \@_;
+
+    my $chack_game_loading = sub {
+
+        my  $state = get_game_state($$p_user1);
+
+        reset_server();
+
+        ($$p_user1, $$p_user2) =
+            Tester::State::register_two_users_and_create_square_map(@$map);
+        my $res;
+        json_compare_test(
+           '{"action": "loadGame", "sid": "' .$$p_user1->{_sid} .'",' .
+           '"gameName": "COOLGame",' .
+           '"gameState":' . to_json($state) .
+           '}', '{"result": "ok"}',
+           {res_hook => sub { $res = $_[0] }});
+
+        my $ok = $res->{result} && $res->{result} eq 'ok';
+        write_msg("\n*** Load Game  ***: $ok\n");
+        write_msg(Dumper $res) unless $ok;
+
+        my $new_state = get_game_state($$p_user1);
+
+        $ok = Compare($state, $new_state);
+        ok( $ok , 'Restore state' );
+        unless ($ok) {
+            write_msg("\n*** Restore state  ***: $ok\n");
+
+            open my $f1, '>>', 'f1.txt';
+            open my $f2, '>>', 'f2.txt';
+
+    #        print $f1 ($state);
+    #        print $f2 ($new_state);
+
+            print $f1 Dumper($state);
+            print $f2 Dumper($new_state);
+
+            close $f1;
+            close $f2;
+
+            exit();
+        }
+    };
+
+    ($$p_user1, $$p_user2) = square_map_two_users(@$map);
+
+    before_request( $chack_game_loading );
+
 }
 
 1;

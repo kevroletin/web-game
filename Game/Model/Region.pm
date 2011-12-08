@@ -1,7 +1,8 @@
 package Game::Model::Region;
 use Moose;
 
-use Game::Environment qw(early_response_json);
+use Game::Environment qw(assert db_search_one
+                         early_response_json);
 use Moose::Util::TypeConstraints;
 use Storable q(dclone);
 
@@ -108,6 +109,34 @@ sub extract_const_descr {
     $r->{raceCoords} = $s->{raceCoords};
     $r->{powerCoords} = $s->{powerCoords};
     $r
+}
+
+# should be already checked: $data->{regions}->[$i]->{owner}
+sub load_state {
+    my ($self, $data) = @_;
+    my $err = 'badRegions';
+
+    assert(defined $data->{tokensNum} &&
+           $data->{tokensNum} =~ /^\d+$/, $err,
+            badTokensNum => $data->{tokensNum});
+    $self->tokensNum($data->{tokensNum});
+
+    if (defined $data->{owner}) {
+        my $u = db_search_one({ CLASS => 'Game::Model::User' },
+                              { id => $data->{owner} });
+        $self->owner($u);
+        assert($self->owner, $err, 'badOwner' => $data->{owner});
+    }
+
+    assert($data->{inDecline} ~~ [0, 1], $err,
+           badInDecline => $data->{inDecline});
+    $self->inDecline($data->{inDecline});
+
+    my $ok = find_type_constraint(
+                 'Game::Model::Region::ExtraItems'
+             )->check($data->{extraItems});
+    assert($ok, $err, 'badExtraItems' => $data->{extraItems});
+    $self->extraItems($data->{extraItems});
 }
 
 sub owner_race {

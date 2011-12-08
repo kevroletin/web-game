@@ -13,7 +13,8 @@ use Game::Exception;
 use Game::Model::Counter;
 
 use Exporter::Easy (
-    OK => [ qw(db
+    OK => [ qw(assert
+               db
                db_search
                db_search_one
                db_scope
@@ -41,6 +42,11 @@ my ($db,
     $request,
     $response,
     $stack_trace);
+
+sub assert {
+    my ($ok, $msg, %h) = @_;
+    early_response_json({result => $msg, %h}) unless $ok;
+}
 
 sub db {
     if (@_) { $db = $_[0] }

@@ -14,11 +14,22 @@ use Game::Actions::Game qw(createGame
                            getGameState
                            getGameList
                            leaveGame
+                           loadGame
                            setReadinessStatus);
-use Game::Actions::Gameplay qw(conquer decline defend dragonAttack
-                               enchant finishTurn redeploy
-                               selectFriend selectRace throwDice);
-use Game::Actions::Lobby qw(getUserInfo login logout register);
+use Game::Actions::Gameplay qw(conquer
+                               decline
+                               defend
+                               dragonAttack
+                               enchant
+                               finishTurn
+                               redeploy
+                               selectFriend
+                               selectRace
+                               throwDice);
+use Game::Actions::Lobby qw(getUserInfo
+                            login
+                            logout
+                            register);
 use Game::Actions::Map qw(createDefaultMaps
                           getMapInfo
                           getMapList

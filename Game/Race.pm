@@ -1,7 +1,7 @@
 package Game::Race;
 use Moose;
 
-use Game::Environment qw(db early_response_json
+use Game::Environment qw(assert db early_response_json
                          global_user
                          global_game);
 use List::Util qw( sum );
@@ -18,8 +18,14 @@ sub extract_state {
 }
 
 sub load_state {
-    my ($class) = shift;
-    $class->new(@_)
+    my ($self, $state) = @_;
+    assert(ref($state) eq 'HASH', 'badRaceState');
+    for my $k (keys %$state) {
+        eval {
+            $self->$k($state->{$k})
+        };
+        assert(!$@, 'badRaceState');
+    }
 }
 
 sub _check_land_type {

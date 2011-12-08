@@ -1,14 +1,17 @@
 package Game::Model::Game;
 use Moose;
 
-use Game::Constants;
-use Game::Environment qw(early_response_json inc_counter);
+use Game::Constants qw(races_with_debug powers_with_debug);
+use Game::Environment qw(assert db_search_one
+                         early_response_json inc_counter
+                         if_debug);
 use Game::Model::Map;
 use Game::Model::User;
 use KiokuDB::Set;
 use Moose::Util::TypeConstraints;
 use KiokuDB::Util q(weak_set);
 use List::Util q(shuffle);
+use Data::Dumper;
 
 our @db_index = qw(gameName gameId);
 
@@ -149,10 +152,22 @@ sub _extract_visible_tokens {
 }
 
 sub _copy_races_state_storage {
-    my ($self, $state) =@_;
+    my ($self, $state) = @_;
     for (keys %{$self->raceStateStorage()}) {
         $state->{$_} = $self->raceStateStorage()->{$_}
     }
+}
+
+sub _extract_history {
+    my ($self) = @_;
+    my $h = sub {
+        my $r = $_[0];
+        $r->{whom} = $r->{whom}->id() if ($r->{whom} );
+        $r->{region} = $self->number_of_region($r->{region});
+        $r
+    };
+    my @res = map { $h->($_) } @{$self->history()};
+    \@res
 }
 
 sub extract_state {
@@ -168,6 +183,9 @@ sub extract_state {
     push @regions, $_->extract_state() for @{$self->map()->regions()};
     $res->{regions} = \@regions;
     $res->{visibleTokenBadges} = $self->_extract_visible_tokens();
+    $res->{attacksHistory} = $self->_extract_history();
+    $res->{mapId} = $self->map()->id();
+    $res->{turn} = $self->turn();
     $self->_copy_races_state_storage($res);
     $res
 }
@@ -212,6 +230,132 @@ sub lastAttack {
     my $self = shift;
     return undef unless @{$self->history()};
     $self->{history}->[-1]
+}
+
+sub _load_players_from_state {
+    my ($self, $data) = @_;
+    assert(ref($data->{players}) eq 'ARRAY', 'badPlayers');
+    my $load_user = sub {
+        my ($id) = @_;
+        my $p = db_search_one({ CLASS => 'Game::Model::User' },
+                              { id => $id });
+        assert($p, 'badUserId', userId => $id);
+        assert(!$p->activeGame(), 'alreadyInGame', userId => $id);
+        $p->activeGame($self);
+        $p->load_state($_);
+        $p
+    };
+    my @res = map { $load_user->($_->{id}) } @{$data->{players}};
+    $self->players(\@res);
+}
+
+sub _load_token_badges_from_state {
+    my ($self, $data) = @_;
+    assert(ref($data->{visibleTokenBadges}) eq 'ARRAY',
+           'badVisibleTokenBadges', descr => 'notArrayRef');
+    my (@race_p, @pow_p, @mon);
+
+    for (@{$data->{visibleTokenBadges}}) {
+        assert(ref($_) eq 'HASH', 'badVisibleTokenBadges',
+               notHash => $_);
+        my ($race, $power) = ($_->{raceName},
+                              $_->{specialPowerName});
+
+        assert(defined $race &&
+               ($race ~~ races_with_debug()),
+               'badRace', $race => $race);
+        assert(defined $power &&
+               ($power ~~ powers_with_debug()),
+               'badPower', power => $power);
+        assert(defined $_->{bonusMoney} &&
+               $_->{bonusMoney} =~ /^\d+$/, 'badBonusMoney');
+        push @race_p, $race;
+        push @pow_p, $power;
+        push @mon, $_->{bonusMoney};
+    }
+    $self->racesPack(\@race_p);
+    $self->powersPack(\@pow_p);
+    $self->bonusMoney(\@mon);
+}
+
+# should be loaded: $self->players
+sub _load_regions_from_state {
+    my ($self, $data) = @_;
+    assert(ref($data->{regions}) eq 'ARRAY', 'badRegions',
+           descr => 'notHash');
+    assert(@{$data->{regions}} == @{$self->map()->regions()},
+           'badRegionsNum');
+    my $i = 0;
+    my @pl_id = map { $_->id() } @{$self->players()};
+    for (@{$data->{regions}}) {
+        assert(!defined $_->{owner} || $_->{owner} ~~ @pl_id,
+               'badRegions', 'badOwner' => $_->{owner},
+               'gamePlayers' => [@pl_id]);
+        $self->map()->regions()->[$i++]->load_state($_);
+    }
+}
+
+# should be loaded: $self->map
+#                   $self->players
+sub _load_attacks_history_from_state {
+    my ($self, $data) = @_;
+    my $err = 'badAttacksHistory';
+    my $h = $data->{attacksHistory};
+    assert(ref($h) eq 'ARRAY', $err, descr => 'notArray');
+    my @res;
+    print Dumper $self->map(), $h;
+    for my $hist_item (@{$h}) {
+        assert(ref($hist_item) eq 'HASH', $err,
+               notHash => $hist_item);
+        my $num = sub { defined $_[0] && $_[0] =~ /^\d+$/ };
+        my $r = $hist_item->{region};
+
+        assert( $num->($r) &&
+                0 <= $r && $r <= @{$self->map()->regions()},
+                $err, badRegion => $r );
+        assert( $num->($hist_item->{tokensNum}), $err,
+                badTokensNum => $hist_item->{tokensNum} );
+        my $is_who = sub {
+            my ($player) = @_;
+            assert(defined $data->{whom}, $err,
+                   badWhom => $hist_item->{whom});
+            $player->id() eq $hist_item->{whom}
+
+        };
+        my $p = $data->{whom};
+        if (defined $data->{whom}) {
+            ($p) = grep { $is_who->($_) } @{$self->players()};
+            assert($p, $err, badDefender => $data->{whom});
+        }
+        push @res, {
+          region => $self->map()->regions()->[$r],
+          tokensNum => $hist_item->{tokensNum},
+          whom => $p ? $p->id() : undef
+        }
+    }
+    print Dumper(\@res);
+
+    $self->history(\@res)
+}
+
+sub load_state {
+    my ($self, $data) = @_;
+
+    die 'bad map id' if $data->{mapId} ne $self->map()->id();
+
+    my @st = qw(conquer startMoving redeployed defend declined);
+    assert(($data->{state} ~~ @st), 'badState');
+    $self->state($data->{state});
+
+    $self->_load_players_from_state($data);
+    $self->_load_regions_from_state($data);
+    $self->_load_token_badges_from_state($data);
+    $self->_load_attacks_history_from_state($data);
+
+    assert(defined $data->{activePlayerNum} &&
+           $data->{activePlayerNum} =~ /^\d+$/,
+           'badActivePlayerNum');
+    $self->activePlayerNum($data->{activePlayerNum});
 }
 
 sub next_player {
