@@ -43,7 +43,7 @@ table#gamesList td {
     border: 1px black solid;
 }
 
-div#players {
+div#game_info {
     float: left;
 }
 
@@ -55,4 +55,10 @@ div.player {
 
 div.active_player {
     background-color: gray;
+}
+
+div.tokens_pack {
+    border: 1px solid black;
+    margin: 2px;
+    padding: 2px;
 }

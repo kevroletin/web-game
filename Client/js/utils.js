@@ -23,10 +23,17 @@ var net = {
 
 var state = {
   store: function(key, value) {
-    this.storage[key] = value;
+//    this.storage[key] = value;
+    set_obj_field(this.storage, key, value);
   },
-  get: function(key) {
-    return this.storage[key];
+  get: function() {
+    for (var i = 0; i < arguments.length; ++i) {
+      var d = get_obj_field(this.storage, arguments[i]);
+      if (!is_null(d)) {
+        return d
+      }
+    }
+    return null;
   },
   delete: function(key) {
     delete this.storage[key];
@@ -119,6 +126,11 @@ function in_arr(elem, array) {
 function determine_race(gameState, reg) {
   if (is_null(reg.owner)) return null;
   var p = gameState.players[reg.owner - 1];
-  return reg.inDecline ? p.declineRace + '_d' : p.activeRace;
+  if (reg.inDecline) {
+    if (is_null(p.declineRace)) return null;
+    return p.declineRace + '_d';
+  } else { 
+    return p.activeRace;
+  };
 }
 

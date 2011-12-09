@@ -322,7 +322,7 @@ playfield.create = function(svg, map) {
     .attr('class', function(d) {
       return 'm_r , ' + d.landDescription
         .map(function(e) { return 'm_r_t_' + e })
-        .join(' , ');
+        .join(' ');
     })
     .attr("d", function(d) { return line(d.coordinates) + 'Z' })
     .each(function(d, i) { svg.append })

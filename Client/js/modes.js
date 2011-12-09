@@ -199,6 +199,7 @@ var major_modes = {
 var minor_modes = {
 
   storage: {
+
     logined: {
       init: function() { 
         return 1;
@@ -224,20 +225,123 @@ var minor_modes = {
         minor_m: ['in_game']
       },
       init: function() {
+        var tok = state.get(
+          'net.getGameState.visibleTokenBadges',
+          'net.getGameInfo.gameInfo.visibleTokenBadges'
+        );
+
+        if (is_null(tok)) {
+          alert('visibleTokenBadges is null');
+        }
+
+        d3.select('div#game_info')
+          .append('div')
+          .attr('id', 'tokens_packs')
+          .selectAll('div.tokens_pack')
+          .data(tok)
+        .enter()
+          .append('div')
+          .each(function(d, i) {
+
+            var t = d3.select(this)
+              .attr('class', 'tokens_pack');
+            t.append('div').text(d.raceName);
+            t.append('div').text(d.specialPowerName);
+            t.append('div').text(d.bonusMoney);
+          });
+
         return 0;
       },
       uninit: function() {}
     },
 
-    attack: {
+    conquer: {
       available_if: {
         minor_m: ['in_game'],
         not_minor_m: ['redeploy', 'defend', 'waiting']
       },
       init : function() {
+        minor_modes.enable('select_race');
+        minor_modes.enable('decline');
+        
+        var on_resp = function(resp) {
+          alert(JSON.stringify(resp, null, ' '));
+        };
+        
+        var h = function(reg_i) {
+          net.send({"action":"conquer","regionId": reg_i}, 
+                   on_resp);
+        };
+        events.reg_h('game.region.click', 'conquer_on_click', h);
+
+        return 0;
+      },
+      uninit: function() {
+        minor_modes.disable('select_race');
+        minor_modes.sicable('decline');
+      }
+    },
+
+    select_race: {
+      available_if: {
+        minor_m: ['conquer'],
+      },
+      init : function() {
+        var on_resp = function(resp) {
+          // TODO:
+          alert(resp.result);
+        };
+        var h = function(d, i) {
+          net.send({"position": d.position,
+                    "action":"selectRace"}, 
+                   on_resp);
+          d3.event.preventDefault();
+        };
+
+        d3.selectAll('div.tokens_pack')
+          .append('form')
+            .classed('select_race', 1)
+            .on('submit', h)
+          .append('input')
+            .attr('name', 'ok')
+            .attr('type', 'submit')
+            .attr('value', 'select');
         return 0;
       },
       uninit: function() {}
+    },
+
+    decline: {
+      available_if: {
+        minor_m: ['conquer'],
+      },
+      init : function() {
+        var on_resp = function(resp) {
+          // TODO:
+          if (resp.result == 'eq') {
+          } else {
+          }
+          alert(resp.result);
+        };
+
+        var h = function() {
+          net.send({action: 'decline'}, on_resp);
+          d3.event.preventDefault();
+        };
+
+        d3.select('div.active_player')
+          .append('form')
+            .attr('id', 'go_decline')
+            .on('submit', h)
+          .append('input')
+            .attr('name', 'ok')
+            .attr('type', 'submit')
+            .attr('value', 'decline');
+        return 0;
+      },
+      uninit: function() {
+        d3.select('form#go_decline').remove();
+      }
     },
 
     redeploy: {
@@ -246,6 +350,7 @@ var minor_modes = {
         not_minor_m: ['attack', 'defend', 'waiting']
       },
       init : function() {
+        alert('not implemented');
         return 0;
       },
       uninit: function() {}
@@ -257,6 +362,7 @@ var minor_modes = {
         not_minor_m: ['attack', 'redeploy', 'waiting']
       },
       init : function() {
+        alert('not implemented');
         return 0;
       },
       uninit: function() {}
@@ -280,13 +386,18 @@ minor_modes.have = function(mode) {
 }; 
 
 minor_modes.enable = function(mode, params) {
+  if (in_arr(mode, curr_modes.minor)) {
+    log.d.warn('mode ' + mode + ' already enabled');
+    return 0;
+  }
+
+  if (is_null(this.storage[mode])) {
+    log.d.err('bad mode: ' + mode );
+  }
+
   log.d.info("|minor mode| -> " + mode);
   log.d.dump(params, 'params');
 
-  if (in_arr(mode, curr_modes.minor)) {
-    log.d.warn('mode already enabled');
-    return 0;
-  }
   if (!_check_if_mod_available(mode)) {
     log.d.warn('mode is not avaible');
     return 0;
@@ -304,12 +415,13 @@ minor_modes.enable = function(mode, params) {
 };
 
 minor_modes.disable = function(mode) {
-  log.d.info("|minor mode| -- " + mode);
 
   if (!(in_arr(mode, curr_modes.minor))) {
-    log.d.info('mode ' + mode + ' is not active');
+    log.d.warn('mode ' + mode + ' is not active');
     return 0;
   }
+
+  log.d.info("|minor mode| -- " + mode);
 
   var len = curr_modes.minor.length;
   for (var i = 0; i < len; ++i) {
