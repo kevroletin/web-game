@@ -431,14 +431,114 @@ var minor_modes = {
         not_minor_m: ['decline', 'select_race',
                       'conquer', 'defend', 'waiting']
       },
+      _prepare_redeploy_data: function() {
+        var regions = state.get('net.getGameState.regions');
+        var res = [];
+        for (var i in regions) {
+          var r = regions[i];
+          if (r.owner == state.get('userId')) {
+            res.push({tokensNum: r.tokensNum,
+                      regionId: i});
+          }
+        }
+        return res;
+      },
+      _send_redeploy: function() {
+        var data = this._prepare_redeploy_data();
+        var h = function(resp) {
+          if (resp.result !== 'ok') {
+            minor_modes.force('redeploy');
+          }
+          alert(resp.result);
+          minor_modes.force('redeployed');
+        };
+        net.send({"regions": data, action: "redeploy"}, h, 1);
+      },
       _prepare_ui: function() {
-
+        var h = function() {
+          d3.event.preventDefault();
+          minor_modes.storage.redeploy._send_redeploy();
+        };
+        d3.select('div#actions')
+          .append('form')
+          .attr('id', 'finish_redeploy')
+          .on('submit', h)
+          .append('input')
+            .attr('type', 'submit')
+            .attr('value', 'submit');
+      },
+      _prepare_map_actions: function() {
+        var plus = function(reg_i) {
+          var regions = state.get('net.getGameState.regions');
+          var player = game.active_player();
+          
+          if (!player.tokensInHand) {
+            alert('no tokens in hand')
+          } else {
+            --player.tokensInHand;
+            ++regions[reg_i].tokensNum;
+            events.exec('net.getGameState');
+          }
+        };
+        events.reg_h('game.region.click',
+                     'minor_modes.conquer->game.region.click',
+                     plus);
+        var minus = function(reg_i) {
+          var regions = state.get('net.getGameState.regions');
+          var player = game.active_player();
+          
+          if (!regions[reg_i].tokensNum) {
+            alert('no tokens on region')
+          } else {
+            ++player.tokensInHand;
+            --regions[reg_i].tokensNum;
+            events.exec('net.getGameState');
+          }
+        };
+        events.reg_h('game.region.image.click',
+                     'minor_modes.conquer->game.region.image.click',
+                     minus);
       },
       init : function() {
         this._prepare_ui();
+        this._prepare_map_actions();
         return 0;
       },
-      uninit: function() {}
+      uninit: function() {
+        events.del_h('game.region.click',
+                     'minor_modes.conquer->game.region.click');
+        d3.select('form#finish_redeploy').remove();
+      }
+    },
+
+    redeployed: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['attack', 'redeploy', 'waiting']
+      },
+      init : function() {
+        var on_resp = function(resp) {
+          alert(resp.result);
+          if (resp.result == 'ok')  {
+            minor_modes.force('waiting');
+          }
+        };
+        var h = function() {
+          d3.event.preventDefault();
+          net.send({action: 'finishTurn'}, on_resp, 1)
+        };
+        d3.select('div#actions')
+          .append('form')
+          .attr('id', 'finish_turn')
+          .on('submit', h)
+          .append('input')
+            .attr('type', 'submit')
+            .attr('value', 'finish_turn');
+        return 0;
+      },
+      uninit: function() {
+        d3.select('form#finish_turn').remove();
+      }
     },
 
     defend: {
@@ -447,10 +547,28 @@ var minor_modes = {
         not_minor_m: ['attack', 'redeploy', 'waiting']
       },
       init : function() {
-        alert('not implemented');
+        var r_m = minor_modes.storage.redeploy;
+        var h = function() {
+          var data = r_m._prepare_redeploy_data();
+          var h = function(resp) {
+            if (resp.result !== 'ok') {
+              minor_modes.force('defend');
+            }
+            alert(resp.result);
+            minor_modes.force('waiting');
+          };
+          net.send({"regions": data, action: "defend"}, h, 1);
+        };
+
+        r_m._prepare_ui.call(r_m);
+        r_m._prepare_map_actions.call(r_m);
+        d3.select('form#finish_redeploy')
+          .on('submit', h);
         return 0;
       },
-      uninit: function() {}
+      uninit: function() {
+        minor_modes.storage.redeploy.uninit();
+      }
     },
 
     waiting: {

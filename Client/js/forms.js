@@ -378,7 +378,9 @@ playfield.apply_game_state = function(gameState) {
         .attr('y', function(d, i) { return (cs.raceCoords[1] + i*4) })
         .attr('width', '50px')
         .attr('height', '50px')
-        .attr('xlink:href', rsc('img.rc.s')(race) );
+        .attr('xlink:href', rsc('img.rc.s')(race) )
+        .on('click', 
+            function(d) { events.exec('game.region.image.click', i)});;
     });
 
   var free_tks = d3.select('g#free_tokens');
@@ -389,13 +391,13 @@ playfield.apply_game_state = function(gameState) {
   free_tks.selectAll('g')
     .each(function(d, player_i) {
       var r = d3.range(0, d.tokensInHand);
-      var race = game.active_player().activeRace;
+      var race = gameState.players[player_i].activeRace;
       var data = d3.select(this).selectAll('image').data(r);
       data.exit().remove();
       data.enter().append('svg:image');
       d3.select(this).selectAll('image').data(r)
         .attr('x', function(d, i) { return ( -100 + i*4) })
-        .attr('y', function(d, i) { return ( player_i*40 + i*4) })
+        .attr('y', function(d, i) { return ( player_i*70 + i*4) })
         .attr('width', '50px')
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) );

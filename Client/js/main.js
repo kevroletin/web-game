@@ -43,10 +43,12 @@ var game = {
 /*    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
                  ui.create_menu); */
 //    major_modes.change('login');
-
-    state.store('sid', 1);
-    state.store('gameId', 1)
-    game.get_current_user_info();
+//  ***
+    var i = 2
+    ;
+    state.store('sid', i);
+    state.store('gameId', i)
+    game.get_current_user_info()
 
     minor_modes.enable('logined');
     minor_modes.enable('in_game');
@@ -84,14 +86,12 @@ game.fix_minor_mode_from_game_state = function() {
   var new_modes = {
     conquer: 0,
     defend: 0,
-//    redeploy: 0,
-    redeploed: 0,
+    redeploy: 0,
+    redeployed: 0,
     waiting: 0,
   };
-  var active_player = 
-    getGameState.players[getGameState.activePlayerNum];
-
-  if (active_player.id !== state.get('userId')) {
+  
+  if (game.active_player_id() != state.get('userId')) {
     new_modes['waiting'] = 1
   } else {
     var a = {
@@ -104,8 +104,8 @@ game.fix_minor_mode_from_game_state = function() {
 
       },
       defend: function() { new_modes['defend'] = 1 },
-//      redeploy: function() { new_modes['redeploy'] = 1 },
-      redeploed: function() { alert('not implemented') }
+      redeploy: function() { new_modes['redeploy'] = 1 },
+      redeployed: function() { new_modes['redeployed'] = 1 }
       
     };
     a[state_field]();
@@ -155,11 +155,37 @@ game.state_monitor.start = function() {
 };
 
 game.state_monitor.stop = function() {
-  cleaInterval(game._timer);
+  clearInterval(game._timer);
+};
+
+game.active_player_id = function() {
+  var game_state = state.get('net.getGameState');
+  if (is_null(game_state)) return null;
+
+  var is_defend = game_state.state == 'defend';
+  if (!is_defend) {
+    return game_state.players[game_state.activePlayerNum].id;
+  }
+
+  var h = game_state.attacksHistory;
+  return h[h.length - 1].whom;
 };
 
 game.active_player = function() {
-  var gameState = state.get('net.getGameState');
-  if (is_null(gameState)) return null;
-  return gameState.players[gameState.activePlayerNum];
+  var game_state = state.get('net.getGameState');
+  if (is_null(game_state)) return null;
+
+  var is_defend = game_state.state == 'defend';
+  if (!is_defend) {
+    return game_state.players[game_state.activePlayerNum];
+  }
+
+  var h = game_state.attacksHistory;
+  var defender_id = h[h.length - 1].whom;
+  for (var i in game_state.players) {
+    if (game_state.players[i].id == defender_id) {
+      return game_state.players[i]
+    }
+  }
+  return null;
 };

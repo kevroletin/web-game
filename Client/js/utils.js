@@ -6,7 +6,7 @@ var net = {
     var h = function(text) {
       var parsed = text ? JSON.parse(text) : null
       if (to_log) {
-        log.ui.info('--request--\n' + parsed);
+        log.ui.info('--response--\n' + text);
       }
       on_resp(parsed);
     };
