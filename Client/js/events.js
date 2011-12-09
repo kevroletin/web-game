@@ -2,18 +2,17 @@
 var events = {
 
   exec: function(ev_full_name, data) {
-    log.d.info('event exec: ' + ev_full_name);
+    log.d.events('event exec: ' + ev_full_name);
     if (!is_null(data)) log.d.dump(data, 'params');
     var ev = get_obj_field(this.storage, ev_full_name);
     if (is_null(ev)) { 
       var msg = 'attempt to execute undefined event: ' + 
                  ev_full_name;
-      log.d.warn(msg);
-      log.d.info(msg);
+      log.d.events(msg);
       return 0; 
     }
     for (var i = 0; i < ev.length; ++i) {
-      log.d.info('    ' + ev[i].name);
+      log.d.events('    ' + ev[i].name);
       ev[i].fun(data);
     }
     return ev;
@@ -30,7 +29,7 @@ var events = {
     }
     ev.push({name: h_name, fun: h_fun});
     
-    log.d.info('event handler registered: ' + 
+    log.d.events('event handler registered: ' + 
              ev_full_name + ' -> ' + h_name);
     return ev;
   },
@@ -48,7 +47,7 @@ var events = {
       }        
     }
 
-    log.d.info('event handler removed: ' + 
+    log.d.events('event handler removed: ' + 
                ev_full_name + ' -> ' + h_name);
     return ev;  
   },

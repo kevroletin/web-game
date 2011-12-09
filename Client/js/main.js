@@ -38,7 +38,7 @@ var game = {
                        /* ui.disable_minor_mode('in_game'); */ });
     
     events.reg_h('game.ui_initialized', 'start main loop',
-                 game.state_monitor.start);
+                 game.request_game_state );
 
 /*    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
                  ui.create_menu); */
@@ -48,6 +48,8 @@ var game = {
     state.store('gameId', 1)
     game.get_current_user_info();
 
+    minor_modes.enable('logined');
+    minor_modes.enable('in_game');
     major_modes.change('play_game');
 
     log.d.info('Game core initialized');
@@ -67,27 +69,6 @@ game.get_current_user_info = function() {
   net.send(q, h);
 };
 
-/* difference between game_info and game_state is what game 
- * state contains information which can be changed only 
- * after game being started */
-game._apply_game_info = function(resp) { 
-  div_game_info = d3.select('div#game_info');
-  var d = d3.select('div#game_info').text('');
-  ui_elements.game_info(d, resp.gameInfo);
-};
-
-game._apply_game_state = function(resp) {
- 
-//  var d = d3.select('div#game_info').text('');
-
-  var svg = d3.select('svg#playfield')
-      div_game_info = d3.select('div#game_info'),
-      div_playfield = d3.select('div#playfield_container');
-
-  ui_elements.update_game_info(div_game_info, resp);
-  playfield.apply_game_state(svg.node(), resp); 
-};
-
 game.fix_minor_mode_from_game_state = function() {
   var getGameState = state.get(
     'net.getGameState',
@@ -103,7 +84,7 @@ game.fix_minor_mode_from_game_state = function() {
   var new_modes = {
     conquer: 0,
     defend: 0,
-    redeploy: 0,
+//    redeploy: 0,
     redeploed: 0,
     waiting: 0,
   };
@@ -123,7 +104,7 @@ game.fix_minor_mode_from_game_state = function() {
 
       },
       defend: function() { new_modes['defend'] = 1 },
-      redeploy: function() { new_modes['redeploy'] = 1 },
+//      redeploy: function() { new_modes['redeploy'] = 1 },
       redeploed: function() { alert('not implemented') }
       
     };
@@ -141,12 +122,11 @@ game.fix_minor_mode_from_game_state = function() {
 
 };
 
-game.update_game_state = function() {
+game.request_game_state = function() {
 //  log.d.info('---getGameState---');
   if (minor_modes.have('game_started')) {
     var h = function(resp) {
       state.store('net.getGameState', resp);
-      game._apply_game_state(resp);
       events.exec('net.getGameState');
       game.fix_minor_mode_from_game_state();
     };
@@ -155,8 +135,8 @@ game.update_game_state = function() {
   } else {
     var h =function(resp) {
       state.store('net.getGameInfo', resp);
-      state.store('gameState', resp.gameInfo);
-      game._apply_game_info(resp);
+      state.store('net.getGameState', resp.gameInfo);
+
       events.exec('net.getGameInfo');
       events.exec('net.getGameState');
       game.fix_minor_mode_from_game_state();
@@ -171,7 +151,15 @@ game.state_monitor = {};
 game.state_monitor.start = function() {  
   log.d.info('game main loop -> started');
   game.fix_minor_mode_from_game_state();
-  game._timer = setInterval(game.update_game_state, 1000);
+  game._timer = setInterval(game.request_game_state, 2000);
 };
 
+game.state_monitor.stop = function() {
+  cleaInterval(game._timer);
+};
 
+game.active_player = function() {
+  var gameState = state.get('net.getGameState');
+  if (is_null(gameState)) return null;
+  return gameState.players[gameState.activePlayerNum];
+};

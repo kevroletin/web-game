@@ -1,12 +1,20 @@
 var net = {
-  send: function(msg, on_resp) { 
+  send: function(msg, on_resp, to_log) { 
     if (is_null(msg.sid)) {
       msg.sid = state.get('sid');
     }
     var h = function(text) {
-      on_resp(text ? JSON.parse(text) : null);
+      var parsed = text ? JSON.parse(text) : null
+      if (to_log) {
+        log.ui.info('--request--\n' + parsed);
+      }
+      on_resp(parsed);
     };
-    this._send_raw(JSON.stringify(msg),
+    var req = JSON.stringify(msg);
+    if (to_log) {
+      log.ui.info('--request--\n' + req);
+    }
+    this._send_raw(req,
                    "application/json", 
                    h);
   },
@@ -126,7 +134,8 @@ function in_arr(elem, array) {
 function determine_race(gameState, reg) {
   if (is_null(reg.owner)) return null;
   var p = gameState.players[reg.owner - 1];
-  if (reg.inDecline) {
+
+  if (reg.inDecline == 1) {
     if (is_null(p.declineRace)) return null;
     return p.declineRace + '_d';
   } else { 

@@ -159,18 +159,25 @@ var major_modes = {
       available_if: {
         minor_m: ['in_game']
       },
-      init: function(content) {
-        var c = d3.select(content).text('');
+      _create_ui: function() {
+        var c = d3.select('div#content').text('');
             div_game_info = c.append('div')
                              .attr('id', 'game_info');
-            div_playfield = c.append('div')
+        c.append('div')
+          .attr('id', 'actions');
+        var div_playfield = c.append('div')
                              .attr('id', 'playfield_container')
-            ans_cnt = 0;
+            ans_cnt = 0,
+            svg = null;
 
         var hg = function(resp) {
           state.store('net.getGameInfo', resp);
+          state.store('net.getGameState', resp.gameInfo);
+
           ui_elements.game_info(div_game_info, resp.gameInfo);
           if (++ans_cnt == 2) {
+            playfield.apply_game_state(
+              state.get('net.getGameInfo').gameInfo);
             events.exec('game.ui_initialized');
           }
         };
@@ -179,17 +186,37 @@ var major_modes = {
 
         var hm = function(resp) {
           state.store('net.getMapInfo', resp);
-          var svg = div_playfield.append('svg');
+          svg = div_playfield.append('svg');
           playfield.create(svg, resp.mapInfo);
-          playfield.apply_game_state(
-              svg.node(), state.get('net.getGameInfo').gameInfo);
+          
           if (++ans_cnt == 2) {
+            playfield.apply_game_state(
+              state.get('net.getGameInfo').gameInfo);
             events.exec('game.ui_initialized');
           }
         };
         net.send({action: 'getMapInfo', 
                   sid: state.get('sid')}, hm );
 
+      },
+      _watch_game_info_updates: function() {
+        var h = function() {
+          var data = state.get('net.getGameInfo');
+          var div = d3.select('div#game_info').text('');
+          ui_elements.game_info(div, data.gameInfo);
+          
+        };
+        events.reg_h('net.getGameInfo', 
+                     'major_modes.play_game->net.getGameInfo',
+                     h);
+      },
+      init: function() {
+        this._create_ui();
+        this._watch_game_info_updates();                
+      },
+      uninit: function() {
+        events.del_h('net.getGameInfo', 
+                     'major_modes.play_game->net.getGameInfo');
       }
     },
   }
@@ -224,12 +251,12 @@ var minor_modes = {
       available_if: {
         minor_m: ['in_game']
       },
-      init: function() {
+      _create_ui: function() {
         var tok = state.get(
           'net.getGameState.visibleTokenBadges',
           'net.getGameInfo.gameInfo.visibleTokenBadges'
         );
-
+        
         if (is_null(tok)) {
           alert('visibleTokenBadges is null');
         }
@@ -242,17 +269,46 @@ var minor_modes = {
         .enter()
           .append('div')
           .each(function(d, i) {
-
             var t = d3.select(this)
               .attr('class', 'tokens_pack');
             t.append('div').text(d.raceName);
             t.append('div').text(d.specialPowerName);
             t.append('div').text(d.bonusMoney);
           });
+      },
+      _watch_game_state_updates: function() {
+        var h = function() {
+          resp = state.get('net.getGameState');
+          var svg = d3.select('svg#playfield')
+          div_game_info = d3.select('div#game_info'),
+          div_playfield = d3.select('div#playfield_container');
+          
+          ui_elements.update_game_info(div_game_info, resp);
+          playfield.apply_game_state(resp); 
 
+          var tok = resp.visibleTokenBadges;
+          d3.select('div#tokens_packs')
+            .selectAll('div.tokens_pack')
+            .data(tok)
+            .each(function(d) {
+              d3.select(this).selectAll('div')
+                .data([d.raceName, d.specialPowerName, 
+                       d.bonusMoney])
+                .text(String);
+            });
+        };
+        events.reg_h('net.getGameState', 
+                     'minor_modes.game_started->net.getGameState',
+                     h);
+      },
+      init: function() {
+        this._create_ui();
+        this._watch_game_state_updates();
         return 0;
       },
-      uninit: function() {}
+      uninit: function() {
+        event.del_h('minor_modes.game_started->net.getGameState');
+      }
     },
 
     conquer: {
@@ -260,25 +316,49 @@ var minor_modes = {
         minor_m: ['in_game'],
         not_minor_m: ['redeploy', 'defend', 'waiting']
       },
-      init : function() {
-        minor_modes.enable('select_race');
-        minor_modes.enable('decline');
-        
+      _watch_map_onclick: function() {
         var on_resp = function(resp) {
-          alert(JSON.stringify(resp, null, ' '));
+          game.request_game_state();
+          alert(resp.result);
         };
         
         var h = function(reg_i) {
           net.send({"action":"conquer","regionId": reg_i}, 
                    on_resp);
         };
-        events.reg_h('game.region.click', 'conquer_on_click', h);
+        events.reg_h('game.region.click',
+                     'minor_modes.conquer->game.region.click',
+                     h);
+      },
+      _prepare_ui: function() {
+        var h = function() {
+          d3.event.preventDefault();
+          minor_modes.force('redeploy');
+        };
+        d3.select('div#actions')
+          .append('form')
+          .attr('id', 'begin_redeploy')
+          .on('submit', h)
+          .append('input')
+            .attr('type', 'submit')
+            .attr('value', 'redeploy');
+      },
+      init : function() {
+        minor_modes.enable('select_race');
+        minor_modes.enable('decline');
+
+        this._watch_map_onclick();
+        this._prepare_ui();
 
         return 0;
       },
       uninit: function() {
+        events.del_h('game.region.click',
+                     'minor_modes.conquer->game.region.click');
+        d3.select('form#begin_redeploy').remove();
+
         minor_modes.disable('select_race');
-        minor_modes.sicable('decline');
+        minor_modes.disable('decline');
       }
     },
 
@@ -289,6 +369,7 @@ var minor_modes = {
       init : function() {
         var on_resp = function(resp) {
           // TODO:
+          game.request_game_state();
           alert(resp.result);
         };
         var h = function(d, i) {
@@ -308,7 +389,9 @@ var minor_modes = {
             .attr('value', 'select');
         return 0;
       },
-      uninit: function() {}
+      uninit: function() {
+        d3.selectAll('form.select_race').remove();
+      }
     },
 
     decline: {
@@ -318,9 +401,7 @@ var minor_modes = {
       init : function() {
         var on_resp = function(resp) {
           // TODO:
-          if (resp.result == 'eq') {
-          } else {
-          }
+          game.request_game_state();
           alert(resp.result);
         };
 
@@ -347,10 +428,14 @@ var minor_modes = {
     redeploy: {
       available_if: {
         minor_m: ['in_game'],
-        not_minor_m: ['attack', 'defend', 'waiting']
+        not_minor_m: ['decline', 'select_race',
+                      'conquer', 'defend', 'waiting']
+      },
+      _prepare_ui: function() {
+
       },
       init : function() {
-        alert('not implemented');
+        this._prepare_ui();
         return 0;
       },
       uninit: function() {}
@@ -374,9 +459,12 @@ var minor_modes = {
         not_minor_m: ['attack', 'redeploy', 'defend']
       },
       init : function() {
+        game.state_monitor.start();
         return 0;
       },
-      uninit: function() {}
+      uninit: function() {
+        game.state_monitor.stop();
+      }
     }
   }
 };
@@ -385,25 +473,40 @@ minor_modes.have = function(mode) {
   return in_arr(mode, curr_modes.minor);
 }; 
 
-minor_modes.enable = function(mode, params) {
+minor_modes._enable = function(mode, force, params) {
   if (in_arr(mode, curr_modes.minor)) {
     log.d.warn('mode ' + mode + ' already enabled');
     return 0;
   }
 
-  if (is_null(this.storage[mode])) {
+  var m_obj = this.storage[mode];
+  if (is_null(m_obj)) {
     log.d.err('bad mode: ' + mode );
   }
 
-  log.d.info("|minor mode| -> " + mode);
-  log.d.dump(params, 'params');
-
-  if (!_check_if_mod_available(mode)) {
+  if (!_check_if_mod_available(m_obj, force)) {
     log.d.warn('mode is not avaible');
     return 0;
   }
 
+  log.d.info("|minor mode| -> " + mode);
+  log.d.dump(params, 'params');
   curr_modes.minor.push(mode);
+
+  if (force) {
+    if (!is_null(m_obj.available_if.not_minor_m)) {
+      var c = m_obj.available_if.not_minor_m;
+      var len = c.length;
+      var i = 0;
+      for (; i < len; ++i) {
+        minor_modes.disable(c[i]);
+        if (c.length < len) {
+          len = c.length;
+          i = 0;
+        }
+      }
+    }
+  }
 
   if (!this.storage[mode].init(params)) {
     return 0;
@@ -412,6 +515,14 @@ minor_modes.enable = function(mode, params) {
   ui.create_menu();
 
   return 1;
+};
+
+minor_modes.enable = function(mode, params) {
+  return this._enable(mode, 0, params);
+};
+
+minor_modes.force = function(mode, params) {
+  return this._enable(mode, 1, params);
 };
 
 minor_modes.disable = function(mode) {
@@ -458,7 +569,7 @@ minor_modes.disable = function(mode) {
   return 1;
 };
 
-function _check_if_mod_available(m_obj) {
+function _check_if_mod_available(m_obj, only_dependencies) {
   if (is_null(m_obj.available_if)) {
     return true;
   }
@@ -470,14 +581,6 @@ function _check_if_mod_available(m_obj) {
     }
     if (!ok) { return false; }
   }
-  if (!is_null(m_obj.available_if.not_major_m)) { 
-    var c = m_obj.available_if.major_m;
-    for (var i = 0; i < c.length && !ok; ++i) {
-      if (curr_modes.major == c[i]) {
-        return false;
-      }
-    }
-  }
   if (!is_null(m_obj.available_if.minor_m)) {
     var c = m_obj.available_if.minor_m;
     var ok = 0;
@@ -486,9 +589,23 @@ function _check_if_mod_available(m_obj) {
     }
     if (!ok) { return false; }
   }
+
+  if (!is_null(m_obj.available_if.not_major_m)) { 
+    var c = m_obj.available_if.major_m;
+    for (var i = 0; i < c.length; ++i) {
+      if (curr_modes.major == c[i]) {
+        return false;
+      }
+    }
+  }
+
+  if (zero_or_one(only_dependencies)) {
+    return true;
+  }
+
   if (!is_null(m_obj.available_if.not_minor_m)) {
     var c = m_obj.available_if.not_minor_m;
-    for (var i = 0; i < c.length && !ok; ++i) {
+    for (var i = 0; i < c.length; ++i) {
       if (in_arr(c[i], curr_modes.minor)) {
         return false;
       }

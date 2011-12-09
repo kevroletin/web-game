@@ -302,8 +302,13 @@ playfield.create = function(svg, map) {
     .attr('class', 'playfield')
     .attr('width', 500)
     .attr('height', 500);
-  
+
+//hach to move pleyfielt to right and get place to tokens storage
+  svg = svg.append('svg:g')
+      .attr("transform", "translate(100,15)");
+
   var reg = svg.append('g').attr('id', 'regions');
+  var free_tks = svg.append('g').attr('id', 'free_tokens');
   var tks = svg.append('g').attr('id', 'tokens');
   
   var line = d3.svg.line();
@@ -312,6 +317,7 @@ playfield.create = function(svg, map) {
     .data(map.regions)
   .enter()
     .append('g')
+    .attr('id', function(d, i) { return 'tok_' + i })
     .each(function(d, i) { this.constState = d })
 
   reg.selectAll('path')
@@ -355,10 +361,9 @@ playfield.create = function(svg, map) {
   return svg.node();
 };
 
-playfield.apply_game_state = function(svg, gameState) {
+playfield.apply_game_state = function(gameState) {
 //  log.d.pretty(gameState);
-
-  var tks = d3.select(svg).select('g#tokens');
+  var tks = d3.select('g#tokens');
   tks.selectAll('g')
     .data(gameState.regions)
     .each(function(d, i) {
@@ -366,14 +371,33 @@ playfield.apply_game_state = function(svg, gameState) {
       var data = d3.select(this).selectAll('image')
                    .data(d3.range(0, d.tokensNum));
       var race = determine_race(gameState, d);
-      data.enter()
-        .append('svg:image')
+      data.enter().append('svg:image')
+      data.exit().remove();
+      d3.select(this).selectAll('image')
         .attr('x', function(d, i) { return (cs.raceCoords[0] + i*4) })
         .attr('y', function(d, i) { return (cs.raceCoords[1] + i*4) })
         .attr('width', '50px')
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) );
-      data.exit().remove();
+    });
 
+  var free_tks = d3.select('g#free_tokens');
+  var data = free_tks.selectAll('g').data(gameState.players);
+  data.enter().
+    append('svg:g')
+    .attr('id', function(d, i) { return 'ftoks_' + i });
+  free_tks.selectAll('g')
+    .each(function(d, player_i) {
+      var r = d3.range(0, d.tokensInHand);
+      var race = game.active_player().activeRace;
+      var data = d3.select(this).selectAll('image').data(r);
+      data.exit().remove();
+      data.enter().append('svg:image');
+      d3.select(this).selectAll('image').data(r)
+        .attr('x', function(d, i) { return ( -100 + i*4) })
+        .attr('y', function(d, i) { return ( player_i*40 + i*4) })
+        .attr('width', '50px')
+        .attr('height', '50px')
+        .attr('xlink:href', rsc('img.rc.s')(race) );
     });
 };
