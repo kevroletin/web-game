@@ -4,6 +4,8 @@ use warnings;
 
 use KiokuDB;
 use KiokuDB::Backend::DBI;
+use KiokuDB::Backend::BDB;
+use KiokuDB::Backend::BDB::GIN;
 use Search::GIN::Extract::Callback;
 
 use Game::Environment qw(db db_scope);
@@ -53,7 +55,19 @@ sub _register_default_extractors {
 sub connect_db {
     _register_default_extractors();
     my $dir = KiokuDB->new(
-        backend => KiokuDB::Backend::DBI->new({
+# Search::Gin queries with intersection doesn't work
+#      backend => KiokuDB::Backend::BDB::GIN->new(
+#          manager => {
+#               home => "tmp/db",
+#               create => 1,
+#               transactions => 0
+#          },
+#          extract => Search::GIN::Extract::Callback->new(
+#              extract => \&_all_extractors
+#          )
+#      ),
+
+       backend => KiokuDB::Backend::DBI->new({
             create => 1,
             dsn => 'dbi:SQLite:dbname=tmp/test.db',
             extract => Search::GIN::Extract::Callback->new(

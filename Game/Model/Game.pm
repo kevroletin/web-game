@@ -97,7 +97,7 @@ before 'state' => sub {
     my ($self, $new_state) = @_;
     if (defined $new_state &&
         $self->state() eq 'notStarted' &&
-        $new_state eq 'startMoving')
+        $new_state ne 'notStarted')
     {
         $self->_create_tokens_pack();
     }
@@ -303,7 +303,6 @@ sub _load_attacks_history_from_state {
     my $h = $data->{attacksHistory};
     assert(ref($h) eq 'ARRAY', $err, descr => 'notArray');
     my @res;
-    print Dumper $self->map(), $h;
     for my $hist_item (@{$h}) {
         assert(ref($hist_item) eq 'HASH', $err,
                notHash => $hist_item);
@@ -333,7 +332,6 @@ sub _load_attacks_history_from_state {
           whom => $p ? $p->id() : undef
         }
     }
-    print Dumper(\@res);
 
     $self->history(\@res)
 }
@@ -343,7 +341,7 @@ sub load_state {
 
     die 'bad map id' if $data->{mapId} ne $self->map()->id();
 
-    my @st = qw(conquer startMoving redeployed defend declined);
+    my @st = qw(conquer redeployed defend declined);
     assert(($data->{state} ~~ @st), 'badState');
     $self->state($data->{state});
 

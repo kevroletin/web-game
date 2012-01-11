@@ -298,12 +298,33 @@ var playfield = {};
 
 playfield.create = function(svg, map) {
 
-  svg.attr('xmlns', "http://www.w3.org/2000/svg") 
+  svg
     .attr('class', 'playfield')
     .attr('width', 500)
     .attr('height', 500);
 
-//hach to move pleyfielt to right and get place to tokens storage
+  var bg = ['swamp', 'hill', 'forest', 'farmland', 'mountain',
+            'sea'];
+
+  var df = svg.append('defs').selectAll('pattern')
+    .data(bg)
+  .enter()
+    .append('svg:pattern')
+    .attr('id', function(d) { return 'bg_' + d })
+    .attr('patternUnits', "userSpaceOnUse")
+    .attr('x', "0")
+    .attr('y', "0")
+    .attr('width', "50")
+    .attr('height', "50")
+    .attr('viewBox', "0 0 50 50")
+    .append('svg:image')
+      .attr('xlink:href', function(d) { return rsc('img.bg')(d) })
+      .attr('width', 50)
+      .attr('height', 50)
+      .attr('x', 0)
+      .attr('y', 0);
+
+//move playfielt to right and get place to tokens storage
   svg = svg.append('svg:g')
       .attr("transform", "translate(100,15)");
 
@@ -325,8 +346,15 @@ playfield.create = function(svg, map) {
   .enter()
     .append("svg:path")
     .attr('id', function(d, i) { return 'm_r_' + i })
+    .style('fill', function(d) { 
+      var res = d.landDescription.filter(function(d) { 
+        return in_arr(d, bg);
+      });
+      return 'url(#bg_' + res[0] + ')';
+    })
     .attr('class', function(d) {
-      return 'm_r , ' + d.landDescription
+      return 'm_r , ' + 
+        d.landDescription
         .map(function(e) { return 'm_r_t_' + e })
         .join(' ');
     })
@@ -367,6 +395,7 @@ playfield.apply_game_state = function(gameState) {
   tks.selectAll('g')
     .data(gameState.regions)
     .each(function(d, i) {
+
       var cs = this.constState;
       var data = d3.select(this).selectAll('image')
                    .data(d3.range(0, d.tokensNum));

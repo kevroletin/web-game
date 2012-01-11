@@ -85,8 +85,7 @@ has 'powerCoords' => ( isa => 'ArrayRef[Int]',
 # TODO:
 # FIXME: rename tokensNum -> population
 sub tokensNum {
-    my $self = shift;
-    $self->population(@_);
+    shift->population(@_);
 }
 
 sub extract_state {

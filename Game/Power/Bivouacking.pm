@@ -16,7 +16,7 @@ after '_redeploy_units' => sub {
     my $enc_cnt = sum 0, grep { $_ }
         map { $_->extraItems()->{encampment} }
             global_user()->owned_regions();
-    $enc_cnt += $moves->{encampments_sum};
+    $enc_cnt += $moves->{encampments_sum} || 0;
     if ($enc_cnt > 5) {
         early_response_json({result => 'badEncampmentsNum'})
     }

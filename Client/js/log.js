@@ -52,7 +52,30 @@ var log = {
     },
     pretty: function(obj, descr) { 
       this._append_log(JSON.stringify(obj, null, ' '))
-    }
+    },
 
-  }
+    _modes_init: function() {
+      var div = d3.select('body')
+        .append('div')
+          .classed('debug_modes_log', 1)
+          .style('width', '300px')
+          .style('height', '300px')
+          .style('position', 'absolute')
+          .style('background-color', 'white')
+          .style('border', '1px black solid')
+          .style('right', 0)
+          .style('top', '300px')
+          .style('overflow', 'scroll')
+      return div.append('pre');
+    },
+    _get_modes_log: function() {
+      var log = this._modes_init();
+      this._get_modes_log = function () { return log }
+      return log
+    },
+    modes: function(modes) {
+      var l = this._get_modes_log();
+      l.text(JSON.stringify(modes, null, ' '));
+    }
+  },
 };

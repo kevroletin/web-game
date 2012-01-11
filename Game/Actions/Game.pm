@@ -174,7 +174,7 @@ sub setReadinessStatus {
 
     global_user()->readinessStatus($data->{isReady});
     if ($game->ready()) {
-        $game->state('startMoving');
+        $game->state('conquer');
     }
 
     db()->update(global_user(), $game);

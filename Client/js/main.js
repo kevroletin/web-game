@@ -39,20 +39,21 @@ var game = {
     
     events.reg_h('game.ui_initialized', 'start main loop',
                  game.request_game_state );
-
-/*    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
-                 ui.create_menu); */
-//    major_modes.change('login');
-//  ***
+/*
+    events.reg_h('ui.refresh_menu', 'ui_create_menu', 
+                 ui.create_menu);
+    major_modes.change('login');
+*/
+/**/
     var i = 2
     ;
     state.store('sid', i);
     state.store('gameId', i)
-    game.get_current_user_info()
-
     minor_modes.enable('logined');
+    game.get_current_user_info()
     minor_modes.enable('in_game');
     major_modes.change('play_game');
+/**/
 
     log.d.info('Game core initialized');
   }
@@ -72,6 +73,8 @@ game.get_current_user_info = function() {
 };
 
 game.fix_minor_mode_from_game_state = function() {
+  log.d.info("===fix minor mode===");
+
   var getGameState = state.get(
     'net.getGameState',
     'net.getGameInfo.gameInfo'
@@ -91,35 +94,42 @@ game.fix_minor_mode_from_game_state = function() {
     waiting: 0,
   };
   
+  minor_modes.enable('game_started');
   if (game.active_player_id() != state.get('userId')) {
-    new_modes['waiting'] = 1
+    minor_modes.force('waiting');
+//    new_modes['waiting'] = 1
   } else {
     var a = {
-      startMoving: function() { this.conquer() },
       conquer: function() {
         if (getGameState.attacksHistory.length == 0) {
-          // TODO: select race
+          if (is_null(getGameState.activeRace)) {
+            // TODO: select race
+          } else { 
+            // TODO: allow decline
+          }
         }
         new_modes['conquer'] = 1
-
+        minor_modes.force('conquer');
       },
       defend: function() { new_modes['defend'] = 1 },
       redeploy: function() { new_modes['redeploy'] = 1 },
-      redeployed: function() { new_modes['redeployed'] = 1 }
-      
+      redeployed: function() { new_modes['redeployed'] = 1 },      
+      declined: function() { new_modes['declined'] = 1 }
     };
     a[state_field]();
-  }
-
-  minor_modes.enable('game_started');
-  for (var i in new_modes) {
-    if (new_modes[i]) {
-      minor_modes.enable(i);
-    } else {
-      minor_modes.disable(i);
+    for (var i in new_modes) {
+      if (!new_modes[i]) {
+        minor_modes.disable(i);
+      }
+    }
+    for (var i in new_modes) {
+      if (new_modes[i]) {
+        minor_modes.enable(i);
+      }
     }
   }
 
+  log.d.info("=== finished ===");
 };
 
 game.request_game_state = function() {

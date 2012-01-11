@@ -21,6 +21,7 @@ var major_modes = {
     curr_modes.major = new_m;
 
     ui.create_menu();
+    log.ui.modes(curr_modes);
   },
   
   available_modes: function() {
@@ -186,7 +187,7 @@ var major_modes = {
 
         var hm = function(resp) {
           state.store('net.getMapInfo', resp);
-          svg = div_playfield.append('svg');
+          svg = div_playfield.append('svg:svg');
           playfield.create(svg, resp.mapInfo);
           
           if (++ans_cnt == 2) {
@@ -240,11 +241,8 @@ var minor_modes = {
       available_if: {
         minor_m: ['logined']
       },
-      init: function() {
-        return 1;
-      },
-      uninit: function() {
-      }
+      init: function() { return 1;  },
+      uninit: function() {  }
     },
 
     game_started: {
@@ -514,7 +512,7 @@ var minor_modes = {
     redeployed: {
       available_if: {
         minor_m: ['in_game'],
-        not_minor_m: ['attack', 'redeploy', 'waiting']
+        not_minor_m: ['conquer', 'redeploy', 'waiting']
       },
       init : function() {
         var on_resp = function(resp) {
@@ -541,10 +539,40 @@ var minor_modes = {
       }
     },
 
+    declined: {
+      available_if: {
+        minor_m: ['in_game'],
+        not_minor_m: ['conquer', 'redeploy', 'waiting']
+      },
+      init : function() {
+        var on_resp = function(resp) {
+          alert(resp.result);
+          if (resp.result == 'ok')  {
+            minor_modes.force('waiting');
+          }
+        };
+        var h = function() {
+          d3.event.preventDefault();
+          net.send({action: 'finishTurn'}, on_resp, 1)
+        };
+        d3.select('div#actions')
+          .append('form')
+          .attr('id', 'finish_turn')
+          .on('submit', h)
+          .append('input')
+            .attr('type', 'submit')
+            .attr('value', 'finish_turn');
+        return 0;
+      },
+      uninit: function() {
+        d3.select('form#finish_turn').remove();
+      }
+    },
+    
     defend: {
       available_if: {
         minor_m: ['in_game'],
-        not_minor_m: ['attack', 'redeploy', 'waiting']
+        not_minor_m: ['conquer', 'redeploy', 'waiting']
       },
       init : function() {
         var r_m = minor_modes.storage.redeploy;
@@ -574,7 +602,8 @@ var minor_modes = {
     waiting: {
       available_if: {
         minor_m: ['in_game'],
-        not_minor_m: ['attack', 'redeploy', 'defend']
+        not_minor_m: ['conquer', 'redeploy', 'redeployed', 'defend',
+                      'declined']
       },
       init : function() {
         game.state_monitor.start();
@@ -599,7 +628,7 @@ minor_modes._enable = function(mode, force, params) {
 
   var m_obj = this.storage[mode];
   if (is_null(m_obj)) {
-    log.d.err('bad mode: ' + mode );
+    log.d.error('bad mode: ' + mode );
   }
 
   if (!_check_if_mod_available(m_obj, force)) {
@@ -632,6 +661,7 @@ minor_modes._enable = function(mode, force, params) {
 
   ui.create_menu();
 
+  log.ui.modes(curr_modes);
   return 1;
 };
 
@@ -684,6 +714,7 @@ minor_modes.disable = function(mode) {
 
   ui.create_menu();
 
+  log.ui.modes(curr_modes);
   return 1;
 };
 

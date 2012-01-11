@@ -53,8 +53,6 @@ use Exporter::Easy( OK => [qw(conquer
                               selectRace
                               throwDice)] );
 
-# TODO: remove startMoving state. Use information from
-# game->history() instead
 sub _control_state {
     my ($data) = @_;
     my $a = $data->{action};
@@ -78,18 +76,26 @@ sub _control_state {
         $ok->($game->activePlayer()->activeRace() &&
               $game->activePlayer()->activeRace()->power_name() eq $_[0]);
     };
+    my $start_moving = sub {
+        $state->('conquer');
+        $ok->(!@{$game->history()})
+    };
+    my $have_race = sub {
+        $ok->($game->activePlayer()->activeRace())
+    };
 
     if ($a eq 'conquer' ) {
         $curr_usr->();
-        $state->('conquer', 'startMoving');
+        $state->('conquer');
         $ok->(global_user()->activeRace());
     } elsif ($a eq 'decline' ) {
         $curr_usr->();
+        $have_race->();
         my $race = $game->activePlayer()->activeRace();
-        if ($race && $race->power_name() eq 'stout') {
-            $state->('startMoving', 'redeployed');
+        if ($race->power_name() eq 'stout') {
+            $state->('conquer', 'redeployed');
         } else {
-            $state->('startMoving');
+            $start_moving->();
         }
         $ok->(global_user()->activeRace())
     } elsif ($a eq 'defend' ) {
@@ -103,12 +109,14 @@ sub _control_state {
     } elsif ($a eq 'enchant' ) {
         $curr_usr->();
         $race->('sorcerers');
-        $state->('startMoving', 'conquer')
+        $state->('conquer')
     } elsif ($a eq 'finishTurn' ) {
         $curr_usr->();
+#        $have_race->();
         $state->('redeployed', 'declined')
     } elsif ($a eq 'redeploy' ) {
         $curr_usr->();
+        $have_race->();
         $state->('conquer')
     } elsif ($a eq 'selectFriend' ) {
         $curr_usr->();
@@ -116,11 +124,11 @@ sub _control_state {
         $state->('redeployed');
     } elsif ($a eq 'selectRace' ) {
         $curr_usr->();
-        $state->('startMoving');
+        $start_moving->();
         $ok->(!global_user()->activeRace())
     } elsif ($a eq 'throwDice' ) {
         $curr_usr->();
-        $state->('startMoving', 'conquer');
+        $state->('conquer');
         $power->('berserk')
     }
 }
@@ -293,10 +301,21 @@ sub finishTurn {
         $coins += global_user()->declineRace()->compute_coins(\@reg_d)
     }
     global_user()->coins(global_user()->coins() + $coins);
-    $game->next_player();
-    $game->state('startMoving');
 
-    db()->update($game, global_user());
+    $game->next_player();
+    my $tok_cnt = $game->activePlayer()->tokensInHand();
+    @reg = $game->activePlayer()->owned_regions();
+    for my $reg (@reg) {
+        my $d = $reg->tokensNum() - 1;
+        if ($d > 0) {
+            $reg->tokensNum(1);
+            $tok_cnt += $d;
+        }
+    }
+    $game->activePlayer()->tokensInHand($tok_cnt);
+    $game->state('conquer');
+
+    db()->update($game, global_user(), $game->activePlayer(), @reg);
 
     # TODO: may be move most of this action handler into
     # Race.pm->finishTurn
