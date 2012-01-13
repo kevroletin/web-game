@@ -367,6 +367,9 @@ sub selectRace {
     unless ($p =~ /^\d+$/ && 0 <= $p && $p <= 5) {
         early_response_json({result => 'badPosition'})
     }
+    for (0 .. $p) {
+        $game->bonusMoney()->[$_] += 1;
+    }
     my $coins = $game->bonusMoney()->[$p] - $p;
     if (global_user()->coins() + $coins < 0 ) {
         early_response_json({result => 'badMoneyAmount'})

@@ -655,13 +655,14 @@ minor_modes._enable = function(mode, force, params) {
     }
   }
 
+  log.ui.modes(curr_modes);
+
   if (!this.storage[mode].init(params)) {
     return 0;
   }
 
   ui.create_menu();
 
-  log.ui.modes(curr_modes);
   return 1;
 };
 
