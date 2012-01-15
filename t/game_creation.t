@@ -376,7 +376,7 @@ GO(
 }'
 ,
 '{
-"result": "badGameStage"
+"result": "badStage"
 }',
 $user3 );
 

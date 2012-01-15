@@ -250,7 +250,7 @@ sub already_json_test {
         my ($in, $out, $res) = @_;
         return _json_compare($in, $out, from_json($res))
     };
-    _run_test($compare, to_json($in), @_)
+    _run_test($compare, to_json($in, {pretty => 1}), @_)
 }
 
 sub custom_compare_test {

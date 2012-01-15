@@ -45,7 +45,7 @@ var game = {
     major_modes.change('login');
 */
 /**/
-    var i = 2
+    var i = 1
     ;
     state.store('sid', i);
     state.store('gameId', i)

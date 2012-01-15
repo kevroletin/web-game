@@ -381,7 +381,7 @@ GO(
 }'
 ,
 '{
-"result":"badGameStage"
+"result":"badStage"
 }',
 $user2 );
 
@@ -423,7 +423,7 @@ GO(
 }'
 ,
 '{
-"result":"badGameStage"
+"result":"badStage"
 }',
 $user2 );
 
@@ -437,7 +437,7 @@ GO(
 }'
 ,
 '{
-"result":"badGameStage"
+"result":"badStage"
 }',
 $user2 );
 

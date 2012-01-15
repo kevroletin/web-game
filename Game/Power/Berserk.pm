@@ -18,7 +18,7 @@ sub throwDice {
     if (defined $self->lastDiceValue() ||
         global_user()->tokensInHand() == 0)
     {
-        early_response_json({result => 'badGameStage'})
+        early_response_json({result => 'badStage'})
     }
     my $dice = int rand(4);
     $self->lastDiceValue($dice);

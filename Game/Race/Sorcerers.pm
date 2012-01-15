@@ -18,7 +18,7 @@ sub tokens_cnt { 5 }
 sub enchant {
     my ($self, $reg) = @_;
     if ($self->enchanted()) {
-        early_response_json({result => 'badGameStage'})
+        early_response_json({result => 'badStage'})
     }
     unless ($self->_region_is_adjacent_with_our($reg) &&
             !$reg->inDecline() &&

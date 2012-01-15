@@ -72,7 +72,7 @@ sub process_request {
     if (!_is_action_without_sid($data->{action}) &&
         !init_user_by_sid($data->{sid}))
     {
-        response_json({result => 'badSid'});
+        response_json({result => 'badUserSid'});
         return;
     }
 

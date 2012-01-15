@@ -9,6 +9,7 @@ use File::Spec;
 use Tester;
 use Tester::OK;
 use Tester::Hooks;
+use Tester::State;
 use File::Slurp q(read_file);
 use JSON;
 
@@ -41,10 +42,15 @@ sub SendTests {
 
     while(@{$in_json->{test}}) {
         my $in = shift @{$in_json->{test}};
+        my $action = $in->{action};
         my $out = shift @$out_json;
         $in and $out or die "bad test structure";
 
-        TEST("$descr:$i");
+        if ($in->{regionId}) {
+            $in->{regionId} += 1;
+        }
+
+        TEST("$descr-$i: $action");
         GO($in, $out, {} );
 
         ++$i;
@@ -63,6 +69,9 @@ for (@files) {
     my $in = read_file($_);
     my $out = read_file($base . '.ans');
     init_logs(File::Spec->join($log_dir, $base));
+
+    print "=== $_ ===";
+
     SendTests(\$in, \$out, $base);
     close_logs();
 }

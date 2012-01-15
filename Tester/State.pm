@@ -111,7 +111,8 @@ sub register_two_users_and_create_square_map {
     ,
     '{
     "result": "ok",
-    "sid": ""
+    "sid": "",
+    "userId": ""
     }'
     , $user1 );
 
@@ -141,7 +142,8 @@ sub register_two_users_and_create_square_map {
     ,
     '{
     "result": "ok",
-    "sid": ""
+    "sid": "",
+    "userId": ""
     }'
     , $user2 );
 
@@ -231,7 +233,6 @@ sub register_two_users_and_create_square_map {
     $user1 );
 
     ($user1, $user2)
-
 }
 
 sub square_map_two_users {
@@ -253,6 +254,7 @@ sub square_map_two_users {
     }',
     $user1 );
 
+=begin comment
 
     TEST("Join Game");
     GO(
@@ -267,6 +269,7 @@ sub square_map_two_users {
     }',
     $user1 );
 
+=cut comment
 
     TEST("Join Game 2nd user");
     $user2->{_gameId} = $user1->{_gameId};
@@ -368,7 +371,7 @@ sub square_map_two_users_debug_state {
            '}', '{"result": "ok"}',
            {res_hook => sub { $res = $_[0] }});
 
-        my $ok = $res->{result} && $res->{result} eq 'ok';
+        my $ok = defined $res->{result} && $res->{result} eq 'ok';
         write_msg("\n*** Load Game  ***: $ok\n");
         write_msg(Dumper $res) unless $ok;
 

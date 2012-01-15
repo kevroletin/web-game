@@ -14,6 +14,7 @@ use Game::Model::Counter;
 
 use Exporter::Easy (
     OK => [ qw(assert
+               compability
                db
                db_search
                db_search_one
@@ -34,7 +35,8 @@ use Exporter::Easy (
                stack_trace) ],
 );
 
-my ($db,
+my ($compability,
+    $db,
     $db_scope,
     $environment,
     $global_user,
@@ -46,6 +48,11 @@ my ($db,
 sub assert {
     my ($ok, $msg, %h) = @_;
     early_response_json({result => $msg, %h}) unless $ok;
+}
+
+sub compability {
+    if (@_) { $compability = $_[0] }
+    $compability
 }
 
 sub db {
@@ -97,7 +104,7 @@ sub environment {
 
 sub global_game {
     unless ($global_user) {
-        early_response_json({result => 'badSid'})
+        early_response_json({result => 'badUserSid'})
     }
     my $g = $global_user->activeGame();
     early_response_json({result => 'notInGame'}) unless $g;

@@ -59,7 +59,7 @@ sub _control_state {
     my $game = global_game();
     my $ok = sub {
         unless ($_[0]) {
-            early_response_json({result => 'badGameStage'})
+            early_response_json({result => 'badStage'})
         }
     };
     my $state = sub {

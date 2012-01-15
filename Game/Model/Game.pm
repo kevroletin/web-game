@@ -97,9 +97,10 @@ before 'state' => sub {
     my ($self, $new_state) = @_;
     if (defined $new_state &&
         $self->state() eq 'notStarted' &&
-        $new_state ne 'notStarted')
+        $new_state ne 'notStarted' &&
+        !@{$self->racesPack()})
     {
-        $self->_create_tokens_pack();
+        $self->_create_tokens_pack()
     }
 };
 
@@ -263,7 +264,7 @@ sub _load_token_badges_from_state {
 
         assert(defined $race &&
                ($race ~~ races_with_debug()),
-               'badRace', $race => $race);
+               'badRace', race => $race);
         assert(defined $power &&
                ($power ~~ powers_with_debug()),
                'badPower', power => $power);

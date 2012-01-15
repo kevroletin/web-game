@@ -3,7 +3,8 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(assert db db_search db_search_one
+use Game::Environment qw(assert compability is_debug
+                         db db_search db_search_one
                          early_response_json
                          init_user_by_sid
                          global_game
@@ -44,10 +45,16 @@ sub _construct_new_game {
 
 sub createGame {
     my ($data) = @_;
+    assert(!global_user()->activeGame(), 'alreadyInGame');
 
     my $game = _construct_new_game($data);
 
+    global_user()->activeGame($game);
+    $game->add_player(global_user());
+
     db()->store_nonroot($game);
+    db()->update(global_user());
+
     response_json({ result => 'ok', gameId => $game->gameId() });
 }
 
@@ -169,12 +176,17 @@ sub setReadinessStatus {
 
     my $game = global_game();
     unless ($game->state() eq 'notStarted') {
-        early_response_json({result => 'badGameStage'})
+        early_response_json({result => 'badGameState'})
     }
 
     global_user()->readinessStatus($data->{isReady});
     if ($game->ready()) {
         $game->state('conquer');
+    }
+
+    if (compability() && is_debug() && defined $data->{visibleRaces}) {
+        $game->racesPack([map { lc($_) } @{$data->{visibleRaces}}]);
+        $game->powersPack([map { lc($_) } @{$data->{visibleSpecialPowers}}]);
     }
 
     db()->update(global_user(), $game);

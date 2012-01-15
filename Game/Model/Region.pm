@@ -63,7 +63,7 @@ has 'owner' => ( isa => 'Maybe[Game::Model::User]',
 
 has 'population' => ( isa => 'Int',
                       is => 'rw',
-                      required => 1 );
+                      default => 0 );
 
 has 'coordinates' => ( isa => 'ArrayRef[ArrayRef[Int]]',
                        is => 'rw',

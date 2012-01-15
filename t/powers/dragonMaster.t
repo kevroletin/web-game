@@ -30,7 +30,7 @@ GO(
 }'
 ,
 '{
-"result": "badGameStage"
+"result": "badStage"
 }',
 $user1 );
 
@@ -193,7 +193,7 @@ GO(
 }'
 ,
 '{
-"result": "badGameStage"
+"result": "badStage"
 }',
 $user2 );
 

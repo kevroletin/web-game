@@ -25,6 +25,17 @@ sub createDefaultMaps {
         my $n_map = db_search_one({ name => $map->{name} },
                                   { CLASS => 'Game::Model::Map'});
         db()->delete($n_map) if defined $n_map;
+        # TODO:
+        # FIXME: sync with other teams regions numeration
+        my $create_reg = sub {
+            my $r = shift;
+            for (0 .. $#{$r->{adjacent}}) {
+                $r->{adjacent}[$_] -= 1
+            }
+            Game::Model::Region->new(%$r)
+        };
+        my @new_reg = map { $create_reg->($_) } @{$map->{regions}};
+        $map->{regions} = \@new_reg;
         $n_map = Game::Model::Map->new(%{$map});
         db()->insert_nonroot($n_map);
     }
@@ -73,20 +84,23 @@ sub uploadMap {
     }
 
     my @regions;
-    eval {
-        @regions = map { Game::Model::Region->new($_) } @{$data->{regions}};
-    };
-    if ($@) {
-        if (ref($@) eq 'Game::Exception::EarlyResponse' ) {
-            die $@
-        } else {
-            early_response_json({result => 'badJson'})
+    for my $i (0 .. $#{$data->{regions}}) {
+        my $reg = eval {
+            Game::Model::Region->new($data->{regions}[$i]);
+        };
+        if ($@) {
+            if (ref($@) eq 'Game::Exception::EarlyResponse' ) {
+                die $@
+            } else {
+                early_response_json({result => 'badRegion', num => $i})
+            }
         }
+        push @regions, $reg
     }
 
     $map = Game::Model::Map->new(
                params_from_proto('mapName', 'playersNum', 'turnsNum'),
-               regions => [@regions]
+               regions => \@regions
            );
     db()->insert_nonroot($map);
     response_json({result => 'ok', mapId => $map->id()});

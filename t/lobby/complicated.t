@@ -12,6 +12,9 @@ use Tester::Hooks;
 init_logs('lobby/complicated');
 ok( reset_server(), 'reset server' );
 
+my ($user1, $user2) = map { params_same(qw(sid userId)) } 1 .. 2;
+
+
 TEST("Bad json 1");
 GO(
 'asdfs;dlkfj'
@@ -83,8 +86,6 @@ GO(
 
 TEST("First user login");
 
-my $sid_1 = '';
-
 GO(
 '{
 "action": "login",
@@ -93,13 +94,12 @@ GO(
 }'
 ,
 '{
-"result": "ok"
+"result": "ok",
+"sid":"",
+"userId":""
 }'
 ,
-   {
-    res_hook => sid_to_params($sid_1),
-    out_hook => sid_from_params()
-   }
+$user1
 );
 
 
@@ -119,9 +119,6 @@ GO(
 
 
 TEST("Second user login");
-
-my $sid_2 = '';
-
 GO(
 '{
 "action": "login",
@@ -130,30 +127,29 @@ GO(
 }'
 ,
 '{
-"result": "ok"
+"result": "ok",
+"sid": "",
+"userId": ""
 }'
 ,
-   {
-    res_hook => sid_to_params($sid_2),
-    out_hook => sid_from_params()
-   }
+$user2
 );
 
 
-ok( $sid_1 ne $sid_2, 'sids differ');
+ok( $user1->{_sid} ne $user2->{_sid}, 'sids differ');
 
 
 TEST("User1 logout");
 GO(
 '{
 "action": "logout",
-"sid": "' . $sid_1 . '"
+"sid": ""
 }'
 ,
 '{
 "result": "ok"
 }'
-, {}
+, $user1
 );
 
 
@@ -161,13 +157,13 @@ TEST("User1 logout twice");
 GO(
 '{
 "action": "logout",
-"sid": "' . $sid_1 . '"
+"sid": ""
 }'
 ,
 '{
-"result": "badSid"
+"result": "badUserSid"
 }'
-, {}
+, $user1
 );
 
 
@@ -175,34 +171,31 @@ TEST("User1 doSmth befor login ");
 GO(
 '{
 "action": "doSmth",
-"sid": "' . $sid_1 . '"
+"sid": ""
 }'
 ,
 '{
-"result": "badSid"
+"result": "badUserSid"
 }'
-, {}
+, $user1
 );
 
 
-TEST("User2 doSmth ");
+TEST("User2 doSmth");
 GO(
 '{
 "action": "doSmth",
-"sid": "' . $sid_2 . '"
+"sid": ""
 }'
 ,
 '{
 "result": "ok"
 }'
-, {}
+, $user2
 );
 
 
 TEST("Second user login twice");
-
-my $sid_2_new = '';
-
 GO(
 '{
 "action": "login",
@@ -211,13 +204,12 @@ GO(
 }'
 ,
 '{
-"result": "ok"
+"result": "ok",
+"sid": "",
+"userId": ""
 }'
 ,
-   {
-    res_hook => sid_to_params($sid_2_new),
-    out_hook => sid_from_params()
-   }
+$user2
 );
 
 
@@ -225,13 +217,14 @@ TEST("Second user using old sid");
 GO(
 '{
 "action": "doSmth",
-"sid": "' . $sid_2 . '"
+"sid": ""
 }'
 ,
 '{
-"result": "badSid"
+"result": "badUserSid"
 }'
-, {}
+,
+$user1
 );
 
 TEST("First user register twice");

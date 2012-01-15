@@ -48,7 +48,7 @@ sub getUserInfo {
     } elsif (defined $data->{sid}) {
         init_user_by_sid($data->{sid});
         $user = global_user();
-        $err = 'badSid'
+        $err = 'badUserSid'
     } else {
         $err = 'badJson'
     }
@@ -80,7 +80,8 @@ sub login {
     $user->sid(_gen_sid());
     db->update($user);
     response_json({'result' => 'ok',
-                   'sid' => $user->sid() });
+                   'sid' => $user->sid(),
+                   'userId' => $user->id() });
 }
 
 sub logout {

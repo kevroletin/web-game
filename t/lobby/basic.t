@@ -27,7 +27,7 @@ init_logs('lobby/basic');
 reset_server();
 
 my ($descr, $in, $out, $h);
-$h = params_same_sid();
+$h = params_same(qw(sid userId));
 do {
     if ($in) {
         write_log($descr);
@@ -61,7 +61,7 @@ do {
     $in = '{
 "action": "logout"
 }';
-    $out = '{ "result": "badSid" }';
+    $out = '{ "result": "badUserSid" }';
     OK( json_compare_test($in, $out, $h), "bad pasword error");
 }
 

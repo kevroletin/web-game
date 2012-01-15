@@ -8,7 +8,8 @@ use Plack::Response;
 use Plack::Request;
 use Game::Constants;
 
-use Game::Environment qw(environment is_debug if_debug
+use Game::Environment qw(environment compability
+                         is_debug if_debug
                          request response response_json
                          stack_trace);
 use Game::Dispatcher;
@@ -31,6 +32,8 @@ $SIG{INT} = \&_dier;
 sub setup_environment {
     my ($env) = @_;
     environment($env);
+    compability($ENV{compability} &&
+                $ENV{compability} eq 'true');
     is_debug($ENV{environment} &&
              $ENV{environment} eq 'debug');
     response(Plack::Response->new(200));

@@ -22,7 +22,7 @@ after 'redeploy' => sub {
 sub dragonAttack {
     my ($self, $reg) = @_;
     if ($self->dragonUsed()) {
-        early_response_json({result => 'badGameStage'})
+        early_response_json({result => 'badStage'})
     }
     if (global_user()->tokensInHand() < 1) {
         early_response_json({result => 'noEnouthUnits'})

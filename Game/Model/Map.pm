@@ -84,7 +84,7 @@ sub region_by_id {
     my $region = undef;
     my $ok = find_type_constraint('Int')->check($id);
     $region = $self->regions()->[$id] if $ok;
-    early_response_json({result => 'badMapIp'}) unless $region;
+    early_response_json({result => 'badRegionId'}) unless $region;
     $region;
 }
 
