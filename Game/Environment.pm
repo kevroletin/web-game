@@ -32,7 +32,7 @@ use Exporter::Easy (
                response
                response_json
                response_raw
-               stack_trace) ],
+               stack_trace) ]
 );
 
 my ($compability,

@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 use Game::Actions;
-use Game::Environment qw( response_json early_response_json
+use Game::Environment qw( assert response_json early_response_json
                           db global_game global_user );
 use Moose::Util qw( apply_all_roles );
 
@@ -364,9 +364,7 @@ sub selectRace {
     my $game = global_game();
 
     my $p = $data->{position};
-    unless ($p =~ /^\d+$/ && 0 <= $p && $p <= 5) {
-        early_response_json({result => 'badPosition'})
-    }
+    assert($p =~ /^\d+$/ && 0 <= $p && $p <= 5, 'badPosition');
     for (0 .. $p) {
         $game->bonusMoney()->[$_] += 1;
     }
@@ -377,6 +375,7 @@ sub selectRace {
     global_user()->coins(global_user()->coins + $coins);
 
     my ($race, $power) = $game->pick_tokens($p);
+
     my $pair = ("Game::Race::" . ucfirst($race))->new();
     apply_all_roles($pair, ("Game::Power::" . ucfirst($power)));
     global_user()->activeRace($pair);
@@ -385,6 +384,7 @@ sub selectRace {
     $game->state('conquer');
     db()->store_nonroot($pair);
     db()->update($game, global_user());
+
     response_json({result => 'ok'})
 }
 

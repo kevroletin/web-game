@@ -1,7 +1,7 @@
 package Game::Model::Map;
 use Moose;
 
-use Game::Environment qw(early_response_json inc_counter);
+use Game::Environment qw(compability early_response_json inc_counter);
 use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 
@@ -79,11 +79,17 @@ sub full_info {
     $r
 }
 
+sub get_region {
+    my ($s, $i) = @_;
+    --$i if compability();
+    $s->regions()->[$i]
+}
+
 sub region_by_id {
     my ($self, $id) = @_;
     my $region = undef;
     my $ok = find_type_constraint('Int')->check($id);
-    $region = $self->regions()->[$id] if $ok;
+    $region = $self->get_region($id) if $ok;
     early_response_json({result => 'badRegionId'}) unless $region;
     $region;
 }

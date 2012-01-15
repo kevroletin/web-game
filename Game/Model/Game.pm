@@ -292,7 +292,7 @@ sub _load_regions_from_state {
         assert(!defined $_->{owner} || $_->{owner} ~~ @pl_id,
                'badRegions', 'badOwner' => $_->{owner},
                'gamePlayers' => [@pl_id]);
-        $self->map()->regions()->[$i++]->load_state($_);
+        $self->map()->get_region($i++)->load_state($_);
     }
 }
 
@@ -328,7 +328,7 @@ sub _load_attacks_history_from_state {
             assert($p, $err, badDefender => $data->{whom});
         }
         push @res, {
-          region => $self->map()->regions()->[$r],
+          region => $self->map()->get_region($r),
           tokensNum => $hist_item->{tokensNum},
           whom => $p ? $p->id() : undef
         }

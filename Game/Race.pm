@@ -58,7 +58,7 @@ sub _region_is_adjacent_with_our {
     my $ok = 0;
     my $map = global_game()->map();
     for (@{$reg->adjacent()}) {
-        my $owner = $map->regions()->[$_]->owner();
+        my $owner = $map->get_region($_)->owner();
         $ok ||= $owner && $owner eq global_user();
         last if $ok;
     }

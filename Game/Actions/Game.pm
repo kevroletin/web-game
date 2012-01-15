@@ -184,7 +184,7 @@ sub setReadinessStatus {
         $game->state('conquer');
     }
 
-    if (compability() && is_debug() && defined $data->{visibleRaces}) {
+    if (compability() && defined $data->{visibleRaces}) {
         $game->racesPack([map { lc($_) } @{$data->{visibleRaces}}]);
         $game->powersPack([map { lc($_) } @{$data->{visibleSpecialPowers}}]);
     }

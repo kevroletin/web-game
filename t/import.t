@@ -46,10 +46,6 @@ sub SendTests {
         my $out = shift @$out_json;
         $in and $out or die "bad test structure";
 
-        if ($in->{regionId}) {
-            $in->{regionId} += 1;
-        }
-
         TEST("$descr-$i: $action");
         GO($in, $out, {} );
 

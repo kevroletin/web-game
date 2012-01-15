@@ -15,7 +15,7 @@ override '_calculate_land_strength' => sub {
     my ($self, $reg) = @_;
     my $was = super();
     for my $reg_num (@{$reg->adjacent()}) {
-        my $a_reg = global_game()->map()->regions()->[$reg_num];
+        my $a_reg = global_game()->map()->get_region($reg_num);
         if ('mountain' ~~ $a_reg->landDescription() &&
             $a_reg->owner() &&
             $a_reg->owner() eq global_user())
