@@ -132,7 +132,7 @@ sub request {
 }
 
 sub request_json {
-    request(to_json($_[0]));
+    request(to_json($_[0], {pretty => 1}));
 }
 
 sub _run_test {
@@ -221,7 +221,7 @@ sub _run_json_test {
             return $in
         }
         $params->{in_hook}->($in, $params);
-        $in = to_json($in);
+        $in = to_json($in, {pretty => 1});
     }
     my $new_code = _json_cmp_transformer($cmp_code, @_);
     _run_test($new_code, $in, $out, $params)

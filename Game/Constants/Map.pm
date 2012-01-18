@@ -8,29 +8,21 @@ my $m5 = {
   playersNum => 2,
   regions => [
     {
-      adjacent => [
-        3,
-        4
-      ],
+      adjacent => [ 3, 4 ],
       landDescription => [
         "mountain"
       ],
       population => 1
     },
     {
-      adjacent => [
-        1,
-        4
-      ],
+      adjacent => [ 1, 4 ],
       landDescription => [
         "sea"
       ],
       population => 1
     },
     {
-      adjacent => [
-        1
-      ],
+      adjacent => [ 1 ],
       landDescription => [
         "border",
         "mountain"
@@ -38,10 +30,7 @@ my $m5 = {
       population => 1
     },
     {
-      adjacent => [
-        1,
-        2
-      ],
+      adjacent => [ 1, 2 ],
       landDescription => [
         "coast"
       ],
@@ -56,23 +45,14 @@ my $m6 = {
   playersNum => 2,
   regions => [
     {
-      adjacent => [
-        2,
-        17,
-        18
-      ],
+      adjacent => [ 2, 17, 18 ],
       landDescription => [
         "sea",
         "border"
       ]
     },
     {
-      adjacent => [
-        1,
-        18,
-        19,
-        3
-      ],
+      adjacent => [ 1, 18, 19, 3 ],
       landDescription => [
         "mine",
         "border",
@@ -81,36 +61,21 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        2,
-        19,
-        21,
-        4
-      ],
+      adjacent => [ 2, 19, 21, 4 ],
       landDescription => [
         "border",
         "mountain"
       ]
     },
     {
-      adjacent => [
-        3,
-        21,
-        22,
-        5
-      ],
+      adjacent => [ 3, 21, 22, 5 ],
       landDescription => [
         "farmland",
         "border"
       ]
     },
     {
-      adjacent => [
-        4,
-        22,
-        23,
-        6
-      ],
+      adjacent => [ 4, 22, 23, 6 ],
       landDescription => [
         "cavern",
         "border",
@@ -118,11 +83,7 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        5,
-        23,
-        7
-      ],
+      adjacent => [ 5, 23, 7 ],
       landDescription => [
         "forest",
         "border"
@@ -130,13 +91,7 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        6,
-        23,
-        8,
-        24,
-        26
-      ],
+      adjacent => [ 6, 23, 8, 24, 26 ],
       landDescription => [
         "mine",
         "border",
@@ -144,13 +99,7 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        7,
-        26,
-        10,
-        9,
-        24
-      ],
+      adjacent => [ 7, 26, 10, 9, 24 ],
       landDescription => [
         "border",
         "mountain",
@@ -158,23 +107,14 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        8,
-        10,
-        11
-      ],
+      adjacent => [ 8, 10, 11 ],
       landDescription => [
         "border",
         "sea"
       ]
     },
     {
-      adjacent => [
-        9,
-        8,
-        11,
-        26
-      ],
+      adjacent => [ 9, 8, 11, 26 ],
       landDescription => [
         "cavern",
         "coast"
@@ -182,12 +122,7 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        10,
-        26,
-        27,
-        12
-      ],
+      adjacent => [ 10, 26, 27, 12 ],
       landDescription => [
         "mine",
         "coast",
@@ -197,58 +132,35 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        11,
-        27,
-        30,
-        13
-      ],
+      adjacent => [ 11, 27, 30, 13 ],
       landDescription => [
         "forest",
         "border"
       ]
     },
     {
-      adjacent => [
-        12,
-        30,
-        28,
-        14
-      ],
+      adjacent => [ 12, 30, 28, 14 ],
       landDescription => [
         "mountain",
         "border"
       ]
     },
     {
-      adjacent => [
-        13,
-        28,
-        16,
-        15
-      ],
+      adjacent => [ 13, 28, 16, 15 ],
       landDescription => [
         "mountain",
         "border"
       ]
     },
     {
-      adjacent => [
-        14,
-        16
-      ],
+      adjacent => [ 14, 16 ],
       landDescription => [
         "hill",
         "border"
       ]
     },
     {
-      adjacent => [
-        15,
-        20,
-        28,
-        17
-      ],
+      adjacent => [ 15, 20, 28, 17 ],
       landDescription => [
         "farmland",
         "magic",
@@ -256,12 +168,7 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        16,
-        20,
-        1,
-        18
-      ],
+      adjacent => [ 16, 20, 1, 18 ],
       landDescription => [
         "border",
         "mountain",
@@ -271,12 +178,7 @@ my $m6 = {
       ]
     },
     {
-      adjacent => [
-        17,
-        20,
-        1,
-        19
-      ],
+      adjacent => [ 17, 20, 1, 19 ],
       landDescription => [
         "farmland",
         "magic",
@@ -285,37 +187,20 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        18,
-        3,
-        21,
-        2,
-        20
-      ],
+      adjacent => [ 18, 3, 21, 2, 20 ],
       landDescription => [
         "swamp"
       ]
     },
     {
-      adjacent => [
-        19,
-        28,
-        29,
-        21
-      ],
+      adjacent => [ 19, 28, 29, 21 ],
       landDescription => [
         "swamp"
       ],
       population => 1
     },
     {
-      adjacent => [
-        20,
-        29,
-        3,
-        4,
-        22
-      ],
+      adjacent => [ 20, 29, 3, 4, 22 ],
       landDescription => [
         "hill",
         "magic"
@@ -323,79 +208,41 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        21,
-        25,
-        29,
-        4,
-        5,
-        23
-      ],
+      adjacent => [ 21, 25, 29, 4, 5, 23 ],
       landDescription => [
         "mountain",
         "mine"
       ]
     },
     {
-      adjacent => [
-        22,
-        25,
-        6,
-        5,
-        24
-      ],
+      adjacent => [ 22, 25, 6, 5, 24 ],
       landDescription => [
         "farmland"
       ],
       population => 1
     },
     {
-      adjacent => [
-        23,
-        26,
-        7,
-        25,
-        8
-      ],
+      adjacent => [ 23, 26, 7, 25, 8 ],
       landDescription => [
         "hill",
         "magic"
       ]
     },
     {
-      adjacent => [
-        24,
-        22,
-        23,
-        29
-      ],
+      adjacent => [ 24, 22, 23, 29 ],
       landDescription => [
         "mountain",
         "cavern"
       ]
     },
     {
-      adjacent => [
-        25,
-        24,
-        7,
-        8,
-        10,
-        11,
-        27
-      ],
+      adjacent => [ 25, 24, 7, 8, 10, 11, 27 ],
       landDescription => [
         "farmland"
       ]
     },
     {
-      adjacent => [
-        26,
-        11,
-        12,
-        30,
-        29
-      ],
+      adjacent => [ 26, 11, 12, 30, 29 ],
       landDescription => [
         "swamp",
         "magic"
@@ -403,14 +250,7 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        29,
-        30,
-        13,
-        14,
-        16,
-        20
-      ],
+      adjacent => [ 29, 30, 13, 14, 16, 20 ],
       landDescription => [
         "forest",
         "cavern"
@@ -418,27 +258,13 @@ my $m6 = {
       population => 1
     },
     {
-      adjacent => [
-        28,
-        20,
-        21,
-        22,
-        25,
-        27,
-        30
-      ],
+      adjacent => [ 28, 20, 21, 22, 25, 27, 30 ],
       landDescription => [
         "sea"
       ]
     },
     {
-      adjacent => [
-        29,
-        28,
-        13,
-        12,
-        27
-      ],
+      adjacent => [ 29, 28, 13, 12, 27 ],
       landDescription => [
         "hill"
       ]
@@ -452,9 +278,7 @@ my $m7 = {
   playersNum => 2,
   regions => [
     {
-      adjacent => [
-        2
-      ],
+      adjacent => [ 2 ],
       landDescription => [
         "border",
         "mountain",
@@ -464,19 +288,13 @@ my $m7 = {
       ]
     },
     {
-      adjacent => [
-        1,
-        3
-      ],
+      adjacent => [ 1, 3 ],
       landDescription => [
         "mountain"
       ]
     },
     {
-      adjacent => [
-        2,
-        4
-      ],
+      adjacent => [ 2, 4 ],
       landDescription => [
         "mountain",
         "mine"
@@ -484,19 +302,14 @@ my $m7 = {
       population => 1
     },
     {
-      adjacent => [
-        3,
-        5
-      ],
+      adjacent => [ 3, 5 ],
       landDescription => [
         "mountain"
       ],
       population => 1
     },
     {
-      adjacent => [
-        4
-      ],
+      adjacent => [ 4 ],
       landDescription => [
         "mountain",
         "mine"
@@ -512,31 +325,13 @@ my $m8 = {
   playersNum => 2,
   regions => [
     {
-      adjacent => [
-        2,
-        6
-      ],
+      adjacent => [ 2, 6 ],
       coordinates => [
-        [
-          0,
-          0
-        ],
-        [
-          0,
-          158
-        ],
-        [
-          46,
-          146
-        ],
-        [
-          126,
-          151
-        ],
-        [
-          104,
-          0
-        ]
+        [ 0, 0 ],
+        [ 0, 158 ],
+        [ 46, 146 ],
+        [ 126, 151 ],
+        [ 104, 0 ]
       ],
       landDescription => [
         "border",
@@ -544,110 +339,41 @@ my $m8 = {
         "magic",
         "forest"
       ],
-      powerCoords => [
-        64,
-        97
-      ],
-      raceCoords => [
-        15,
-        15
-      ]
+      powerCoords => [ 64, 97 ],
+      raceCoords => [ 15, 15 ],
+      magicCoords => [ 40, 20 ]
     },
     {
-      adjacent => [
-        1,
-        3,
-        6,
-        7
-      ],
+      adjacent => [ 1, 3, 6, 7 ],
       coordinates => [
-        [
-          104,
-          0
-        ],
-        [
-          126,
-          151
-        ],
-        [
-          154,
-          135
-        ],
-        [
-          202,
-          107
-        ],
-        [
-          258,
-          104
-        ],
-        [
-          277,
-          77
-        ],
-        [
-          264,
-          0
-        ]
+        [ 104, 0 ],
+        [ 126, 151 ],
+        [ 154, 135 ],
+        [ 202, 107 ],
+        [ 258, 104 ],
+        [ 277, 77 ],
+        [ 264, 0 ]
       ],
       landDescription => [
         "border",
         "coast",
         "sea"
       ],
-      powerCoords => [
-        130,
-        64
-      ],
-      raceCoords => [
-        130,
-        8
-      ]
+      powerCoords => [ 130, 64 ],
+      raceCoords => [ 130, 8 ]
     },
     {
-      adjacent => [
-        2,
-        4,
-        7,
-        8
-      ],
+      adjacent => [ 2, 4, 7, 8 ],
       coordinates => [
-        [
-          264,
-          0
-        ],
-        [
-          277,
-          77
-        ],
-        [
-          258,
-          104
-        ],
-        [
-          273,
-          142
-        ],
-        [
-          297,
-          143
-        ],
-        [
-          392,
-          113
-        ],
-        [
-          409,
-          95
-        ],
-        [
-          393,
-          45
-        ],
-        [
-          404,
-          0
-        ]
+        [ 264, 0 ],
+        [ 277, 77 ],
+        [ 258, 104 ],
+        [ 273, 142 ],
+        [ 297, 143 ],
+        [ 392, 113 ],
+        [ 409, 95 ],
+        [ 393, 45 ],
+        [ 404, 0 ]
       ],
       landDescription => [
         "border",
@@ -655,64 +381,23 @@ my $m8 = {
         "magic",
         "farmland"
       ],
-      powerCoords => [
-        317,
-        65
-      ],
-      raceCoords => [
-        285,
-        8
-      ]
+      powerCoords => [ 317, 65 ],
+      raceCoords => [ 285, 8 ],
+      magicCoords => [ 340, 20 ]
     },
     {
-      adjacent => [
-        3,
-        5,
-        8,
-        9,
-        10
-      ],
+      adjacent => [ 3, 5, 8, 9, 10 ],
       coordinates => [
-        [
-          404,
-          0
-        ],
-        [
-          393,
-          45
-        ],
-        [
-          409,
-          95
-        ],
-        [
-          392,
-          113
-        ],
-        [
-          422,
-          179
-        ],
-        [
-          508,
-          160
-        ],
-        [
-          536,
-          106
-        ],
-        [
-          503,
-          82
-        ],
-        [
-          551,
-          36
-        ],
-        [
-          552,
-          0
-        ]
+        [ 404, 0 ],
+        [ 393, 45 ],
+        [ 409, 95 ],
+        [ 392, 113 ],
+        [ 422, 179 ],
+        [ 508, 160 ],
+        [ 536, 106 ],
+        [ 503, 82 ],
+        [ 551, 36 ],
+        [ 552, 0 ]
       ],
       landDescription => [
         "border",
@@ -721,157 +406,60 @@ my $m8 = {
         "forest"
       ],
       population => 1,
-      powerCoords => [
-        419,
-        65
-      ],
-      raceCoords => [
-        412,
-        8
-      ]
+      powerCoords => [ 419, 65 ],
+      raceCoords => [ 412, 8 ],
+      mineCoords => [ 480, 8 ]
     },
     {
-      adjacent => [
-        4,
-        10
-      ],
+      adjacent => [ 4, 10 ],
       coordinates => [
-        [
-          552,
-          0
-        ],
-        [
-          551,
-          36
-        ],
-        [
-          503,
-          82
-        ],
-        [
-          536,
-          106
-        ],
-        [
-          630,
-          123
-        ],
-        [
-          630,
-          0
-        ]
+        [ 552, 0 ],
+        [ 551, 36 ],
+        [ 503, 82 ],
+        [ 536, 106 ],
+        [ 630, 123 ],
+        [ 630, 0 ]
       ],
       landDescription => [
         "border",
         "swamp",
         "cavern"
       ],
-      powerCoords => [
-        570,
-        55
-      ],
-      raceCoords => [
-        560,
-        4
-      ]
+      powerCoords => [ 570, 55 ],
+      raceCoords => [ 560, 4 ],
+      cavernCoords => [ 560, 60 ]
     },
     {
-      adjacent => [
-        1,
-        2,
-        7,
-        11
-      ],
+      adjacent => [ 1, 2, 7, 11 ],
       coordinates => [
-        [
-          0,
-          158
-        ],
-        [
-          46,
-          146
-        ],
-        [
-          126,
-          151
-        ],
-        [
-          154,
-          135
-        ],
-        [
-          132,
-          256
-        ],
-        [
-          92,
-          233
-        ],
-        [
-          0,
-          282
-        ]
+        [ 0, 158 ],
+        [ 46, 146 ],
+        [ 126, 151 ],
+        [ 154, 135 ],
+        [ 132, 256 ],
+        [ 92, 233 ],
+        [ 0, 282 ]
       ],
       landDescription => [
         "border",
         "coast",
         "hill"
       ],
-      powerCoords => [
-        6,
-        195
-      ],
-      raceCoords => [
-        63,
-        165
-      ]
+      powerCoords => [ 6, 195 ],
+      raceCoords => [ 63, 165 ]
     },
     {
-      adjacent => [
-        2,
-        3,
-        6,
-        8,
-        11,
-        12
-      ],
+      adjacent => [ 2, 3, 6, 8, 11, 12 ],
       coordinates => [
-        [
-          154,
-          135
-        ],
-        [
-          202,
-          107
-        ],
-        [
-          258,
-          104
-        ],
-        [
-          273,
-          142
-        ],
-        [
-          297,
-          143
-        ],
-        [
-          305,
-          172
-        ],
-        [
-          268,
-          222
-        ],
-        [
-          191,
-          247
-        ],
-        [
-          132,
-          256
-        ]
+        [ 154, 135 ],
+        [ 202, 107 ],
+        [ 258, 104 ],
+        [ 273, 142 ],
+        [ 297, 143 ],
+        [ 305, 172 ],
+        [ 268, 222 ],
+        [ 191, 247 ],
+        [ 132, 256 ]
       ],
       landDescription => [
         "mountain",
@@ -881,150 +469,56 @@ my $m8 = {
         "mountain",
         "cavern"
       ],
-      powerCoords => [
-        167,
-        135
-      ],
-      raceCoords => [
-        150,
-        190
-      ]
+      powerCoords => [ 167, 135 ],
+      raceCoords => [ 150, 190 ],
+      mineCoords => [ 170, 190 ],
+      cavernCoords => [ 170, 130 ]
     },
     {
-      adjacent => [
-        3,
-        4,
-        7,
-        9,
-        12,
-        13
-      ],
+      adjacent => [ 3, 4, 7, 9, 12, 13 ],
       coordinates => [
-        [
-          297,
-          143
-        ],
-        [
-          392,
-          113
-        ],
-        [
-          444,
-          235
-        ],
-        [
-          388,
-          277
-        ],
-        [
-          350,
-          247
-        ],
-        [
-          308,
-          254
-        ],
-        [
-          268,
-          222
-        ],
-        [
-          305,
-          172
-        ]
+        [ 297, 143 ],
+        [ 392, 113 ],
+        [ 444, 235 ],
+        [ 388, 277 ],
+        [ 350, 247 ],
+        [ 308, 254 ],
+        [ 268, 222 ],
+        [ 305, 172 ]
       ],
       landDescription => [
         "coast",
         "hill"
       ],
       population => 1,
-      powerCoords => [
-        333,
-        137
-      ],
-      raceCoords => [
-        300,
-        191
-      ]
+      powerCoords => [ 333, 137 ],
+      raceCoords => [ 300, 191 ]
     },
     {
-      adjacent => [
-        4,
-        8,
-        10,
-        13,
-        14
-      ],
+      adjacent => [ 4, 8, 10, 13, 14 ],
       coordinates => [
-        [
-          422,
-          179
-        ],
-        [
-          508,
-          160
-        ],
-        [
-          548,
-          238
-        ],
-        [
-          565,
-          276
-        ],
-        [
-          508,
-          317
-        ],
-        [
-          388,
-          277
-        ],
-        [
-          444,
-          235
-        ]
+        [ 422, 179 ],
+        [ 508, 160 ],
+        [ 548, 238 ],
+        [ 565, 276 ],
+        [ 508, 317 ],
+        [ 388, 277 ],
+        [ 444, 235 ]
       ],
       landDescription => [
         "sea"
       ],
-      powerCoords => [
-        453,
-        180
-      ],
-      raceCoords => [
-        448,
-        240
-      ]
+      powerCoords => [ 453, 180 ],
+      raceCoords => [ 448, 240 ]
     },
     {
-      adjacent => [
-        4,
-        5,
-        9,
-        14
-      ],
+      adjacent => [ 4, 5, 9, 14 ],
       coordinates => [
-        [
-          508,
-          160
-        ],
-        [
-          536,
-          106
-        ],
-        [
-          630,
-          123
-        ],
-        [
-          630,
-          242
-        ],
-        [
-          548,
-          238
-        ]
+        [ 508, 160 ],
+        [ 536, 106 ],
+        [ 630, 123 ],
+        [ 630, 242 ],
+        [ 548, 238 ]
       ],
       landDescription => [
         "border",
@@ -1032,216 +526,76 @@ my $m8 = {
         "mountain"
       ],
       population => 1,
-      powerCoords => [
-        536,
-        123
-      ],
-      raceCoords => [
-        546,
-        180
-      ]
+      powerCoords => [ 536, 123 ],
+      raceCoords => [ 546, 180 ]
     },
     {
-      adjacent => [
-        6,
-        7,
-        12,
-        15
-      ],
+      adjacent => [ 6, 7, 12, 15 ],
       coordinates => [
-        [
-          0,
-          377
-        ],
-        [
-          114,
-          343
-        ],
-        [
-          155,
-          342
-        ],
-        [
-          160,
-          255
-        ],
-        [
-          132,
-          256
-        ],
-        [
-          92,
-          233
-        ],
-        [
-          0,
-          282
-        ]
+        [ 0, 377 ],
+        [ 114, 343 ],
+        [ 155, 342 ],
+        [ 160, 255 ],
+        [ 132, 256 ],
+        [ 92, 233 ],
+        [ 0, 282 ]
       ],
       landDescription => [
         "border",
         "sea"
       ],
-      powerCoords => [
-        65,
-        253
-      ],
-      raceCoords => [
-        7,
-        305
-      ]
+      powerCoords => [ 65, 253 ],
+      raceCoords => [ 7, 305 ]
     },
     {
-      adjacent => [
-        7,
-        8,
-        11,
-        13,
-        15,
-        17
-      ],
+      adjacent => [ 7, 8, 11, 13, 15, 17 ],
       coordinates => [
-        [
-          217,
-          339
-        ],
-        [
-          281,
-          331
-        ],
-        [
-          312,
-          290
-        ],
-        [
-          308,
-          254
-        ],
-        [
-          268,
-          222
-        ],
-        [
-          191,
-          247
-        ],
-        [
-          160,
-          255
-        ],
-        [
-          155,
-          342
-        ]
+        [ 217, 339 ],
+        [ 281, 331 ],
+        [ 312, 290 ],
+        [ 308, 254 ],
+        [ 268, 222 ],
+        [ 191, 247 ],
+        [ 160, 255 ],
+        [ 155, 342 ]
       ],
       landDescription => [
         "coast",
         "farmland"
       ],
-      powerCoords => [
-        163,
-        287
-      ],
-      raceCoords => [
-        214,
-        253
-      ]
+      powerCoords => [ 163, 287 ],
+      raceCoords => [ 214, 253 ]
     },
     {
-      adjacent => [
-        8,
-        9,
-        12,
-        14,
-        17,
-        18,
-        19
-      ],
+      adjacent => [ 8, 9, 12, 14, 17, 18, 19 ],
       coordinates => [
-        [
-          308,
-          254
-        ],
-        [
-          350,
-          247
-        ],
-        [
-          388,
-          277
-        ],
-        [
-          508,
-          317
-        ],
-        [
-          511,
-          374
-        ],
-        [
-          404,
-          411
-        ],
-        [
-          281,
-          331
-        ],
-        [
-          312,
-          290
-        ]
+        [ 308, 254 ],
+        [ 350, 247 ],
+        [ 388, 277 ],
+        [ 508, 317 ],
+        [ 511, 374 ],
+        [ 404, 411 ],
+        [ 281, 331 ],
+        [ 312, 290 ]
       ],
       landDescription => [
         "coast",
         "forest"
       ],
       population => 1,
-      powerCoords => [
-        318,
-        295
-      ],
-      raceCoords => [
-        380,
-        313
-      ]
+      powerCoords => [ 318, 295 ],
+      raceCoords => [ 380, 313 ]
     },
     {
-      adjacent => [
-        9,
-        10,
-        13,
-        19,
-        20
-      ],
+      adjacent => [ 9, 10, 13, 19, 20 ],
       coordinates => [
-        [
-          508,
-          317
-        ],
-        [
-          565,
-          276
-        ],
-        [
-          548,
-          238
-        ],
-        [
-          630,
-          242
-        ],
-        [
-          630,
-          418
-        ],
-        [
-          553,
-          416
-        ],
-        [
-          511,
-          374
-        ]
+        [ 508, 317 ],
+        [ 565, 276 ],
+        [ 548, 238 ],
+        [ 630, 242 ],
+        [ 630, 418 ],
+        [ 553, 416 ],
+        [ 511, 374 ]
       ],
       landDescription => [
         "border",
@@ -1249,51 +603,20 @@ my $m8 = {
         "magic",
         "farmland"
       ],
-      powerCoords => [
-        565,
-        287
-      ],
-      raceCoords => [
-        546,
-        348
-      ]
+      powerCoords => [ 565, 287 ],
+      raceCoords => [ 546, 348 ],
+      magicCoords => [ 530, 300 ]
     },
     {
-      adjacent => [
-        11,
-        12,
-        16,
-        17
-      ],
+      adjacent => [ 11, 12, 16, 17 ],
       coordinates => [
-        [
-          0,
-          377
-        ],
-        [
-          114,
-          343
-        ],
-        [
-          155,
-          342
-        ],
-        [
-          217,
-          339
-        ],
-        [
-          247,
-          387
-        ],
-        [
-          185,
-          465
-        ],
-        [
-          0,
-          426
-        ]
+        [ 0, 377 ],
+        [ 114, 343 ],
+        [ 155, 342 ],
+        [ 217, 339 ],
+        [ 247, 387 ],
+        [ 185, 465 ],
+        [ 0, 426 ]
       ],
       landDescription => [
         "border",
@@ -1302,41 +625,18 @@ my $m8 = {
         "swamp"
       ],
       population => 1,
-      powerCoords => [
-        28,
-        376
-      ],
-      raceCoords => [
-        87,
-        375
-      ]
+      powerCoords => [ 28, 376 ],
+      raceCoords => [ 87, 375 ],
+      magicCoords => [ 20, 376 ]
     },
     {
-      adjacent => [
-        15,
-        17
-      ],
-      bonusCoords => [
-        129,
-        483
-      ],
+      adjacent => [ 15, 17 ],
+      bonusCoords => [ 129, 483 ],
       coordinates => [
-        [
-          0,
-          426
-        ],
-        [
-          185,
-          465
-        ],
-        [
-          186,
-          515
-        ],
-        [
-          0,
-          515
-        ]
+        [ 0, 426 ],
+        [ 185, 465 ],
+        [ 186, 515 ],
+        [ 0, 515 ]
       ],
       landDescription => [
         "border",
@@ -1344,141 +644,57 @@ my $m8 = {
         "cavern"
       ],
       population => 1,
-      powerCoords => [
-        6,
-        458
-      ],
-      raceCoords => [
-        62,
-        458
-      ]
+      powerCoords => [ 6, 458 ],
+      raceCoords => [ 62, 458 ],
+      cavernCoords => [ 140, 450 ]
     },
     {
-      adjacent => [
-        12,
-        13,
-        15,
-        16,
-        18
-      ],
+      adjacent => [ 12, 13, 15, 16, 18 ],
       coordinates => [
-        [
-          186,
-          515
-        ],
-        [
-          288,
-          515
-        ],
-        [
-          336,
-          369
-        ],
-        [
-          281,
-          331
-        ],
-        [
-          217,
-          339
-        ],
-        [
-          247,
-          387
-        ],
-        [
-          185,
-          465
-        ]
+        [ 186, 515 ],
+        [ 288, 515 ],
+        [ 336, 369 ],
+        [ 281, 331 ],
+        [ 217, 339 ],
+        [ 247, 387 ],
+        [ 185, 465 ]
       ],
       landDescription => [
         "border",
         "mountain",
         "mine"
       ],
-      powerCoords => [
-        244,
-        398
-      ],
-      raceCoords => [
-        202,
-        460
-      ]
+      powerCoords => [ 244, 398 ],
+      raceCoords => [ 202, 460 ],
+      mineCoords => [ 220, 460 ]
     },
     {
-      adjacent => [
-        13,
-        17,
-        19
-      ],
+      adjacent => [ 13, 17, 19 ],
       coordinates => [
-        [
-          288,
-          515
-        ],
-        [
-          336,
-          369
-        ],
-        [
-          404,
-          411
-        ],
-        [
-          408,
-          513
-        ]
+        [ 288, 515 ],
+        [ 336, 369 ],
+        [ 404, 411 ],
+        [ 408, 513 ]
       ],
       landDescription => [
         "border",
         "cavern",
         "hill"
       ],
-      powerCoords => [
-        308,
-        464
-      ],
-      raceCoords => [
-        324,
-        411
-      ]
+      powerCoords => [ 308, 464 ],
+      raceCoords => [ 324, 411 ],
+      cavernCoords => [ 324, 380 ]
     },
     {
-      adjacent => [
-        13,
-        14,
-        18,
-        20
-      ],
-      bonusCoords => [
-        514,
-        418
-      ],
+      adjacent => [ 13, 14, 18, 20 ],
+      bonusCoords => [ 514, 418 ],
       coordinates => [
-        [
-          404,
-          411
-        ],
-        [
-          511,
-          374
-        ],
-        [
-          553,
-          416
-        ],
-        [
-          519,
-          471
-        ],
-        [
-          520,
-          515
-        ],
-        [
-          408,
-          513
-        ]
+        [ 404, 411 ],
+        [ 511, 374 ],
+        [ 553, 416 ],
+        [ 519, 471 ],
+        [ 520, 515 ],
+        [ 408, 513 ]
       ],
       landDescription => [
         "border",
@@ -1486,54 +702,25 @@ my $m8 = {
         "swamp"
       ],
       population => 1,
-      powerCoords => [
-        437,
-        466
-      ],
-      raceCoords => [
-        419,
-        411
-      ]
+      powerCoords => [ 437, 466 ],
+      raceCoords => [ 419, 411 ],
+      mineCoords => [ 480, 411 ]
     },
     {
-      adjacent => [
-        14,
-        19
-      ],
+      adjacent => [ 14, 19 ],
       coordinates => [
-        [
-          520,
-          515
-        ],
-        [
-          630,
-          515
-        ],
-        [
-          630,
-          418
-        ],
-        [
-          553,
-          416
-        ],
-        [
-          519,
-          471
-        ]
+        [ 520, 515 ],
+        [ 630, 515 ],
+        [ 630, 418 ],
+        [ 553, 416 ],
+        [ 519, 471 ]
       ],
       landDescription => [
         "border",
         "mountain"
       ],
-      powerCoords => [
-        582,
-        422
-      ],
-      raceCoords => [
-        529,
-        466
-      ]
+      powerCoords => [ 582, 422 ],
+      raceCoords => [ 529, 466 ]
     }
   ],
   turnsNum => 10

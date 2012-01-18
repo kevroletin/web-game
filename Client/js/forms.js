@@ -59,6 +59,7 @@ var ui_forms = {
       d3.select('p#msg_box').text(resp.result);
       if (resp.result == 'ok') {
         state.store('sid', resp.sid);
+        state.store('userId', resp.userId);
         events.exec('state.sid_stored');
         events.exec('login.success', resp);
       }
@@ -300,8 +301,8 @@ playfield.create = function(svg, map) {
 
   svg
     .attr('class', 'playfield')
-    .attr('width', 500)
-    .attr('height', 500);
+    .attr('width', 750)
+    .attr('height', 550);
 
   var bg = ['swamp', 'hill', 'forest', 'farmland', 'mountain',
             'sea'];
@@ -324,13 +325,14 @@ playfield.create = function(svg, map) {
       .attr('x', 0)
       .attr('y', 0);
 
-//move playfielt to right and get place to tokens storage
-  svg = svg.append('svg:g')
+//move playfield to right and get place to tokens storage
+  var field = svg.append('svg:g')
       .attr("transform", "translate(100,15)");
 
-  var reg = svg.append('g').attr('id', 'regions');
-  var free_tks = svg.append('g').attr('id', 'free_tokens');
-  var tks = svg.append('g').attr('id', 'tokens');
+  var reg = field.append('g').attr('id', 'regions');
+  var extra = field.append('g').attr('id', 'extra_items');
+  var free_tks = field.append('g').attr('id', 'free_tokens');
+  var tks = field.append('g').attr('id', 'tokens');
   
   var line = d3.svg.line();
 
@@ -341,11 +343,14 @@ playfield.create = function(svg, map) {
     .attr('id', function(d, i) { return 'tok_' + i })
     .each(function(d, i) { this.constState = d })
 
-  reg.selectAll('path')
+  var reg_g = reg.selectAll('path')
     .data(map.regions)
   .enter()
-    .append("svg:path")
+    .append('svg:g')
     .attr('id', function(d, i) { return 'm_r_' + i })
+    .on('click', function(d, i) { events.exec('game.region.click', i)});
+
+  reg_g.append("svg:path")
     .style('fill', function(d) { 
       var res = d.landDescription.filter(function(d) { 
         return in_arr(d, bg);
@@ -359,7 +364,6 @@ playfield.create = function(svg, map) {
         .join(' ');
     })
     .attr("d", function(d) { return line(d.coordinates) + 'Z' })
-    .each(function(d, i) { svg.append })
     .each(function(d, i) {
       var ps = d3.select(this);
       ps.append('animate')
@@ -372,7 +376,7 @@ playfield.create = function(svg, map) {
         .attr('begin', 'm_r_' + i + '.mouseover');
       ps.append('set')
         .attr('attributeName', 'stroke-width')
-        .attr('to', '2')
+        .attr('to', '1')
         .attr('begin', 'm_r_' + i + '_a1.begin');
       ps.append('set')
         .attr('attributeName', 'stroke-width')
@@ -382,9 +386,36 @@ playfield.create = function(svg, map) {
         .attr('attributeName', 'stroke')
         .attr('to', 'transparent')
         .attr('begin', 'm_r_' + i + '.mouseout');
-      ps.on('click', 
-            function(d) { events.exec('game.region.click', i)});
     });
+
+  reg_g.each(function(d, i) {
+    var g = d3.select(this);
+
+    ['magic', 'mine', 'cavern'].forEach(function(extra_item) {
+      var field = extra_item + 'Coords';
+      log.d.info(field);
+      
+      if (!is_null(d[field])) {
+        g.append('svg:image')
+          .attr('xlink:href', function(d) { return rsc('img.ex')(extra_item) })
+        .attr('width', 50)
+          .attr('height', 50)
+          .attr('x', d[field][0])
+          .attr('y', d[field][1]);
+      }
+    })
+  });
+
+
+/*
+  extra.selectAll('img')
+    .data(map.regions)
+  .enter()
+    .append('g')
+    .attr('id', function(d, i) { return "etok_" + i })
+  });
+*/
+
 
   return svg.node();
 };

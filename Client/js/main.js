@@ -39,12 +39,12 @@ var game = {
     
     events.reg_h('game.ui_initialized', 'start main loop',
                  game.request_game_state );
-/*
+
+if (1) {
     events.reg_h('ui.refresh_menu', 'ui_create_menu', 
                  ui.create_menu);
     major_modes.change('login');
-*/
-/**/
+} else {
     var i = 1
     ;
     state.store('sid', i);
@@ -53,11 +53,10 @@ var game = {
     game.get_current_user_info()
     minor_modes.enable('in_game');
     major_modes.change('play_game');
-/**/
+}
 
-    log.d.info('Game core initialized');
+    log.d.info('Game core initialized');    
   }
-
 };
 
 game.get_current_user_info = function() {
@@ -73,7 +72,7 @@ game.get_current_user_info = function() {
 };
 
 game.fix_minor_mode_from_game_state = function() {
-  log.d.info("===fix minor mode===");
+//  log.d.info("===fix minor mode===");
 
   var getGameState = state.get(
     'net.getGameState',
@@ -102,10 +101,10 @@ game.fix_minor_mode_from_game_state = function() {
     var a = {
       conquer: function() {
         if (getGameState.attacksHistory.length == 0) {
-          if (is_null(getGameState.activeRace)) {
-            // TODO: select race
+          if (is_null(game.active_player().activeRace)) {
+            new_modes['select_race'] = 1
           } else { 
-            // TODO: allow decline
+            new_modes['decline'] = 1
           }
         }
         new_modes['conquer'] = 1
@@ -129,7 +128,7 @@ game.fix_minor_mode_from_game_state = function() {
     }
   }
 
-  log.d.info("=== finished ===");
+//  log.d.info("=== finished ===");
 };
 
 game.request_game_state = function() {

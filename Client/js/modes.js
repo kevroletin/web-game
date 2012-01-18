@@ -96,6 +96,70 @@ var major_modes = {
       }
     },
 
+    games_new: {
+      descr: 'New game',
+      in_menu: true,
+      init: function(content) {
+        var c = d3.select(content);
+        c.text('');
+        c.append('h2').text('Create new game');
+        var f = c.append('form')
+                 .attr('onSubmit', 'return false;');
+        f.on('submit', function(d) {
+          var h = function(resp) {
+            
+          };
+          var q = { action: 'createGame',
+                    gameDescr: f.node()['gameDescr'].value,
+                    gameName: f.node()['gameName'].value,
+                    mapId: f.node()['mapId'].value };
+          net.send(q, h, 1);
+          return false;
+        });
+        
+        var table = f.append('table');
+        var create_table = function(d) {
+          d.forEach(function(t) {
+            var tr = table.append('tr');
+            tr.append('td').text(t[0]);
+            t[1](tr.append('td'));
+          })
+        };
+        create_table([
+          ['Game name',
+           function(f) {
+             f.append('input')
+               .attr('type', 'textfield')
+               .attr('name', 'gameName');
+           }],
+          ['Map', 
+           function(f) {
+             var h = function(resp) {
+               var sel = f.append('select')
+                           .attr('name', 'mapId');
+               resp.maps.forEach(function(map) {
+                 sel.append('option')
+                   .attr('value', map.mapId)
+                   .text(map.mapName);
+               });
+             };
+             net.send({action: 'getMapList'}, h);
+           }],
+          ['Description',
+          function(f) {
+            f.append('textarea')
+              .attr('name', 'gameDescr')
+          }],
+          ['',
+           function(f) {
+             f.append('input')
+               .attr('type', 'submit')
+               .attr('value', 'ok');
+           }]
+        ]);
+      }
+    },   
+
     explore_game: {
       descr: 'Explore game',
       in_menu: false,
@@ -146,9 +210,11 @@ var major_modes = {
         log.d.dump('retrive game info for gameId: ' + mapId);
         var h = function(resp) {
           var m = resp.mapInfo;
+          log.d.pretty(m);
           c.append('h2')
             .text(m.mapName);
-          content.appendChild(playfield.create(m));
+          var svg = c.append('div').append('svg:svg');
+          content.appendChild(playfield.create(svg, m));
         }
         net.send({action: 'getMapInfo', mapId: mapId}, h );
       }
@@ -342,9 +408,6 @@ var minor_modes = {
             .attr('value', 'redeploy');
       },
       init : function() {
-        minor_modes.enable('select_race');
-        minor_modes.enable('decline');
-
         this._watch_map_onclick();
         this._prepare_ui();
 

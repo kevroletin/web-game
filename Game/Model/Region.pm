@@ -81,6 +81,18 @@ has 'powerCoords' => ( isa => 'ArrayRef[Int]',
                        is => 'rw',
                        default => sub { [] } );
 
+has 'magicCoords' => ( isa => 'Maybe[ArrayRef[Int]]',
+                       is => 'rw',
+                       required => 0 );
+
+has 'mineCoords' => ( isa => 'Maybe[ArrayRef[Int]]',
+                      is => 'rw',
+                      required => 0 );
+
+has 'cavernCoords' => ( isa => 'Maybe[ArrayRef[Int]]',
+                        is => 'rw',
+                        required => 0 );
+
 
 # TODO:
 # FIXME: rename tokensNum -> population
@@ -107,6 +119,9 @@ sub extract_const_descr {
     $r->{bonusCoords} = $s->{bonusCoords};
     $r->{raceCoords} = $s->{raceCoords};
     $r->{powerCoords} = $s->{powerCoords};
+    for (qw(magicCoords mineCoords cavernCoords)) {
+        $r->{$_} = $s->{$_} if $s->{$_};
+    }
     $r
 }
 
