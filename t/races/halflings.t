@@ -82,20 +82,6 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
   "regionId": 1
 }'
 ,
@@ -119,6 +105,20 @@ GO(
 $user1 );
 
 
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 3
+}'
+,
+'{
+"result": "ok"
+}',
+$user1 );
+
+
 
 TEST("redeploy");
 GO(
@@ -126,9 +126,9 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 1},
   {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
+  {"regionId": 2, "tokensNum": 1},
+  {"regionId": 3, "tokensNum": 1}
 ]
 }'
 ,
@@ -186,7 +186,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -200,7 +200,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 3
+  "regionId": 4
 }'
 ,
 '{
@@ -215,7 +215,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 3, "tokensNum": 1}
+  {"regionId": 4, "tokensNum": 1}
 ]
 }'
 ,
@@ -291,7 +291,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 1
+  "regionId": 2
 }'
 ,
 '{
@@ -306,7 +306,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 1, "tokensNum": 1}
+  {"regionId": 2, "tokensNum": 1}
 ]
 }'
 ,

@@ -1,7 +1,7 @@
 package Game::Model::Map;
 use Moose;
 
-use Game::Environment qw(compability early_response_json inc_counter);
+use Game::Environment qw(assert compability early_response_json inc_counter);
 use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 
@@ -59,6 +59,25 @@ has 'id' => ( isa => 'Int',
 
 sub BUILD {
     my ($self) = @_;
+
+#    assert(@{$self->regions()} >= 1, 'badRegions', descr => 'notEnouthRegions');
+
+    my $population = 0;
+    for my $i (1 .. @{$self->regions()}) {
+        my $reg = $self->get_region($i);
+        $population += defined $reg->{population} ? $reg->{population} : 0 ;
+        my $adj = $reg->{adjacent};
+        for (@$adj) {
+            assert($_ != $i &&
+                   $_ >= 1 &&
+                   $_ <= @{$self->regions()},
+                   'badRegions', regNum => $i, descr => 'badAdjacent', cause => $_);
+            assert($i ~~ $self->get_region($_)->{adjacent}, 'badRegions',
+                   regNum => $i, descr => 'inconsistentAdjasent');
+        }
+    }
+    assert($population <= 18, 'badRegions', descr => 'tooManyFreeTokens');
+
     $self->{id} = inc_counter('Game::Model::Map::id');
 }
 
@@ -81,8 +100,7 @@ sub full_info {
 
 sub get_region {
     my ($s, $i) = @_;
-    --$i if compability();
-    $s->regions()->[$i]
+    $s->regions()->[$i - 1]
 }
 
 sub region_by_id {

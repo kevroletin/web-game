@@ -37,6 +37,10 @@ subtype 'Game::Model::Region::landDescription',
         early_response_json({result => 'badRegions'})
     };
 
+subtype 'Game::Model::Region::Population',
+    as 'Int',
+    where { $_ >= 0 },
+    message { assert(0, 'badRegions') };
 
 has 'adjacent' => ( isa => 'ArrayRef[Int]',
                     is => 'rw',
@@ -52,7 +56,7 @@ has 'inDecline' => ( isa => 'Bool',
 
 has 'landDescription' => ( isa => 'Game::Model::Region::landDescription',
                            is => 'rw',
-                           required => 1
+                           default => sub { [] }
                          );
 
 has 'owner' => ( isa => 'Maybe[Game::Model::User]',
@@ -61,7 +65,7 @@ has 'owner' => ( isa => 'Maybe[Game::Model::User]',
                  weak_ref => 1 );
 
 
-has 'population' => ( isa => 'Int',
+has 'population' => ( isa => 'Game::Model::Region::Population',
                       is => 'rw',
                       default => 0 );
 

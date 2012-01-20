@@ -175,7 +175,7 @@ sub register_two_users_and_create_square_map {
       playersNum => 2,
       regions => [
         {
-          adjacent => [ 1, 2 ],
+          adjacent => [ 2, 3 ],
           coordinates => [
             [0, 0],
             [0, 100],
@@ -189,7 +189,7 @@ sub register_two_users_and_create_square_map {
           population => $c1
         },
         {
-          adjacent => [ 0, 3 ],
+          adjacent => [ 1, 4 ],
           coordinates => [
             [0, 100],
             [0, 200],
@@ -201,7 +201,7 @@ sub register_two_users_and_create_square_map {
           population => $c2
         },
         {
-          adjacent => [ 0, 3 ],
+          adjacent => [ 1, 4 ],
           coordinates => [
             [100, 0],
             [100, 100],
@@ -213,7 +213,7 @@ sub register_two_users_and_create_square_map {
           population => $c3
         },
         {
-          adjacent => [ 1, 2 ],
+          adjacent => [ 2, 3 ],
           coordinates => [
             [100, 100],
             [100, 200],

@@ -47,6 +47,9 @@ sub createGame {
     my ($data) = @_;
     assert(!global_user()->activeGame(), 'alreadyInGame');
 
+    unless (defined $data->{gameDescr}) {
+        $data->{gameDescr} = $data->{gameDescription}
+    }
     my $game = _construct_new_game($data);
 
     global_user()->activeGame($game);
@@ -115,19 +118,11 @@ sub joinGame {
     my $game = db_search_one({ gameId => $data->{gameId} },
                              { CLASS => 'Game::Model::Game' });
 
-    unless ($game) {
-        early_response_json({ result => 'badGameId' })
-    }
-    if (defined global_user()->activeGame()) {
-        early_response_json({ result => 'alreadyInGame' })
-    }
-    if ($game->state() ne 'notStarted') {
-        early_response_json({ result => 'badGameState' })
-    }
-
-    if (@{$game->players()} eq $game->map()->playersNum()) {
-        early_response_json({ result => 'tooManyPlayers' })
-    }
+    assert($game, 'badGameId');
+    assert(!defined global_user()->activeGame(), 'alreadyInGame');
+    assert($game->state() eq 'notStarted', 'badGameState');
+    assert(@{$game->players()} ne $game->map()->playersNum(), 'tooManyPlayers');
+    assert(@{$game->players()} != 0, 'badGameState') if compability();
 
     global_user()->activeGame($game);
     $game->add_player(global_user());
@@ -172,13 +167,13 @@ sub loadGame {
 
 sub setReadinessStatus {
     my ($data) = @_;
-    proto($data, 'isReady');
+    assert(defined $data->{isReady}, 'badReadinessStatus');
 
     my $game = global_game();
-    unless ($game->state() eq 'notStarted') {
-        early_response_json({result => 'badGameState'})
-    }
+    assert($game->state() eq 'notStarted', 'badGameState');
 
+    printf STDERR "user: %s; [%s]", global_user()->{id},
+        join ', ', map { $_->{readinessStatus} } @{global_game()->players()};
     global_user()->readinessStatus($data->{isReady});
     if ($game->ready()) {
         $game->state('conquer');

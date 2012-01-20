@@ -5,7 +5,7 @@ use strict;
 use Exporter::Easy ( EXPORT => [qw(inc_counter
                                    params_from_proto
                                    proto)] );
-use Game::Environment qw(db db_search_one early_response_json);
+use Game::Environment qw(assert db db_search_one early_response_json);
 use Game::Model::Counter;
 
 my $last_data = undef;
@@ -24,9 +24,8 @@ sub params_from_proto {
 sub proto {
     my $data = shift;
     for (@_) {
-        unless (defined $data->{$_}) {
-            early_response_json({result => 'badJson'});
-        }
+        assert(defined $data->{$_}, 'bad' . ucfirst($_));
+#        assert(defined $data->{$_}, 'badJson');
     }
     $last_proto = \@_;
     $last_data = $data;

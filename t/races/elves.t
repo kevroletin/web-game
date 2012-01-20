@@ -43,7 +43,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -58,7 +58,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 4}
+  {"regionId": 1, "tokensNum": 4}
 ]
 }'
 ,
@@ -105,7 +105,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{

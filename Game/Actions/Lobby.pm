@@ -5,7 +5,7 @@ use warnings;
 use Digest::SHA1 ();
 
 use Game::Actions;
-use Game::Environment qw(db db_search db_search_one
+use Game::Environment qw(assert compability db db_search db_search_one
                          early_response_json
                          global_user
                          inc_counter
@@ -13,6 +13,7 @@ use Game::Environment qw(db db_search db_search_one
                          is_debug if_debug
                          response response_json);
 use Game::Model::User;
+use Moose::Util::TypeConstraints;
 
 use Exporter::Easy (
     OK => [qw(getUserInfo login logout register)]
@@ -68,14 +69,17 @@ sub login {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
+    my $ok_name = find_type_constraint('Username')->check($data->{username});
+    assert($ok_name, 'badUsername');
+    my $ok_pass = find_type_constraint('Password')->check($data->{password});
+    assert($ok_pass, 'badPassword');
+
     my @q = ({ username => $data->{username} },
-             { password => $data->{password} },
              { CLASS => 'Game::Model::User' });
     my $user = db_search_one(@q);
 
-    unless ($user) {
-        early_response_json({result => 'badUsernameOrPassword'});
-    }
+    assert(defined $user && $user->{password} eq $data->{password},
+           'badUsernameOrPassword');
 
     $user->sid(_gen_sid());
     db->update($user);

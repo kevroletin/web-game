@@ -43,7 +43,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 2
+  "regionId": 3
 }'
 ,
 '{
@@ -60,7 +60,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -74,7 +74,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 1
+  "regionId": 2
 }'
 ,
 '{
@@ -92,8 +92,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 5},
-  {"regionId": 1, "tokensNum": 1}
+  {"regionId": 1, "tokensNum": 5},
+  {"regionId": 2, "tokensNum": 1}
 ]
 }'
 ,
@@ -143,7 +143,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -163,7 +163,7 @@ GO(
 '{
   "action": "defend",
   "sid": "",
-  "regions": [{"regionId": 1, "tokensNum": 4}]
+  "regions": [{"regionId": 2, "tokensNum": 4}]
 }'
 ,
 '{
@@ -181,7 +181,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 6}
+  {"regionId": 1, "tokensNum": 6}
 ]
 }'
 ,

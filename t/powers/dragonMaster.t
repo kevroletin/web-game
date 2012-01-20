@@ -25,7 +25,7 @@ $user1->{_userId} = $user2->{_userId};
 GO(
 '{
   "action": "dragonAttack",
-  "regionId": "1",
+  "regionId": 2,
   "sid": ""
 }'
 ,
@@ -57,7 +57,7 @@ TEST("conquer");
 GO(
 '{
   "action": "conquer",
-  "regionId": "0",
+  "regionId": 1,
   "sid": ""
 }'
 ,
@@ -74,7 +74,7 @@ TEST("dragonAttack on your region");
 GO(
 '{
   "action": "dragonAttack",
-  "regionId": "0",
+  "regionId": 1,
   "sid": ""
 }'
 ,
@@ -88,7 +88,7 @@ TEST("dragonAttack");
 GO(
 '{
   "action": "dragonAttack",
-  "regionId": "1",
+  "regionId": 2,
   "sid": ""
 }'
 ,
@@ -110,8 +110,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 1},
-  {"regionId": 1, "tokensNum": 1}
+  {"regionId": 1, "tokensNum": 1},
+  {"regionId": 2, "tokensNum": 1}
 ]
 }'
 ,
@@ -157,7 +157,7 @@ TEST("conquer");
 GO(
 '{
   "action": "conquer",
-  "regionId": "2",
+  "regionId": 3,
   "sid": ""
 }'
 ,
@@ -171,7 +171,7 @@ TEST("dragonAttack");
 GO(
 '{
   "action": "dragonAttack",
-  "regionId": "3",
+  "regionId": 4,
   "sid": ""
 }'
 ,
@@ -188,7 +188,7 @@ TEST("dragonAttack twice");
 GO(
 '{
   "action": "dragonAttack",
-  "regionId": "3",
+  "regionId": 4,
   "sid": ""
 }'
 ,
@@ -204,7 +204,7 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 2, "tokensNum": 1}
+  {"regionId": 3, "tokensNum": 1}
 ]
 }'
 ,

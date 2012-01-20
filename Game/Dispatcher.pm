@@ -3,6 +3,8 @@ use strict;
 use warnings;
 
 use Devel::StackTrace::AsHTML;
+use Game::Actions::Chat qw(getMessages
+                           sendMessage);
 use Game::Actions::Debug qw(resetServer
                             doSmth
                             setBadge
@@ -46,6 +48,7 @@ sub _is_action_without_sid {
                  resetServer
                  createDefaultMaps
                  uploadMap
+                 getMessages
                  getUserInfo
                  getGameList
                  getGameState

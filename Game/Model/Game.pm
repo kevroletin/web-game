@@ -35,6 +35,11 @@ subtype 'playersNum',
         early_response_json({result => 'badnumberOfPlayers'})
     };
 
+subtype 'Game::Model::Game::GameDescr',
+    as 'Str',
+    where { assert(length($_) <= 300, 'badGameDescription') },
+    message { '' };
+
 
 has 'gameName' => ( isa => 'GameName',
                     is => 'ro',
@@ -44,7 +49,7 @@ has 'map' => ( isa => 'Game::Model::Map',
                is => 'rw',
                required => 0 );
 
-has 'gameDescr' => ( isa => 'Str|Undef',
+has 'gameDescr' => ( isa => 'Maybe[Game::Model::Game::GameDescr]',
                      is => 'rw' );
 
 has 'players' => ( isa => 'ArrayRef[Game::Model::User]',
@@ -382,7 +387,7 @@ sub number_of_user {
 sub number_of_region {
     my ($self, $region) = @_;
     return undef unless $region;
-    my $i = 0;
+    my $i = 1;
     for (@{$self->map()->regions()}) {
         return $i if $_ eq $region;
         ++$i
@@ -392,10 +397,11 @@ sub number_of_region {
 
 sub ready {
     my ($self) = @_;
+    return 0 unless @{$self->players()} > 1;
     for my $user (@{$self->players()}) {
         return 0 unless $user->readinessStatus()
     }
-    1 && @{$self->players()}
+    1
 }
 
 sub pick_tokens {

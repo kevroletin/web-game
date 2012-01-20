@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More tests => 38;
+use Test::More tests => 37;
 
 use lib '..';
 use Tester;
@@ -250,7 +250,7 @@ GO(
 }'
 ,
 '{
-"result": "badJson"
+"result": "badPassword"
 }'
 , {}
 );
@@ -264,7 +264,7 @@ GO(
 }'
 ,
 '{
-"result": "badJson"
+"result": "badUsername"
 }'
 , {}
 );
@@ -279,7 +279,7 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badPassword"
 }'
 , {}
 );
@@ -294,23 +294,23 @@ GO(
 }'
 ,
 '{
-"result": "badUsernameOrPassword"
+"result": "badUsername"
 }'
 , {}
 );
 
 
-TEST("First user login whithout params");
-GO(
-'{
-"action": "login"
-}'
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
+#TEST("First user login whithout params");
+#GO(
+#'{
+#"action": "login"
+#}'
+#,
+#'{
+#"result": "badJson"
+#}'
+#, {}
+#);
 
 
 TEST("First user login wrond password");
@@ -351,7 +351,7 @@ GO(
 }'
 ,
 '{
-"result": "badJson"
+"result": "badUsername"
 }'
 , {}
 );

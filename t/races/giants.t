@@ -43,7 +43,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -60,7 +60,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 1
+  "regionId": 2
 }'
 ,
 '{
@@ -77,7 +77,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 3
+  "regionId": 4
 }'
 ,
 '{

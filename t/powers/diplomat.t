@@ -73,7 +73,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -101,7 +101,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 1
+  "regionId": 2
 }'
 ,
 '{
@@ -116,8 +116,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 1},
-  {"regionId": 1, "tokensNum": 1}
+  {"regionId": 1, "tokensNum": 1},
+  {"regionId": 2, "tokensNum": 1}
 ]
 }'
 ,
@@ -191,25 +191,11 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
 "result": "canNotAttackFriend"
-}',
-$user2 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "ok"
 }',
 $user2 );
 
@@ -228,14 +214,28 @@ GO(
 $user2 );
 
 
+TEST("conquer");
+GO(
+'{
+  "action": "conquer",
+  "sid": "",
+  "regionId": 4
+}'
+,
+'{
+"result": "ok"
+}',
+$user2 );
+
+
 TEST("redeploy");
 GO(
 '{
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 2, "tokensNum": 1},
-  {"regionId": 3, "tokensNum": 1}
+  {"regionId": 3, "tokensNum": 1},
+  {"regionId": 4, "tokensNum": 1}
 ]
 }'
 ,
@@ -264,7 +264,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 2
+  "regionId": 3
 }'
 ,
 '{

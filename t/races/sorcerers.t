@@ -43,7 +43,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 0
+  "regionId": 1
 }'
 ,
 '{
@@ -57,7 +57,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 1
+  "regionId": 2
 }'
 ,
 '{
@@ -75,8 +75,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 1},
-  {"regionId": 1, "tokensNum": 1}
+  {"regionId": 1, "tokensNum": 1},
+  {"regionId": 2, "tokensNum": 1}
 ]
 }'
 ,
@@ -108,7 +108,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 1
+"regionId": 2
 }'
 ,
 '{
@@ -137,7 +137,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 1
+"regionId": 2
 }'
 ,
 '{
@@ -151,7 +151,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 2
+  "regionId": 3
 }'
 ,
 '{
@@ -165,7 +165,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 1
+"regionId": 2
 }'
 ,
 '{
@@ -179,7 +179,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 0
+"regionId": 1
 }'
 ,
 '{
@@ -194,8 +194,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 0, "tokensNum": 2},
-  {"regionId": 2, "tokensNum": 1}
+  {"regionId": 1, "tokensNum": 2},
+  {"regionId": 3, "tokensNum": 1}
 ]
 }'
 ,
@@ -229,7 +229,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 0
+"regionId": 1
 }'
 ,
 '{
@@ -243,7 +243,7 @@ GO(
 '{
   "action": "conquer",
   "sid": "",
-  "regionId": 3
+  "regionId": 4
 }'
 ,
 '{
@@ -258,8 +258,8 @@ GO(
 "action": "redeploy",
 "sid": "",
 "regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 3, "tokensNum": 1}
+  {"regionId": 2, "tokensNum": 1},
+  {"regionId": 4, "tokensNum": 1}
 ]
 }'
 ,
@@ -288,7 +288,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 1
+"regionId": 2
 }'
 ,
 '{
@@ -302,7 +302,7 @@ GO(
 '{
 "action": "enchant",
 "sid": "",
-"regionId": 0
+"regionId": 1
 }'
 ,
 '{

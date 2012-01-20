@@ -43,8 +43,8 @@ has 'sid' => ( isa => 'Str',
                required => 0 );
 
 has 'username' => ( isa => 'Username',
-                is  => 'rw',
-                required => 1 );
+                    is  => 'rw',
+                    required => 1 );
 
 has 'password' => ( isa => 'Password',
                     is  => 'rw',

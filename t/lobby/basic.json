@@ -64,7 +64,7 @@
 }
 
 {
-"result": "badUsernameOrPassword"
+"result": "badPassword"
 }
 
 @bad password error
