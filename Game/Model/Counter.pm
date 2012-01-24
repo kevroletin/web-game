@@ -1,10 +1,10 @@
 package Game::Model::Counter;
 use Moose;
 
-our @db_index = qw(name);
+our @db_index = qw(counterName);
 
 
-has 'name' => ( isa => 'Str', is => 'rw' );
+has 'counterName' => ( isa => 'Str', is => 'rw' );
 
 has 'value' => ( isa => 'Int', is => 'rw', default => 0 );
 

@@ -24,8 +24,7 @@ sub createDefaultMaps {
     my $i = 1;
     eval {
         for my $map (@Game::Constants::Map::maps) {
-            my $n_map = db_search_one({ name => $map->{name} },
-                                      { CLASS => 'Game::Model::Map'});
+            my $n_map = db_search_one({ mapName => $map->{mapName} });
             db()->delete($n_map) if defined $n_map;
             my $create_reg = sub {
                 my $r = shift;
@@ -51,12 +50,10 @@ sub getMapInfo {
     my ($data) = @_;
     my ($map, $err);
     if (defined $data->{mapId}) {
-        $map = db_search_one({ id => $data->{mapId} },
-                             { CLASS => 'Game::Model::Map' });
+        $map = db_search_one({ mapId => $data->{mapId} });
         $err = 'badMapId'
     } elsif (defined $data->{mapName}) {
-        $map = db_search_one({ mapName => $data->{mapName} },
-                             { CLASS => 'Game::Model::Map' });
+        $map = db_search_one({ mapName => $data->{mapName} });
         $err = 'badMapName'
     } elsif (defined $data->{sid}) {
         init_user_by_sid($data->{sid});
@@ -76,8 +73,7 @@ sub uploadMap {
     my ($data) = @_;
     proto($data, 'mapName', 'playersNum', 'turnsNum', 'regions');
 
-    my $map = db_search_one({ mapName => $data->{mapName} },
-                            { CLASS => 'Game::Model::Map' });
+    my $map = db_search_one({ mapName => $data->{mapName} });
     if ($map) {
         early_response_json({ result => 'mapNameTaken' })
     }

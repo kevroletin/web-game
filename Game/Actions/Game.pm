@@ -24,14 +24,11 @@ sub _construct_new_game {
     my ($data) = @_;
     proto($data, 'gameName', 'mapId');
 
-    if (db_search_one({ gameName => $data->{gameName} },
-                      { CLASS => 'Game::Model::Game' }))
-    {
+    if (db_search_one({ gameName => $data->{gameName} })) {
         early_response_json({result => 'gameNameTaken'});
     }
 
-    my $map = db_search_one({ id => $data->{mapId} },
-                            { CLASS => 'Game::Model::Map' });
+    my $map = db_search_one({ mapId => $data->{mapId} });
     unless ($map) {
         early_response_json({result => 'badMapId'});
     }
@@ -63,8 +60,7 @@ sub createGame {
 
 sub _get_game_by_id {
     my ($id) = @_;
-    my $game = db_search_one({ gameId => $id },
-                             { CLASS => 'Game::Model::Game' });
+    my $game = db_search_one({ gameId => $id });
     unless ($game) {
         early_response_json({result => 'badGameId'})
     }
@@ -115,8 +111,7 @@ sub joinGame {
     my ($data) = @_;
     proto($data, 'gameId');
 
-    my $game = db_search_one({ gameId => $data->{gameId} },
-                             { CLASS => 'Game::Model::Game' });
+    my $game = db_search_one({ gameId => $data->{gameId} });
 
     assert($game, 'badGameId');
     assert(!defined global_user()->activeGame(), 'alreadyInGame');

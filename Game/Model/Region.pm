@@ -140,8 +140,7 @@ sub load_state {
     $self->tokensNum($data->{tokensNum});
 
     if (defined $data->{owner}) {
-        my $u = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $data->{owner} });
+        my $u = db_search_one({ id => $data->{owner} });
         $self->owner($u);
         assert($self->owner, $err, 'badOwner' => $data->{owner});
     }

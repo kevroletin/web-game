@@ -39,12 +39,10 @@ sub getUserInfo {
     my ($user, $err);
 
     if (defined $data->{userId}) {
-        $user = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $data->{userId} });
+        $user = db_search_one({ id => $data->{userId} });
         $err = 'badUserId'
     } elsif (defined $data->{username}) {
-        $user = db_search_one({ CLASS => 'Game::Model::User' },
-                              { username => $data->{username} });
+        $user = db_search_one({ username => $data->{username} });
         $err = 'badUsername'
     } elsif (defined $data->{sid}) {
         init_user_by_sid($data->{sid});
@@ -74,9 +72,7 @@ sub login {
     my $ok_pass = find_type_constraint('Password')->check($data->{password});
     assert($ok_pass, 'badPassword');
 
-    my @q = ({ username => $data->{username} },
-             { CLASS => 'Game::Model::User' });
-    my $user = db_search_one(@q);
+    my $user = db_search_one({ username => $data->{username} });
 
     assert(defined $user && $user->{password} eq $data->{password},
            'badUsernameOrPassword');
@@ -91,7 +87,7 @@ sub login {
 sub logout {
     my ($data) = @_;
 
-    global_user()->sid("");
+    global_user()->sid('');
     db->update(global_user());
     response_json({result => 'ok'});
 }
@@ -100,9 +96,7 @@ sub register {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
-    my @q = ({ CLASS => 'Game::Model::User' },
-             { username => $data->{username} });
-    if (db_search(@q)->all()) {
+    if (db_search({ username => $data->{username} })->all()) {
         early_response_json({result => 'usernameTaken'});
     }
 

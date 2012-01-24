@@ -103,9 +103,7 @@ sub environment {
 }
 
 sub global_game {
-    unless ($global_user) {
-        early_response_json({result => 'badUserSid'})
-    }
+    assert($global_user, 'badUserSid');
     my $g = $global_user->activeGame();
     early_response_json({result => 'notInGame'}) unless $g;
     $g
@@ -133,9 +131,8 @@ sub if_debug {
 
 sub inc_counter {
     my ($name) = @_;
-    my $cnt = db_search_one({ name => $name },
-                            { CLASS => 'Game::Model::Counter' });
-    $cnt = Game::Model::Counter->new(name => $name) unless $cnt;
+    my $cnt = db_search_one({ counterName => $name });
+    $cnt = Game::Model::Counter->new(counterName => $name) unless $cnt;
     $cnt->next();
     db()->store($cnt);
     $cnt->value();
@@ -143,18 +140,10 @@ sub inc_counter {
 
 sub init_user_by_sid {
     my ($sid) = @_;
-    return 0 unless defined $sid;
-    $global_user = undef;
-
-    my @users = db_search({ sid => $sid })->all();
-    if (!@users ) {
-        return 0
-    } elsif ( @users > 1 ) {
-        die "multiple users with same name"
-    }
-
-    $global_user = $users[0];
-    1
+    return 0 unless defined $sid && $sid ne '';
+    my $user = db_search_one({ sid => $sid });
+    $global_user = $user;
+    defined $user ? 1 : 0
 }
 
 sub request {

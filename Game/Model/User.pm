@@ -7,7 +7,7 @@ use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw( apply_all_roles );
 
-our @db_index = qw(id sid username password);
+our @db_index = qw(userId sid username password);
 
 
 subtype 'Username',
@@ -40,7 +40,7 @@ subtype 'ReadinessStatus',
 
 has 'sid' => ( isa => 'Str',
                is  => 'rw',
-               required => 0 );
+               default => '' );
 
 has 'username' => ( isa => 'Username',
                     is  => 'rw',
@@ -65,6 +65,8 @@ has 'coins' => ( isa => 'Int',
                  is => 'rw',
                  default => 0 );
 
+# FIXME: rename to userId
+sub userId { $_[0]->id() }
 has 'id' => ( isa => 'Int',
               is => 'ro',
               required => 0 );

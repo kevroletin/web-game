@@ -6,7 +6,7 @@ use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 
 
-our @db_index = qw(mapName id);
+our @db_index = qw(mapName mapId);
 
 
 subtype 'MapName',
@@ -53,6 +53,8 @@ has 'regions' => ( isa => 'ArrayRef[Game::Model::Region]|Undef',
                    is => 'rw',
                    required => 0 );
 
+# FIXME: rename to mapId
+sub mapId { $_[0]->id() }
 has 'id' => ( isa => 'Int',
               is => 'ro',
               required => 0 );

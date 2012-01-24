@@ -243,8 +243,7 @@ sub _load_players_from_state {
     assert(ref($data->{players}) eq 'ARRAY', 'badPlayers');
     my $load_user = sub {
         my ($id) = @_;
-        my $p = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $id });
+        my $p = db_search_one({ id => $id });
         assert($p, 'badUserId', userId => $id);
         assert(!$p->activeGame(), 'alreadyInGame', userId => $id);
         $p->activeGame($self);

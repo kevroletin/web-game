@@ -25,7 +25,7 @@ sub resetServer {
         srand($data->{randSeed})
     }
     unlink 'tmp/test.db';
-    `rm -rf db`;
+#    `rm -rf tmp/db`;
     response_json({result => 'ok'});
 }
 
