@@ -11,9 +11,9 @@ sub power_name { 'forest' }
 sub _power_tokens_cnt { 4 }
 
 override 'compute_coins' => sub {
-    my ($self, $regs) = @_;
+    my ($self, $regs, $st) = @_;
     return super() if $self->inDecline();
-    super() + grep { 'forest' ~~ $_->landDescription() } @$regs;
+    super() + ($st->{power} = grep { 'forest' ~~ $_->landDescription() } @$regs)
 };
 
 

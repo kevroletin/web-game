@@ -16,10 +16,11 @@ sub power_name { 'wealthy' }
 sub _power_tokens_cnt { 4 }
 
 override 'compute_coins' => sub {
-    my ($self) = @_;
+    my ($self, $regs, $stat) = @_;
     return super() if $self->firstTurnFinished();
     $self->firstTurnFinished(1);
     db()->update($self);
+    $stat->{power} = 7;
     super() + 7
 };
 

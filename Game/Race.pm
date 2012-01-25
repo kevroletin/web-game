@@ -1,7 +1,10 @@
 package Game::Race;
 use Moose;
 
-use Game::Environment qw(assert db early_response_json
+use Game::Environment qw(assert
+                         compability
+                         db
+                         early_response_json
                          global_user
                          global_game);
 use List::Util qw( sum );
@@ -10,6 +13,11 @@ use List::Util qw( sum );
 has 'inDecline' => ( isa => 'Bool',
                      is => 'rw',
                      default => 0 );
+
+# compatibility
+has 'tokenBadgeId' => ( isa => 'Int',
+                        is => 'rw',
+                        required => 1 );
 
 sub extract_state {
     my ($self) = @_;
@@ -51,6 +59,11 @@ sub _check_land_immune {
             early_response_json({result => 'regionIsImmune'});
         }
     }
+}
+
+sub _regions_are_adjacent {
+    my ($self, $r1, $r2) = @_;
+    $r1->regionId() ~~ $r2->adjacent() || $r2->regionId() ~~ $r1->adjacent();
 }
 
 sub _region_is_adjacent_with_our {
@@ -128,9 +141,7 @@ sub conquer {
     my $units_cnt = $self->_calculate_land_strength($reg);
     $units_cnt = 1 if $units_cnt <= 0;
 
-    if (global_user()->tokensInHand() < $units_cnt) {
-        early_response_json({result => 'noEnouthUnits'});
-    }
+    assert(global_user()->tokensInHand() >= $units_cnt, 'badTokensNum');
 
     my $defender = $self->__kill_region_owner($reg);
 
@@ -183,7 +194,28 @@ sub _redeploy_units {
 
 sub defend {
     my ($self, $moves) = @_;
+    assert($moves->{units_sum} <= global_user()->tokensInHand(),
+           'notEnoughTokens');
+    if (compability()) {
+        assert($moves->{units_sum} == global_user()->tokensInHand(),
+               'thereAreTokensInTheHand');
+    }
+
     $self->_redeploy_units($moves);
+
+    my $attacked_reg = global_game()->lastAttack()->{region};
+    my $ok = 0;
+    for (global_game()->lastAttack()->{whom}->owned_regions()) {
+        last if $ok ||= !$self->_regions_are_adjacent($attacked_reg, $_)
+    }
+    if ($ok) {
+        for (@{$moves->{units_moves}}) {
+            my $reg = $_->[0];
+            assert(!$self->_regions_are_adjacent($attacked_reg, $reg),
+                   'badRegion');
+        }
+    }
+
     global_user()->tokensInHand(global_user()->tokensInHand - $moves->{units_sum});
 }
 
@@ -194,9 +226,7 @@ sub redeploy {
     my $tok_cnt = global_user()->tokensInHand() +
                   sum 0, map { $_->tokensNum() } @reg;
 
-    if ($moves->{units_sum} > $tok_cnt) {
-        early_response_json({result => 'badTokensNum'})
-    }
+    assert($moves->{units_sum} <= $tok_cnt, 'notEnoughTokensForRedeployment');
 
     global_user()->tokensInHand($tok_cnt - $moves->{units_sum});
     for (@reg) {
@@ -205,6 +235,13 @@ sub redeploy {
     $self->_redeploy_units($moves);
     for (@reg) {
         $self->_clear_left_region($_) unless $_->tokensNum()
+    }
+
+    if (compability() && global_user()->tokensInHand() != 0) {
+        next unless @{$moves->{units_moves}};
+        my $reg = $moves->{units_moves}[-1][0];
+        $reg->tokensNum($reg->tokensNum() + global_user()->tokensInHand());
+        global_user()->tokensInHand(0);
     }
 
     \@reg

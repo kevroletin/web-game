@@ -1,9 +1,12 @@
 package Game::Model::Game;
 use Moose;
+use v5.10;
 
 use Game::Constants qw(races_with_debug powers_with_debug);
-use Game::Environment qw(assert db_search_one
-                         early_response_json inc_counter
+use Game::Environment qw(assert compability db_search_one
+                         early_response_json
+                         global_user
+                         inc_counter
                          if_debug);
 use Game::Model::Map;
 use Game::Model::User;
@@ -36,9 +39,9 @@ subtype 'playersNum',
     };
 
 subtype 'Game::Model::Game::GameDescr',
-    as 'Str',
-    where { assert(length($_) <= 300, 'badGameDescription') },
-    message { '' };
+    as 'Maybe[Str]',
+    where { !defined $_ || length($_) <= 300 },
+    message { assert(0, 'badGameDescription') };
 
 
 has 'gameName' => ( isa => 'GameName',
@@ -49,8 +52,9 @@ has 'map' => ( isa => 'Game::Model::Map',
                is => 'rw',
                required => 0 );
 
-has 'gameDescr' => ( isa => 'Maybe[Game::Model::Game::GameDescr]',
-                     is => 'rw' );
+has 'gameDescr' => ( isa => 'Game::Model::Game::GameDescr',
+                     is => 'rw',
+                     default => '' );
 
 has 'players' => ( isa => 'ArrayRef[Game::Model::User]',
                    is => 'rw',
@@ -72,6 +76,7 @@ has 'racesPack' => ( isa => 'ArrayRef[Str]',
                      is => 'rw',
                      default => sub { [] } );
 
+# FIXME: construct token badges with game #############
 has 'powersPack' => ( isa => 'ArrayRef[Str]',
                       is => 'rw',
                       default => sub { [] } );
@@ -79,6 +84,15 @@ has 'powersPack' => ( isa => 'ArrayRef[Str]',
 has 'bonusMoney' => ( isa => 'ArrayRef[Int]',
                       is => 'rw',
                       default => sub { [(0) x 6] } );
+
+has 'tokenBadgeIds' => ( isa => 'ArrayRef[Int]',
+                         is => 'rw',
+                         default => sub { [1 .. 6] } );
+#######################################################
+
+has 'lasTokenBadgeId' => ( isa => 'Int',
+                           is => 'rw',
+                           default => 6 );
 
 has 'history' => ( isa => 'ArrayRef',
                    is => 'rw',
@@ -148,8 +162,13 @@ sub _extract_visible_tokens {
     my @res;
     for my $i (0 .. 5) {
         my $tok = {};
-        $tok->{raceName} = $self->racesPack()->[$i];
-        $tok->{specialPowerName} = $self->powersPack()->[$i];
+        $tok->{tokenBadgeId} = $self->tokenBadgeIds()->[$i];
+        $tok->{raceName} = ucfirst($self->racesPack()->[$i]);
+        # FIXME:
+        $tok->{specialPowerName} =
+            $self->powersPack()->[$i] eq 'dragonmaster' ?
+                'DragonMaster' :
+                ucfirst($self->powersPack()->[$i]);
         $tok->{position} = $i;
         $tok->{bonusMoney} = $self->bonusMoney()->[$i];
         push @res, $tok
@@ -176,54 +195,137 @@ sub _extract_history {
     \@res
 }
 
-sub extract_state {
-    my ($self) = @_;
+sub _extract_map_state {
+    my ($s) = @_;
+    my $m = $s->map();
     my $res = {};
-    $res->{activePlayerNum} = $self->activePlayerNum();
-    $res->{lastAttack} = $self->_extract_last_attack();
-    $res->{state} = $self->state();
-    my @players_st;
-    push @players_st, $_->extract_state() for @{$self->players()};
-    $res->{players} = \@players_st;
-    my @regions;
-    push @regions, $_->extract_state() for @{$self->map()->regions()};
-    $res->{regions} = \@regions;
-    $res->{visibleTokenBadges} = $self->_extract_visible_tokens();
-    $res->{attacksHistory} = $self->_extract_history();
-    $res->{mapId} = $self->map()->id();
-    $res->{turn} = $self->turn();
-    $self->_copy_races_state_storage($res);
+    $res->{mapId} = $m->id();
+    $res->{mapName} = $m->mapName();
+    $res->{playersNum} = $m->playersNum();
+    $res->{turnsNum} = $m->turnsNum();
+    $res->{regions} = [];
+    for my $reg (@{$s->map()->regions()}) {
+        my $st = {};
+        $st->{constRegionState} = $reg->landDescription;
+        $st->{adjacentRegions} = $reg->adjacent();
+        $st->{currentRegionState} = {
+            ownerId => $reg->owner() ? $reg->owner()->id() : undef,
+            tokensNum => $reg->population(),
+            tokenBadgeId => $reg->owner_race() ?
+                                $reg->owner_race()->tokenBadgeId() : undef
+        };
+        for (keys $reg->extraItems()) {
+            my ($c, $d);
+            given ($_) {
+                when ('hole') {
+                    $c = 'holeInTheGround';
+                    $d = $reg->extraItems()->{$_} ? JSON::true : JSON::false
+                }
+                default { ($c, $d) = ($_, $reg->extraItems()->{$_}) }
+            };
+            $st->{currentRegionState}{$c} = $d;
+        }
+# TODO: DEBUG:
+        $st->{regionId} = $reg->{regionId};
+
+        push $res->{regions}, $st
+    }
     $res
 }
 
-sub short_info {
+sub _extract_players_state {
     my ($s) = @_;
-    my $res = {
-        gameId => $s->gameId(),
-        gameName => $s->gameName(),
-        gameDescr => $s->gameDescr(),
-        playersNum => scalar @{$s->players()},
-        maxPlayersNum => $s->map()->playersNum(),
-        activePlayerId => $s->activePlayer()->id(),
-        turn => $s->turn(),
-        turnsNum => $s->map()->turnsNum(),
-        mapId => $s->map()->id(),
-        mapName => $s->map()->mapName()
-    };
+    my $res = [];
+    for my $i (0 .. $#{$s->players()}) {
+        my $st = {};
+        my $p = $s->players()->[$i];
+        $st->{userId} = $p->id();
+        $st->{username} = $p->username();
+        $st->{coins} = $p->coins();
+        $st->{priority} = $i + 1;
+        $st->{isReady} = $p->readinessStatusBool;
+        $st->{tokensInHand} = $p->tokensInHand();
+        my $extract_race = sub {
+            my ($race) = @_;
+            return undef unless $race;
+            {
+                raceName => ucfirst($race->race_name()),
+                specialPowerName => ucfirst($race->power_name()),
+                tokenBadgeId => $race->tokenBadgeId()
+            }
+        };
+        $st->{currentTokenBadge} = $extract_race->($p->activeRace());
+        $st->{declinedTokenBadge} = $extract_race->($p->declineRace());
+        push $res, $st
+    }
+    $res
 }
 
-sub full_info {
+sub extract_state {
     my ($s) = @_;
-    my $state = $s->extract_state();
-    my $s_i = $s->short_info();
-    for my $k (keys %{$s_i}) {
-        $state->{$k} = $s_i->{$k}
+    my $res = {};
+
+    $res->{activePlayerId} = $s->activePlayer() ?
+                                 $s->activePlayer()->id() : undef;
+    $res->{currentPlayersNum} = @{$s->players()};
+    $res->{currentTurn} = $s->turn();
+    $res->{gameDescription} = $s->gameDescr();
+    $res->{gameId} = $s->gameId();
+    $res->{gameName} = $s->gameName();
+    $res->{players} = $s->_extract_players_state();
+    $res->{stage} = $s->stage();
+    $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
+    $res->{map} = $s->_extract_map_state();
+
+    if ($s->state() eq 'defend') {
+        $res->{defendingInfo} = {
+            playerId => $s->lastAttack()->{whom}->userId(),
+            regionId => $s->lastAttack()->{region}->regionId()
+        }
     }
-    for my $i (0 .. $#{$s->players()}) {
-        $state->{players}->[$i]->{name} =
-            $s->players()->[$i]->{username}
+#    $res->{activePlayerNum} = $s->activePlayerNum();
+#    $res->{lastAttack} = $s->_extract_last_attack();
+#    $res->{state} = $s->state();
+    my @regions;
+    push @regions, $_->extract_state() for @{$s->map()->regions()};
+#    $res->{regions} = \@regions;
+#    $res->{attacksHistory} = $s->_extract_history();
+#    $res->{mapId} = $s->map()->id();
+
+    $s->_copy_races_state_storage($res);
+    $res
+}
+
+sub stage {
+    my ($self) = @_;
+    my $st = $self->state();
+    given ($st) {
+        when ('conquer') {
+            if (defined $self->activePlayer()->activeRace()) {
+                'conquest'
+            } else {
+                'selectRace'
+            }
+        }
+        default {
+            $st
+        }
     }
-    $state
+
+=begin comment
+
+# внутриигровые состояния игры (stages)
+use constant GS_DEFEND             => 'defend'           ;
+use constant GS_SELECT_RACE        => 'selectRace'       ;
+use constant GS_BEFORE_CONQUEST    => 'beforeConquest'   ;
+use constant GS_CONQUEST           => 'conquest'         ;
+use constant GS_REDEPLOY           => 'redeploy'         ;
+use constant GS_BEFORE_FINISH_TURN => 'beforeFinishTurn' ;
+use constant GS_FINISH_TURN        => 'finishTurn'       ;
+use constant GS_IS_OVER            => 'gameOver'         ;
+
+=cut comment
+
 }
 
 sub remove_player {
@@ -366,8 +468,8 @@ sub next_player {
     my ($self) = @_;
     my $n = $self->activePlayerNum() + 1;
     if ($n >= @{$self->players()}) {
-        $n = 0
-        # TODO: next turn
+        $n = 0;
+        $self->turn($self->turn() + 1);
     }
     $self->history([]);
     $self->activePlayerNum($n)
@@ -404,13 +506,41 @@ sub ready {
     1
 }
 
+sub short_info {
+    my ($s) = @_;
+    my $res = {
+        gameId => $s->gameId(),
+        gameName => $s->gameName(),
+        gameDescr => $s->gameDescr(),
+        playersNum => scalar @{$s->players()},
+        maxPlayersNum => $s->map()->playersNum(),
+        activePlayerId => $s->activePlayer()->id(),
+        turn => $s->turn(),
+        turnsNum => $s->map()->turnsNum(),
+        mapId => $s->map()->id(),
+        mapName => $s->map()->mapName()
+    };
+    my $extract_user = sub {
+        my ($user) = @_;
+        {
+            isReady => $user->readinessStatusBool(),
+            userId => $user->{id},
+            username => $user->{username}
+        }
+    };
+    $res->{players} = [map { $extract_user->($_) } @{$s->players()}];
+    $res
+}
+
 sub pick_tokens {
     my ($self, $race_num) = @_;
     my $race = splice @{$self->racesPack()}, $race_num, 1;
     my $power = splice @{$self->powersPack()}, $race_num, 1;
     my $coins = splice @{$self->bonusMoney()}, $race_num, 1;
+    my $id =  splice @{$self->tokenBadgeIds()}, $race_num, 1;
     push @{$self->bonusMoney()}, 0;
-    ($race, $power, $coins)
+    push @{$self->tokenBadgeIds()}, ++$self->{lasTokenBadgeId};
+    ($race, $power, $id, $coins)
 }
 
 sub put_back_tokens {

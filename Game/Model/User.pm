@@ -6,6 +6,7 @@ use Game::Environment qw(assert early_response_json inc_counter);
 use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw( apply_all_roles );
+use JSON;
 
 our @db_index = qw(id sid username password);
 
@@ -65,6 +66,7 @@ has 'coins' => ( isa => 'Int',
                  is => 'rw',
                  default => 0 );
 
+sub userId { $_[0]->id() }
 has 'id' => ( isa => 'Int',
               is => 'ro',
               required => 0 );
@@ -74,6 +76,10 @@ has 'activeRace' => ( isa => 'Game::Race|Undef',
 
 has 'declineRace' => ( isa => 'Game::Race|Undef',
                        is => 'rw' );
+
+has 'raceSelected' => ( isa => 'Bool',
+                        is => 'rw',
+                        default => 0 );
 
 sub BUILD {
     my ($self) = @_;
@@ -188,6 +194,10 @@ sub short_info {
     $res
 }
 
+sub readinessStatusBool {
+    my ($s) = @_;
+    $s->readinessStatus() ? JSON::true : JSON::false
+}
 
 1
 

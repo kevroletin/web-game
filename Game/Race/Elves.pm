@@ -11,11 +11,12 @@ sub race_name { 'elves' }
 
 sub tokens_cnt { 6 }
 
-sub clear_reg_and_die {
+override 'clear_reg_and_die' => sub {
     my ($self, $reg) = @_;
+    return super() if $self->inDecline();
     my $tok_cnt = $reg->owner()->tokensInHand() + $reg->tokensNum();
     $reg->owner()->tokensInHand($tok_cnt);
-}
+};
 
 
 1

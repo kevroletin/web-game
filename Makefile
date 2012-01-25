@@ -1,4 +1,5 @@
 CMD=starman
+CMD=plackup
 
 debug :
 	@echo "***Debug environment***"

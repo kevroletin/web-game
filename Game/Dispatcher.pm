@@ -88,7 +88,7 @@ sub process_request {
         response_raw($@->{msg})
     } else {
         response()->content_type('text/html; charset=utf-8');
-        my $str = stack_trace()->as_html();
+        my $str = stack_trace()->as_string();#html();
         utf8::encode($str) if utf8::is_utf8($str);
         response_raw($str);
     }

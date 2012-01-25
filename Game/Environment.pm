@@ -46,8 +46,14 @@ my ($compability,
     $stack_trace);
 
 sub assert {
-    my ($ok, $msg, %h) = @_;
-    early_response_json({result => $msg, %h}) unless $ok;
+    my ($ok, $msg) = (shift, shift);
+    return if $ok;
+    if (compability()) {
+        early_response_json({result => $msg})
+    } else {
+        early_response_json({result => $msg, @_})
+    }
+    1
 }
 
 sub compability {

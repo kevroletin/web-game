@@ -10,10 +10,11 @@ with( 'Game::Roles::Power' );
 sub power_name { 'fortified' }
 
 override 'compute_coins' => sub {
-    my ($self, $regs) = @_;
+    my ($self, $regs, $stat) = @_;
     return super() if $self->inDecline();
-    super() +
-        grep { defined $_->extraItems()->{fortified} } @$regs;
+    my $bonus = grep { defined $_->extraItems()->{fortified} } @$regs;
+    $stat->{power} = $bonus unless $self->inDecline();
+    super() + $bonus;
 };
 
 sub _power_tokens_cnt { 3 }

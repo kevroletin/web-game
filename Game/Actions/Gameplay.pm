@@ -53,6 +53,22 @@ use Exporter::Easy( OK => [qw(conquer
                               selectRace
                               throwDice)] );
 
+sub _control_extra_items {
+    my ($regs) = @_;
+    my $h = {
+        encampments => 'bivouacking',
+        fortified_reg => 'fortified',
+        heroes_regs => 'heroic'
+    };
+    for (keys $h) {
+        if (defined $regs->{$_}) {
+            assert(global_user()->activeRace()->power_name() eq $h->{$_},
+                       'badStage');
+            }
+    }
+}
+
+# FIXME: yes, yes kill me for this code
 sub _control_state {
     my ($data) = @_;
     my $a = $data->{action};
@@ -78,7 +94,7 @@ sub _control_state {
     };
     my $start_moving = sub {
         $state->('conquer');
-        $ok->(!@{$game->history()})
+        $ok->(!@{$game->history()} && !global_user()->raceSelected());
     };
     my $have_race = sub {
         $ok->($game->activePlayer()->activeRace())
@@ -171,18 +187,11 @@ sub __moves_pairs_from_array {
     my $sum = 0;
     for (@{$arr}) {
         my $reg = global_game()->map()->region_by_id($_->{regionId});
-        unless ($reg->owner() &&
-                $reg->owner() eq global_user())
-        {
-            early_response_json({result => 'badRegion'})
-        }
-        unless ($_->{$field} =~ /^\d+$/) {
-            early_response_json(result => $error_msg)
-        }
-        if ($proc_reg{$reg}) {
-            early_response_json({result => 'badRegion'})
-        }
-        $proc_reg{$reg} = 1;
+        assert($reg->owner() && $reg->owner() eq global_user(), 'badRegion');
+        assert(defined $_->{$field} &&
+               $_->{$field} =~ /^\d+$/ && $_->{$field} > 0, $error_msg);
+#        assert(!$proc_reg{$reg}, 'badRegion');
+#        $proc_reg{$reg} = 1;
         push @res, [$reg, $_->{$field}];
         $sum += $_->{$field}
     }
@@ -218,11 +227,9 @@ sub __heroes_regs_from_date {
 
 sub _moves_from_data {
     my  ($data) = @_;
-    unless (defined $data->{regions} &&
-            ref($data->{regions}) eq 'ARRAY')
-    {
-        early_response_json({result => 'badJson'})
-    }
+    assert(defined $data->{regions} && ref($data->{regions}) eq 'ARRAY',
+           'badJson');
+
     my ($units, $units_sum) =
         __moves_pairs_from_array($data->{regions},
                                 'tokensNum',
@@ -231,14 +238,16 @@ sub _moves_from_data {
         __moves_pairs_from_array($data->{encampments},
                                 'encampmentsNum',
                                 'badEncampmentsNum');
-    {
+    my $res = {
         encampments => $enc,
         encampments_sum => $enc_sum,
         fortified_reg => __fortified_reg_from_data($data),
         heroes_regs => __heroes_regs_from_date($data),
         units_moves => $units,
         units_sum => $units_sum,
-    }
+    };
+    _control_extra_items($res);
+    $res
 }
 
 sub defend {
@@ -294,13 +303,15 @@ sub finishTurn {
         }
     }
     my $coins = 0;
+    my $stat = {};
     if (global_user()->activeRace()) {
-        $coins += global_user()->activeRace()->compute_coins(\@reg_a)
+        $coins += global_user()->activeRace()->compute_coins(\@reg_a, $stat)
     }
     if (global_user()->declineRace()) {
-        $coins += global_user()->declineRace()->compute_coins(\@reg_d)
+        $coins += global_user()->declineRace()->compute_coins(\@reg_d, $stat)
     }
     global_user()->coins(global_user()->coins() + $coins);
+    global_user()->raceSelected(0);
 
     $game->next_player();
     my $tok_cnt = $game->activePlayer()->tokensInHand();
@@ -319,11 +330,21 @@ sub finishTurn {
 
     # TODO: may be move most of this action handler into
     # Race.pm->finishTurn
-    if (global_user()->activeRace()) {
-        global_user()->activeRace()->turnFinished()
-    }
+    my $race = global_user()->activeRace();
+    my $race_d = global_user()->declineRace();
+    $race->turnFinished() if $race;
 
-    response_json({result => 'ok', coins => $coins})
+    my $stat_from_race = sub {
+        my ($race) = @_;
+        [['Regions', @reg_a + @reg_d],
+                     [ucfirst($race->race_name()), $stat->{race} || 0],
+                     [ucfirst($race->power_name()), $stat->{power} || 0]]
+    };
+    $stat = $race   ? $stat_from_race->($race)   :
+            $race_d ? $stat_from_race->($race_d) :
+            [['Regions', @reg_a + @reg_d]];
+
+    response_json({result => 'ok', 'statistics' => $stat})
 }
 
 sub redeploy {
@@ -341,8 +362,8 @@ sub redeploy {
 
 sub selectFriend {
     my ($data) = @_;
-    proto($data, 'userId');
     _control_state($data);
+    proto($data, 'userId');
 
     my $friend;
     for (@{global_game()->players()}) {
@@ -365,7 +386,7 @@ sub selectRace {
 
     my $p = $data->{position};
     assert($p =~ /^\d+$/ && 0 <= $p && $p <= 5, 'badPosition');
-    for (0 .. $p) {
+    for (0 .. $p - 1) {
         $game->bonusMoney()->[$_] += 1;
     }
     my $coins = $game->bonusMoney()->[$p] - $p;
@@ -374,18 +395,19 @@ sub selectRace {
     }
     global_user()->coins(global_user()->coins + $coins);
 
-    my ($race, $power) = $game->pick_tokens($p);
+    my ($race, $power, $id) = $game->pick_tokens($p);
 
-    my $pair = ("Game::Race::" . ucfirst($race))->new();
+    my $pair = ("Game::Race::" . ucfirst($race))->new(tokenBadgeId => $id);
     apply_all_roles($pair, ("Game::Power::" . ucfirst($power)));
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
+    global_user()->raceSelected(1);
 
     $game->state('conquer');
     db()->store_nonroot($pair);
     db()->update($game, global_user());
 
-    response_json({result => 'ok'})
+    response_json({tokenBadgeId => $id, result => 'ok'})
 }
 
 sub throwDice {
