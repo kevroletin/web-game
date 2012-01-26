@@ -107,6 +107,15 @@ has 'turn' => ( isa => 'Int',
                 is => 'rw',
                 default => 0 );
 
+has 'prevGenNum' => ( isa => 'Int',
+                      is => 'rw',
+                      default => 0 );
+
+has 'lastDiceValue' => ( isa => 'Maybe[Int]',
+                         is => 'rw',
+                         required => 0 );
+
+
 sub BUILD {
     my ($self) = @_;
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
@@ -214,7 +223,7 @@ sub _extract_map_state {
             tokenBadgeId => $reg->owner_race() ?
                                 $reg->owner_race()->tokenBadgeId() : undef
         };
-        for (keys $reg->extraItems()) {
+        for (keys %{$reg->extraItems()}) {
             my ($c, $d);
             given ($_) {
                 when ('hole') {
@@ -228,7 +237,7 @@ sub _extract_map_state {
 # TODO: DEBUG:
         $st->{regionId} = $reg->{regionId};
 
-        push $res->{regions}, $st
+        push @{$res->{regions}}, $st
     }
     $res
 }
@@ -256,7 +265,7 @@ sub _extract_players_state {
         };
         $st->{currentTokenBadge} = $extract_race->($p->activeRace());
         $st->{declinedTokenBadge} = $extract_race->($p->declineRace());
-        push $res, $st
+        push @{$res}, $st
     }
     $res
 }
@@ -302,13 +311,13 @@ sub stage {
     given ($st) {
         when ('conquer') {
             if (defined $self->activePlayer()->activeRace()) {
-                'conquest'
+                return 'conquest'
             } else {
-                'selectRace'
+                return 'selectRace'
             }
         }
         default {
-            $st
+            return $st
         }
     }
 
@@ -472,7 +481,8 @@ sub next_player {
         $self->turn($self->turn() + 1);
     }
     $self->history([]);
-    $self->activePlayerNum($n)
+    $self->activePlayerNum($n);
+    $self->lastDiceValue(undef);
 }
 
 sub number_of_user {
@@ -548,5 +558,24 @@ sub put_back_tokens {
     push @{$self->racesPack()}, $race->race_name();
     push @{$self->powersPack()}, $race->power_name();
 }
+
+sub random_dice { int rand(4) }
+
+=begin comment
+
+# константы для работы алгоритма случайных чисел
+use constant RAND_A    =>     16807;
+use constant RAND_M    => 2**31 - 1;
+use constant RAND_EXPR =>     47127;
+
+sub random_dice {
+    my ($self, $dice) = @_;
+    return $dice if defined $dice;
+    $self->prevGenNum((RAND_A * $self->{prevGenNum}) % RAND_M);
+    my $result = $self->prevGenNum() % 6;
+    $result > 3 ? 0 : $result;
+}
+
+=cut comment
 
 1

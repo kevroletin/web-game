@@ -2,7 +2,7 @@ package Game::Actions::Lobby;
 use strict;
 use warnings;
 
-use Digest::SHA1 ();
+#use Digest::SHA1 ();
 
 use Game::Actions;
 use Game::Environment qw(assert compability db db_search db_search_one

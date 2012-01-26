@@ -4,7 +4,7 @@ use strict;
 
 use Game::Actions;
 use Game::Environment qw( assert response_json early_response_json
-                          db global_game global_user );
+                          db global_game global_user is_debug );
 use Moose::Util qw( apply_all_roles );
 
 #TODO: move to separate module or use smth. like Module::Find
@@ -60,7 +60,7 @@ sub _control_extra_items {
         fortified_reg => 'fortified',
         heroes_regs => 'heroic'
     };
-    for (keys $h) {
+    for (keys %$h) {
         if (defined $regs->{$_}) {
             assert(global_user()->activeRace()->power_name() eq $h->{$_},
                        'badStage');
@@ -74,9 +74,7 @@ sub _control_state {
     my $a = $data->{action};
     my $game = global_game();
     my $ok = sub {
-        unless ($_[0]) {
-            early_response_json({result => 'badStage'})
-        }
+        assert(shift, 'badStage', stage => $game->state(), @_);
     };
     my $state = sub {
         $ok->($game->state() ~~ [@_])
@@ -104,6 +102,7 @@ sub _control_state {
         $curr_usr->();
         $state->('conquer');
         $ok->(global_user()->activeRace());
+        $ok->(!defined global_game()->lastDiceValue(), descr => 'diceUsed');
     } elsif ($a eq 'decline' ) {
         $curr_usr->();
         $have_race->();
@@ -145,7 +144,8 @@ sub _control_state {
     } elsif ($a eq 'throwDice' ) {
         $curr_usr->();
         $state->('conquer');
-        $power->('berserk')
+        $power->('berserk');
+        $ok->(!defined global_game()->lastDiceValue(), descr => 'diceUsed');
     }
 }
 
@@ -157,7 +157,8 @@ sub conquer {
     my $reg = global_game()->map()->region_by_id($data->{regionId});
     my $race = global_user()->activeRace();
     $race->check_is_move_possible($reg);
-    my $defender = $race->conquer($reg);
+    my $dice = is_debug() ? $data->{dice} : 0;
+    my $defender = $race->conquer($reg, $dice);
 
     if ($defender && $defender->have_owned_regions()) {
         global_game()->state('defend');
@@ -412,10 +413,10 @@ sub selectRace {
 
 sub throwDice {
     my ($data) = @_;
-    proto($data, );
     _control_state($data);
 
-    global_user()->activeRace()->throwDice();
+    my $dice = is_debug() ? $data->{dice} : 0;
+    global_user()->activeRace()->throwDice($dice);
 }
 
 1;

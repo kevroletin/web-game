@@ -48,11 +48,11 @@ my ($compability,
 sub assert {
     my ($ok, $msg) = (shift, shift);
     return if $ok;
-    if (compability()) {
-        early_response_json({result => $msg})
-    } else {
-        early_response_json({result => $msg, @_})
-    }
+#    if (compability()) {
+#        early_response_json({result => $msg})
+#    } else {
+        early_response_json({result => $msg, @_});
+#    }
     1
 }
 

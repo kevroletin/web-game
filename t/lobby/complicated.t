@@ -11,7 +11,6 @@ use Tester::Hooks;
 
 init_logs('lobby/complicated');
 ok( reset_server(), 'reset server' );
-exit;
 
 my ($user1, $user2) = map { params_same(qw(sid userId)) } 1 .. 2;
 
