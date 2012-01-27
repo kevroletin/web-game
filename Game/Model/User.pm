@@ -1,8 +1,10 @@
 package Game::Model::User;
 use Moose;
 
+#use Digest::SHA1 ();
+
 use Game::Constants qw(races_with_debug powers_with_debug);
-use Game::Environment qw(assert early_response_json inc_counter);
+use Game::Environment qw(assert is_debug early_response_json inc_counter);
 use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw( apply_all_roles );
@@ -13,7 +15,7 @@ our @db_index = qw(id sid username password);
 subtype 'Username',
     as 'Str',
     where {
-        /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/
+        /^[A-Za-z_][A-Za-z0-9\_\-\.]{2,15}$/
     },
     message {
         early_response_json({result => 'badUsername'})
@@ -37,6 +39,9 @@ subtype 'ReadinessStatus',
         early_response_json({result => 'badReadinessStatus'})
     };
 
+has isAi => ( is => 'Bool',
+              is => 'rw',
+              default => 0 );
 
 has 'sid' => ( isa => 'Str',
                is  => 'rw',
@@ -75,9 +80,30 @@ has 'activeRace' => ( isa => 'Game::Race|Undef',
 has 'declineRace' => ( isa => 'Game::Race|Undef',
                        is => 'rw' );
 
+
 sub BUILD {
     my ($self) = @_;
     $self->{id} = inc_counter('Game::Model::User::id');
+    $self->{sid} = _gen_sid();
+    unless ($self->isAi()) {
+        assert($self->{username} =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/,
+               'badUsername');
+    }
+}
+
+sub _gen_sid {
+    my $sid;
+
+    if (is_debug()) {
+        return inc_counter('Game::Model::User::sid');
+    }
+
+    while (1) {
+        $sid = Digest::SHA1::sha1_hex(rand() . time() .
+                                      'secret#$#%#%#%#%@#KJDFSd24');
+        last unless (db_search({ sid => $sid })->all());
+    }
+    $sid
 }
 
 before 'activeGame' => sub {

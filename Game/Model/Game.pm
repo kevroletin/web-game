@@ -40,6 +40,11 @@ subtype 'Game::Model::Game::GameDescr',
     where { assert(length($_) <= 300, 'badGameDescription') },
     message { '' };
 
+subtype 'Game::Model::Game::Ai',
+    as 'Int',
+    where {  !defined $_ || $_ <= 4 },
+    message { assert(0, 'badAi' ) };
+
 
 has 'gameName' => ( isa => 'GameName',
                     is => 'ro',
@@ -88,6 +93,14 @@ has 'raceStateStorage' => ( isa => 'HashRef',
                             is => 'rw',
                             default => sub { {} } );
 
+has 'ai' => ( isa => 'Game::Model::Game::Ai',
+              is => 'rw',
+              default => 0 );
+
+has 'aiJoined' => ( isa => 'Int',
+                    is => 'rw',
+                    default => 0 );
+
 # TODO: process game turn during gameplay
 has 'turn' => ( isa => 'Int',
                 is => 'rw',
@@ -96,6 +109,7 @@ has 'turn' => ( isa => 'Int',
 sub BUILD {
     my ($self) = @_;
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
+    assert($self->ai() <= $self->map()->playersNum, 'badAiNum');
 }
 
 before 'state' => sub {
@@ -208,7 +222,9 @@ sub short_info {
         turn => $s->turn(),
         turnsNum => $s->map()->turnsNum(),
         mapId => $s->map()->id(),
-        mapName => $s->map()->mapName()
+        mapNamee => $s->map()->mapName(),
+        aiRequiredNum => $s->ai() - $s->aiJoined(),
+        ai => $s->ai()
     };
 }
 
@@ -398,6 +414,7 @@ sub number_of_region {
 sub ready {
     my ($self) = @_;
     return 0 unless @{$self->players()} > 1;
+    return 0 if $self->ai() != $self->aiJoined();
     for my $user (@{$self->players()}) {
         return 0 unless $user->readinessStatus()
     }
