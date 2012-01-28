@@ -91,8 +91,8 @@ sub BUILD {
     $self->{id} = inc_counter('Game::Model::User::id');
     $self->{sid} = _gen_sid();
     unless ($self->isAi()) {
-        assert($self->{username} =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/,
-               'badUsername');
+        my $ok = $self->{username} =~ /^[A-Za-z][A-Za-z0-9\-]{2,15}$/;
+        assert($ok, 'badUsername');
     }
 }
 

@@ -1,537 +1,362 @@
 use strict;
 use warnings;
 
-use Test::More tests => 37;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
-
-
-init_logs('lobby/complicated');
-ok( reset_server(), 'reset server' );
-
-my ($user1, $user2) = map { params_same(qw(sid userId)) } 1 .. 2;
-
-
-TEST("Bad json 1");
-GO(
-'asdfs;dlkfj'
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
-
-
-TEST("Bad json 2(empty)");
-GO(
-''
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
-
-
-TEST("No action");
-GO(
-'{ }'
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
-
-TEST("Empty action 1");
-GO(
-'{ "action" : "" }'
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
-
-
-TEST("Empty action 2");
-GO(
-'{ "action" }'
-,
-'{
-"result": "badJson"
-}'
-, {}
-);
-
-
-TEST("First user register");
-GO(
-'{
-"action": "register",
-"username": "user1",
-"password": "password1"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
-
-
-TEST("First user login");
-
-GO(
-'{
-"action": "login",
-"username": "user1",
-"password": "password1"
-}'
-,
-'{
-"result": "ok",
-"sid":"",
-"userId":""
-}'
-,
-$user1
-);
-
-
-TEST("Second user register");
-GO(
-'{
-"action": "register",
-"username": "user2",
-"password": "password1"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
-
-
-TEST("Second user login");
-GO(
-'{
-"action": "login",
-"username": "user2",
-"password": "password1"
-}'
-,
-'{
-"result": "ok",
-"sid": "",
-"userId": ""
-}'
-,
-$user2
-);
-
-
-ok( $user1->{_sid} ne $user2->{_sid}, 'sids differ');
-
-
-TEST("User1 logout");
-GO(
-'{
-"action": "logout",
-"sid": ""
-}'
-,
-'{
-"result": "ok"
-}'
-, $user1
-);
-
-
-TEST("User1 logout twice");
-GO(
-'{
-"action": "logout",
-"sid": ""
-}'
-,
-'{
-"result": "badUserSid"
-}'
-, $user1
-);
-
-
-TEST("User1 doSmth befor login ");
-GO(
-'{
-"action": "doSmth",
-"sid": ""
-}'
-,
-'{
-"result": "badUserSid"
-}'
-, $user1
-);
-
-
-TEST("User2 doSmth");
-GO(
-'{
-"action": "doSmth",
-"sid": ""
-}'
-,
-'{
-"result": "ok"
-}'
-, $user2
-);
-
-
-TEST("Second user login twice");
-GO(
-'{
-"action": "login",
-"username": "user2",
-"password": "password1"
-}'
-,
-'{
-"result": "ok",
-"sid": "",
-"userId": ""
-}'
-,
-$user2
-);
-
-
-TEST("Second user using old sid");
-GO(
-'{
-"action": "doSmth",
-"sid": ""
-}'
-,
-'{
-"result": "badUserSid"
-}'
-,
-$user1
-);
-
-TEST("First user register twice");
-GO(
-'{
-"action": "register",
-"username": "user1",
-"password": "password1"
-}'
-,
-'{
-"result": "usernameTaken"
-}'
-, {}
-);
-
-
-TEST("First user login whithout password");
-GO(
-'{
-"action": "login",
-"username": "user1"
-}'
-,
-'{
-"result": "badPassword"
-}'
-, {}
-);
-
-
-TEST("First user login whithout username");
-GO(
-'{
-"action": "login",
-"password": "password1"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("First user login empty password");
-GO(
-'{
-"action": "login",
-"username": "user1",
-"password": ""
-}'
-,
-'{
-"result": "badPassword"
-}'
-, {}
-);
-
-
-TEST("First user login empty username");
-GO(
-'{
-"action": "login",
-"username": "",
-"password": "password1"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-#TEST("First user login whithout params");
-#GO(
-#'{
-#"action": "login"
-#}'
-#,
-#'{
-#"result": "badJson"
-#}'
-#, {}
-#);
-
-
-TEST("First user login wrond password");
-GO(
-'{
-"action": "login",
-"username": "user1",
-"password": "password1sdasfdsdf"
-}'
-,
-'{
-"result": "badUsernameOrPassword"
-}'
-, {}
-);
-
-
-TEST("First user login wrond username");
-GO(
-'{
-"action": "login",
-"username": "user1sdfsd",
-"password": "password1"
-}'
-,
-'{
-"result": "badUsernameOrPassword"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(no field)");
-GO(
-'{
-"action": "register",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(empty)");
-GO(
-'{
-"action": "register",
-"username": "",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(too short)");
-GO(
-'{
-"action": "register",
-"username": "ab",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(too long)");
-GO(
-'{
-"action": "register",
-"username": "a1234567890123456",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(Starts with number)");
-GO(
-'{
-"action": "register",
-"username": "1abcde",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(contains @)");
-GO(
-'{
-"action": "register",
-"username": "Jonh@",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: user(boundaries1)");
-GO(
-'{
-"action": "register",
-"username": "Abcd",
-"password": "password"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
-
-
-TEST("Register: user(boundaries2)");
-GO(
-'{
-"action": "register",
-"username": "a123456789012345",
-"password": "password"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
-
-
-TEST("Register: bad username(contains russian letters)");
-GO(
-'{
-"action": "register",
-"username": "Петька",
-"password": "password"
-}'
-,
-'{
-"result": "badUsername"
-}'
-, {}
-);
-
-
-TEST("Register: bad password(boundaries1)");
-GO(
-'{
-"action": "register",
-"username": "UserPasswd4",
-"password": "pas12"
-}'
-,
-'{
-"result": "badPassword"
-}'
-, {}
-);
-
-
-TEST("Register: bad password(boundaries2)");
-GO(
-'{
-"action": "register",
-"username": "UserPasswd3",
-"password": "1234567890123456789"
-}'
-,
-'{
-"result": "badPassword"
-}'
-, {}
-);
-
-
-TEST("Register: password(boundaries1)");
-GO(
-'{
-"action": "register",
-"username": "UserPasswd2",
-"password": "!@#$%^&*()!@#$%^&*"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
-
-
-TEST("Register: password(boundaries2)");
-GO(
-'{
-"action": "register",
-"username": "UserPasswd1",
-"password": "!@#$%^&*()!@#$%^&*"
-}'
-,
-'{
-"result": "ok"
-}'
-, {}
-);
+use Tester::New;
+
+my ($user1, $user2) = map { hooks_sync_values(qw(sid userId)) } 1 .. 2;
+
+test("reset server", {action => 'resetServer'}, { result => 'ok' });
+
+test("bad json 1",
+     'asdfs;dlkfj',
+     { result => 'badJson' });
+
+test("bad json 2(empty)",
+     '',
+     {result => "badJson"});
+
+test("no action",
+     '{ }',
+     {result => "badJson"});
+
+test("empty action 1",
+     '{ "action" : "" }',
+     {result => "badJson"});
+
+test("empty action 2",
+     '{ "action" }',
+     {result => "badJson"});
+
+test("first user register",
+     {action => 'register',
+      username => 'user1',
+      password => 'password1'},
+     {result => 'ok'});
+
+test("first user login",
+     {action => "login",
+      username => "user1",
+      password => "password1"},
+     {result => "ok",
+      sid => undef,
+      userId => undef},
+     $user1);
+
+test('second user register',
+    {
+      action => "register",
+      password => "password1",
+      username => "user2"
+    },
+    {
+      result => "ok"
+    },
+    {} );
+
+test('second user login',
+    {
+      action => "login",
+      password => "password1",
+      username => "user2"
+    },
+    {
+      result => "ok",
+      sid => undef,
+      userId => undef
+    },
+    $user2 );
+
+ok( $user1->{data}{sid} ne $user2->{data}{sid}, 'sids differ');
+
+test('user1 logout',
+    {
+      action => "logout",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
+
+test('user1 logout twice',
+    {
+      action => "logout",
+      sid => undef
+    },
+    {
+      result => "badUserSid"
+    },
+    $user1 );
+
+test('user1 dosmth befor login ',
+    {
+      action => "doSmth",
+      sid => undef
+    },
+    {
+      result => "badUserSid"
+    },
+    $user1 );
+
+test('user2 dosmth',
+    {
+      action => "doSmth",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
+
+test('second user login twice',
+    {
+      action => "login",
+      password => "password1",
+      username => "user2"
+    },
+    {
+      result => "ok",
+      sid => undef,
+      userId => undef
+    },
+    $user2 );
+
+test('second user using old sid',
+    {
+      action => "doSmth",
+      sid => undef
+    },
+    {
+      result => "badUserSid"
+    },
+    $user1 );
+
+test('first user register twice',
+    {
+      action => "register",
+      password => "password1",
+      username => "user1"
+    },
+    {
+      result => "usernameTaken"
+    },
+    {} );
+
+test('first user login whithout password',
+    {
+      action => "login",
+      username => "user1"
+    },
+    {
+      result => "badPassword"
+    },
+    {} );
+
+test('first user login whithout username',
+    {
+      action => "login",
+      password => "password1"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('first user login empty password',
+    {
+      action => "login",
+      password => undef,
+      username => "user1"
+    },
+    {
+      result => "badPassword"
+    },
+    {} );
+
+test('first user login empty username',
+    {
+      action => "login",
+      password => "password1",
+      username => undef
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('first user login wrond password',
+    {
+      action => "login",
+      password => "password1sdasfdsdf",
+      username => "user1"
+    },
+    {
+      result => "badUsernameOrPassword"
+    },
+    {} );
+
+test('first user login wrond username',
+    {
+      action => "login",
+      password => "password1",
+      username => "user1sdfsd"
+    },
+    {
+      result => "badUsernameOrPassword"
+    },
+    {} );
+
+test('register: bad username(no field)',
+    {
+      action => "register",
+      password => "password"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(empty)',
+    {
+      action => "register",
+      password => "password",
+      username => undef
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(too short)',
+    {
+      action => "register",
+      password => "password",
+      username => "ab"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(too long)',
+    {
+      action => "register",
+      password => "password",
+      username => "a1234567890123456"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(starts with number)',
+    {
+      action => "register",
+      password => "password",
+      username => "1abcde"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(contains @)',
+    {
+      action => "register",
+      password => "password",
+      username => "Jonh\@"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad username(as ai)',
+    {
+      action => "register",
+      password => "password",
+      username => "_ai1.1"
+    },
+    {
+      result => "badUsername"
+    });
+
+test('register: user(boundaries1)',
+    {
+      action => "register",
+      password => "password",
+      username => "Abcd"
+    },
+    {
+      result => "ok"
+    },
+    {} );
+
+test('register: user(boundaries2)',
+    {
+      action => "register",
+      password => "password",
+      username => "a123456789012345"
+    },
+    {
+      result => "ok"
+    },
+    {} );
+
+test('register: bad username(contains russian letters)',
+    {
+      action => "register",
+      password => "password",
+      username => "\x{d0}\x{9f}\x{d0}\x{b5}\x{d1}\x{82}\x{d1}\x{8c}\x{d0}\x{ba}\x{d0}\x{b0}"
+    },
+    {
+      result => "badUsername"
+    },
+    {} );
+
+test('register: bad password(boundaries1)',
+    {
+      action => "register",
+      password => "pas12",
+      username => "UserPasswd4"
+    },
+    {
+      result => "badPassword"
+    },
+    {} );
+
+test('register: bad password(boundaries2)',
+    {
+      action => "register",
+      password => "1234567890123456789",
+      username => "UserPasswd3"
+    },
+    {
+      result => "badPassword"
+    },
+    {} );
+
+test('register: password(boundaries1)',
+    {
+      action => "register",
+      password => "!\@#\$%^&*()!\@#\$%^&*",
+      username => "UserPasswd2"
+    },
+    {
+      result => "ok"
+    },
+    {} );
+
+test('register: password(boundaries2)',
+    {
+      action => "register",
+      password => "!\@#\$%^&*()!\@#\$%^&*",
+      username => "UserPasswd1"
+    },
+    {
+      result => "ok"
+    },
+    {} );
+
+done_testing();
