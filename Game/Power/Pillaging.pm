@@ -11,8 +11,9 @@ sub power_name { 'pillaging' }
 sub _power_tokens_cnt { 5 }
 
 override 'compute_coins' => sub {
-    my ($self) = @_;
+    my ($self, $regs, $stat) = @_;
     my $conquired = grep { $_->{tokensNum} } @{global_game()->history()};
+    $stat->{power} = $conquired unless $self->inDecline();
     super() + $conquired
 };
 

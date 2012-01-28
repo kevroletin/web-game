@@ -52,7 +52,7 @@ sub parse_request {
     my $json = request()->raw_body();
 
     use Data::Dumper;
-#    print Dumper($json);
+    print Dumper($json);
 
     my $data = '';
     eval {
@@ -67,7 +67,7 @@ sub parse_request {
     }
 
     use Data::Dumper;
-#    print Dumper(response()->body());
+    print Dumper(response()->body());
 
     response()->finalize();
 };

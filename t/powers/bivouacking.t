@@ -196,18 +196,19 @@ GO(
 $user2 );
 
 
-TEST("conquer strong region");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "noEnouthUnits"
-}',
-$user2 );
+#TEST("conquer strong region");
+#GO(
+#'{
+#  "action": "conquer",
+#  "sid": "",
+#  "regionId": 2,
+#  "dice": 0
+#}'
+#,
+#'{
+#"result": "badTokensNum"
+#}',
+#$user2 );
 
 
 TEST("conquer");

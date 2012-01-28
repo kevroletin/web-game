@@ -97,6 +97,9 @@ has 'cavernCoords' => ( isa => 'Maybe[ArrayRef[Int]]',
                         is => 'rw',
                         required => 0 );
 
+has 'regionId' => ( isa => 'Int',
+                    is => 'rw',
+                    required => 0 );
 
 # TODO:
 # FIXME: rename tokensNum -> population

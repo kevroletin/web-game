@@ -24,8 +24,16 @@ sub resetServer {
     if (defined $data->{randSeed}) {
         srand($data->{randSeed})
     }
-    unlink 'tmp/test.db';
-    `rm -rf db`;
+    if (1) {
+        use DBI;
+        my $dbh = eval{ DBI->connect('dbi:SQLite:dbname=tmp/test.db') };
+        $dbh->do('delete from entries');
+        $dbh->do('delete from gin_index;');
+        die $DBI::errstr if $DBI::errstr;
+    } else {
+        unlink 'tmp/test.db';
+        `rm -rf db`;
+    }
     response_json({result => 'ok'});
 }
 

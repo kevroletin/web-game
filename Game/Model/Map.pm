@@ -57,8 +57,16 @@ has 'id' => ( isa => 'Int',
               is => 'ro',
               required => 0 );
 
+has 'picture' => ( isa => 'Str',
+                   is => 'rw',
+                   default => '' );
+
+
 sub BUILD {
     my ($self) = @_;
+    for my $i (1 .. @{$self->regions()}) {
+        $self->regions()->[$i - 1]->regionId($i)
+    }
 
 #    assert(@{$self->regions()} >= 1, 'badRegions', descr => 'notEnouthRegions');
 
@@ -106,9 +114,10 @@ sub get_region {
 sub region_by_id {
     my ($self, $id) = @_;
     my $region = undef;
-    my $ok = find_type_constraint('Int')->check($id);
+    my $ok = find_type_constraint('Int')->check($id) && $id > 0;
     $region = $self->get_region($id) if $ok;
-    early_response_json({result => 'badRegionId'}) unless $region;
+    assert($region, 'badRegionId');
+#    assert($region, 'badRegion', descr => 'badId');
     $region;
 }
 

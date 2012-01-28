@@ -11,9 +11,11 @@ sub power_name { 'swamp' }
 sub _power_tokens_cnt { 4 }
 
 override 'compute_coins' => sub {
-    my ($self, $regs) = @_;
+    my ($self, $regs, $stat) = @_;
     return super() if $self->inDecline();
-    super() + grep { 'swamp' ~~ $_->landDescription() } @$regs;
+    my $bonus = grep { 'swamp' ~~ $_->landDescription() } @$regs;
+    $stat->{power} = $bonus unless $self->inDecline();
+    super() + $bonus;
 };
 
 

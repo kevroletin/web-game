@@ -115,6 +115,7 @@ sub getGameInfo {
 sub getGameState {
     my ($data) = @_;
     my $game;
+
     if (defined $data->{gameId}) {
         $game = _get_game_by_id($data->{gameId})
     } elsif (defined $data->{sid}) {
@@ -199,16 +200,14 @@ sub setReadinessStatus {
     my $game = global_game();
     assert($game->state() eq 'notStarted', 'badGameState');
 
-    printf STDERR "user: %s; [%s]", global_user()->{id},
-        join ', ', map { $_->{readinessStatus} } @{global_game()->players()};
     global_user()->readinessStatus($data->{isReady});
     if ($game->ready()) {
         $game->state('conquer');
     }
 
     if (compability() && defined $data->{visibleRaces}) {
-        $game->racesPack([map { lc($_) } @{$data->{visibleRaces}}]);
-        $game->powersPack([map { lc($_) } @{$data->{visibleSpecialPowers}}]);
+        $game->racesPack([map { ($_) } @{$data->{visibleRaces}}]);
+        $game->powersPack([map { ($_) } @{$data->{visibleSpecialPowers}}]);
     }
 
     db()->update(global_user(), $game);

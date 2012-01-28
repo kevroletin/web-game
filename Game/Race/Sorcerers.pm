@@ -1,7 +1,8 @@
 package Game::Race::Sorcerers;
 use Moose;
+use JSON;
 
-use Game::Environment qw(db early_response_json global_user global_game);
+use Game::Environment qw(assert db early_response_json global_user global_game);
 
 extends( 'Game::Race' );
 with( 'Game::Roles::Race' );
@@ -14,6 +15,14 @@ has 'enchanted' => ( isa => 'Bool',
 sub race_name { 'sorcerers' }
 
 sub tokens_cnt { 5 }
+
+sub __clear_game_state_storage {
+    delete global_game()->raceStateStorage()->{enchanted}
+}
+
+sub __write_game_state_storage {
+    global_game()->raceStateStorage()->{enchanted} = JSON::true;
+}
 
 sub enchant {
     my ($self, $reg) = @_;
@@ -34,12 +43,14 @@ sub enchant {
     $reg->owner(global_user());
 
     $self->enchanted(1);
+    $self->__write_game_state_storage();
     db()->update($self, $reg)
 }
 
 after 'redeploy' => sub {
     my ($self) = @_;
     $self->enchanted(0);
+    $self->__clear_game_state_storage();
     db()->update($self)
 };
 

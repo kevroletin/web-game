@@ -1,9 +1,12 @@
 package Game::Model::Game;
 use Moose;
+use v5.10;
 
 use Game::Constants qw(races_with_debug powers_with_debug);
-use Game::Environment qw(assert db_search_one
-                         early_response_json inc_counter
+use Game::Environment qw(assert compability db_search_one
+                         early_response_json
+                         global_user
+                         inc_counter
                          if_debug);
 use Game::Model::Map;
 use Game::Model::User;
@@ -36,9 +39,9 @@ subtype 'playersNum',
     };
 
 subtype 'Game::Model::Game::GameDescr',
-    as 'Str',
-    where { assert(length($_) <= 300, 'badGameDescription') },
-    message { '' };
+    as 'Maybe[Str]',
+    where { !defined $_ || length($_) <= 300 },
+    message { assert(0, 'badGameDescription') };
 
 subtype 'Game::Model::Game::Ai',
     as 'Int',
@@ -54,8 +57,9 @@ has 'map' => ( isa => 'Game::Model::Map',
                is => 'rw',
                required => 0 );
 
-has 'gameDescr' => ( isa => 'Maybe[Game::Model::Game::GameDescr]',
-                     is => 'rw' );
+has 'gameDescr' => ( isa => 'Game::Model::Game::GameDescr',
+                     is => 'rw',
+                     default => '' );
 
 has 'players' => ( isa => 'ArrayRef[Game::Model::User]',
                    is => 'rw',
@@ -77,6 +81,7 @@ has 'racesPack' => ( isa => 'ArrayRef[Str]',
                      is => 'rw',
                      default => sub { [] } );
 
+# FIXME: construct token badges with game #############
 has 'powersPack' => ( isa => 'ArrayRef[Str]',
                       is => 'rw',
                       default => sub { [] } );
@@ -84,6 +89,15 @@ has 'powersPack' => ( isa => 'ArrayRef[Str]',
 has 'bonusMoney' => ( isa => 'ArrayRef[Int]',
                       is => 'rw',
                       default => sub { [(0) x 6] } );
+
+has 'tokenBadgeIds' => ( isa => 'ArrayRef[Int]',
+                         is => 'rw',
+                         default => sub { [1 .. 6] } );
+#######################################################
+
+has 'lasTokenBadgeId' => ( isa => 'Int',
+                           is => 'rw',
+                           default => 6 );
 
 has 'history' => ( isa => 'ArrayRef',
                    is => 'rw',
@@ -105,6 +119,12 @@ has 'aiJoined' => ( isa => 'Int',
 has 'turn' => ( isa => 'Int',
                 is => 'rw',
                 default => 0 );
+
+
+has 'lastDiceValue' => ( isa => 'Maybe[Int]',
+                         is => 'rw',
+                         required => 0 );
+
 
 sub BUILD {
     my ($self) = @_;
@@ -162,8 +182,9 @@ sub _extract_visible_tokens {
     my @res;
     for my $i (0 .. 5) {
         my $tok = {};
-        $tok->{raceName} = $self->racesPack()->[$i];
-        $tok->{specialPowerName} = $self->powersPack()->[$i];
+        $tok->{tokenBadgeId} = $self->tokenBadgeIds()->[$i];
+        $tok->{raceName} = ucfirst($self->racesPack()->[$i]);
+        $tok->{specialPowerName} = ucfirst($self->powersPack()->[$i]);
         $tok->{position} = $i;
         $tok->{bonusMoney} = $self->bonusMoney()->[$i];
         push @res, $tok
@@ -222,7 +243,7 @@ sub short_info {
         turn => $s->turn(),
         turnsNum => $s->map()->turnsNum(),
         mapId => $s->map()->id(),
-        mapNamee => $s->map()->mapName(),
+        mapName => $s->map()->mapName(),
         aiRequiredNum => $s->ai() - $s->aiJoined(),
         ai => $s->ai()
     };
@@ -382,11 +403,12 @@ sub next_player {
     my ($self) = @_;
     my $n = $self->activePlayerNum() + 1;
     if ($n >= @{$self->players()}) {
-        $n = 0
-        # TODO: next turn
+        $n = 0;
+        $self->turn($self->turn() + 1);
     }
     $self->history([]);
-    $self->activePlayerNum($n)
+    $self->activePlayerNum($n);
+    $self->lastDiceValue(undef);
 }
 
 sub number_of_user {
@@ -426,8 +448,10 @@ sub pick_tokens {
     my $race = splice @{$self->racesPack()}, $race_num, 1;
     my $power = splice @{$self->powersPack()}, $race_num, 1;
     my $coins = splice @{$self->bonusMoney()}, $race_num, 1;
+    my $id =  splice @{$self->tokenBadgeIds()}, $race_num, 1;
     push @{$self->bonusMoney()}, 0;
-    ($race, $power, $coins)
+    push @{$self->tokenBadgeIds()}, ++$self->{lasTokenBadgeId};
+    ($race, $power, $id, $coins)
 }
 
 sub put_back_tokens {
@@ -435,5 +459,8 @@ sub put_back_tokens {
     push @{$self->racesPack()}, $race->race_name();
     push @{$self->powersPack()}, $race->power_name();
 }
+
+sub random_dice { int rand(4) }
+
 
 1

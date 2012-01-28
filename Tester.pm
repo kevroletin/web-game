@@ -179,7 +179,7 @@ sub _from_json {
     return 1;
 }
 
-my $first_error;
+my $error_num = 0;
 
 sub _json_cmp_transformer {
     my ($cmp_code, $in, $out, $res, $params) = @_;
@@ -192,16 +192,18 @@ sub _json_cmp_transformer {
         unless (_from_json($res, $res_parsed, 'response')) {
             $res_parsed->{long} = $res_parsed->{long} .
                                   "\n\nserver returned:\n$res";
-            unless ($first_error) {
-                open my $f, '>', 'first_error.htm';
+            {
+                print STDERR Dumper $res;
+                $error_num++;
+                open my $f, '>', "error_$error_num.htm";
                 print $f $res;
                 close $f;
-                $first_error = 1;
-                print STDERR
+            }
+            print STDERR
                     "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n",
                     "~    may be server is died    ~",
                     "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n";
-            }
+
             return $res_parsed;
         };
         if ($params->{res_hook}) {

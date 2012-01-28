@@ -18,6 +18,12 @@ override '_calculate_land_strength' => sub {
     super()
 };
 
+override '_regions_are_adjacent' => sub {
+    my ($self, $r1, $r2) = @_;
+    super() || ('cavern' ~~ $r1->landDescription() &&
+                'cavern' ~~ $r2->landDescription())
+};
+
 override '_region_is_adjacent_with_our' => sub {
     my ($self, $reg) = @_;
     my $super = super();

@@ -6,7 +6,8 @@ use Exporter::Easy (
     OK => [ qw(races
                races_with_debug
                powers
-               powers_with_debug) ] );
+               powers_with_debug) ]);
+
 
 our @races = qw(
 amazons
