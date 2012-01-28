@@ -2,15 +2,12 @@ package Game::Actions::Lobby;
 use strict;
 use warnings;
 
-#use Digest::SHA1 ();
-
 use Game::Actions;
 use Game::Environment qw(assert compability db db_search db_search_one
                          early_response_json
                          global_user
                          inc_counter
                          init_user_by_sid
-                         is_debug if_debug
                          response response_json);
 use Game::Model::User;
 use Moose::Util::TypeConstraints;
@@ -19,28 +16,12 @@ use Exporter::Easy (
     OK => [qw(getUserInfo login logout register)]
 );
 
-sub _gen_sid {
-    my $sid;
-
-    if (is_debug()) {
-        return inc_counter('Game::Model::User::sid');
-    }
-
-    while (1) {
-        $sid = Digest::SHA1::sha1_hex(rand() . time() .
-                                      'secret#$#%#%#%#%@#KJDFSd24');
-        last unless (db_search({ sid => $sid })->all());
-    }
-    $sid
-}
-
 sub getUserInfo {
     my ($data) = @_;
     my ($user, $err);
 
     if (defined $data->{userId}) {
-        $user = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $data->{userId} });
+        $user = db_search_one({ id => $data->{userId} });
         $err = 'badUserId'
     } elsif (defined $data->{username}) {
         $user = db_search_one({ CLASS => 'Game::Model::User' },
@@ -81,7 +62,6 @@ sub login {
     assert(defined $user && $user->{password} eq $data->{password},
            'badUsernameOrPassword');
 
-    $user->sid(_gen_sid());
     db->update($user);
     response_json({'result' => 'ok',
                    'sid' => $user->sid(),

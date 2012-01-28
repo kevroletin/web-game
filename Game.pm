@@ -15,6 +15,7 @@ use Game::Environment qw(environment compability
 use Game::Dispatcher;
 use Game::Model;
 
+
 sub _dier {
     my $t = Devel::StackTrace->new(
                 indent => 1, message => $_[0],

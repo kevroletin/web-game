@@ -11,7 +11,9 @@ use Game::Environment qw(assert compability is_debug
                          global_user
                          response response_json);
 use Game::Model::Game;
-use Exporter::Easy ( OK => [qw(createGame
+use Game::Model::AiUser;
+use Exporter::Easy ( OK => [qw(aiJoin
+                               createGame
                                joinGame
                                leaveGame
                                getGameState
@@ -36,8 +38,9 @@ sub _construct_new_game {
         early_response_json({result => 'badMapId'});
     }
 
+    $data->{ai} ||= 0;
     my $game = Game::Model::Game->new(
-                   params_from_proto('gameName', 'gameDescr'),
+                   params_from_proto('gameName', 'gameDescr', 'ai'),
                    map => $map
                );
     $game
@@ -59,6 +62,27 @@ sub createGame {
     db()->update(global_user());
 
     response_json({ result => 'ok', gameId => $game->gameId() });
+}
+
+sub aiJoin {
+    my ($data) = @_;
+    proto($data, 'gameId');
+    my $game = _get_game_by_id($data->{gameId});
+    assert($game->state() eq 'notStarted', 'badGameState');
+    assert($game->ai() - $game->aiJoined > 0, 'tooManyAi');
+
+    my $name = sprintf("_ai%d.%d", $game->gameId(), $game->aiJoined());
+    my $ai_user = Game::Model::User->new({username => $name,
+                                          password => $name, isAi => 1});
+
+    $ai_user->activeGame($game);
+    $game->add_player($ai_user);
+    $game->aiJoined( $game->aiJoined + 1 );
+
+    db()->insert($ai_user);
+    db()->update( $game );
+    response_json({result => 'ok', sid => $ai_user->sid(),
+                   id => int(@{$game->players()})});
 }
 
 sub _get_game_by_id {
@@ -104,7 +128,7 @@ sub joinGame {
     assert($game, 'badGameId');
     assert(!defined global_user()->activeGame(), 'alreadyInGame');
     assert($game->state() eq 'notStarted', 'badGameState');
-    assert(@{$game->players()} ne $game->map()->playersNum(), 'tooManyPlayers');
+    assert(@{$game->players()} < $game->map()->playersNum(), 'tooManyPlayers');
     assert(@{$game->players()} != 0, 'badGameState') if compability();
 
     global_user()->activeGame($game);
@@ -120,6 +144,9 @@ sub leaveGame {
     my $game = global_game();
     $game->remove_player(global_user());
     global_user()->activeGame(undef);
+    if (global_user()->username() =~ /^_ai/) {
+        $game->aiJoined( $game->aiJoined - 1 )
+    }
 
     db()->update(global_user(), $game);
     response_json({result => 'ok'});

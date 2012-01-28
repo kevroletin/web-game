@@ -10,7 +10,8 @@ use Game::Actions::Debug qw(resetServer
                             setBadge
                             createBadgesPack
                             selectGivenRace);
-use Game::Actions::Game qw(createGame
+use Game::Actions::Game qw(aiJoin
+                           createGame
                            joinGame
                            leaveGame
                            getGameState
@@ -43,7 +44,8 @@ use utf8;
 
 
 sub _is_action_without_sid {
-    $_[0] ~~ [qw(login
+    $_[0] ~~ [qw(aiJoin
+                 login
                  register
                  resetServer
                  createDefaultMaps

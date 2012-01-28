@@ -9,7 +9,6 @@ use KiokuDB::Backend::BDB::GIN;
 use Search::GIN::Extract::Callback;
 
 use Game::Environment qw(db db_scope);
-use Game::Model::User;
 
 
 my @extractors;
