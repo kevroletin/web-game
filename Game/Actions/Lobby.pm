@@ -62,6 +62,7 @@ sub login {
     assert(defined $user && $user->{password} eq $data->{password},
            'badUsernameOrPassword');
 
+    $user->generate_sid();
     db->update($user);
     response_json({'result' => 'ok',
                    'sid' => $user->sid(),

@@ -79,6 +79,7 @@ sub aiJoin {
     $game->add_player($ai_user);
     $game->aiJoined( $game->aiJoined + 1 );
 
+    $ai_user->generate_sid();
     db()->insert($ai_user);
     db()->update( $game );
     response_json({result => 'ok', sid => $ai_user->sid(),

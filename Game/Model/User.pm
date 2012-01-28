@@ -88,36 +88,37 @@ has 'raceSelected' => ( isa => 'Bool',
 
 sub BUILD {
     my ($self) = @_;
-    $self->{id} = inc_counter('Game::Model::User::id');
-    $self->{sid} = _gen_sid();
     unless ($self->isAi()) {
-        assert($self->{username} =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/,
-               'badUsername');
+        my $ok = $self->{username} =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/;
+        assert($ok, 'badUsername');
     }
-}
-
-sub _gen_sid {
-    my $sid;
-
-    if (is_debug()) {
-        return inc_counter('Game::Model::User::sid');
-    }
-
-    while (1) {
-        $sid = Digest::SHA1::sha1_hex(rand() . time() .
-                                      'secret#$#%#%#%#%@#KJDFSd24');
-        last unless (db_search({ sid => $sid })->all());
-    }
-    $sid
+    $self->{id} = inc_counter('Game::Model::User::id');
 }
 
 before 'activeGame' => sub {
-    my ($self) = shift;
+    my $self = shift;
     if (@_) {
         $self->readinessStatus(0);
         $self->coins(5);
     }
 };
+
+sub generate_sid {
+    my ($self) = @_;
+
+    if (is_debug()) {
+        $self->sid( inc_counter('Game::Model::User::sid') );
+        return
+    }
+
+    my $sid;
+    while (1) {
+        $sid = Digest::SHA1::sha1_hex(rand() . time() .
+                                      'secret#$#%#%#%#%@#KJDFSd24');
+        last unless (db_search({ sid => $sid })->all());
+    }
+    $self->sid( $sid )
+}
 
 sub extract_state {
     my ($self) = @_;
