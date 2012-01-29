@@ -1,203 +1,150 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-use JSON;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
 use Tester::State;
-use Tester::CheckState;
-use Data::Dumper::Concise;
-
-init_logs('powers/seafaring');
-ok( reset_server(), 'reset server' );
+use Tester::New;
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'sea'], ['border', 'farmland'],
-  ['border', 'hill'], ['border', 'hill']);
+   ['border', 'sea'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
+);
 
+test('select power',
+    {
+      action => "selectGivenRace",
+      power => "seafaring",
+      race => "debug",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("Select power");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "debug",
-"power": "seafaring"
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(5, $user1);
 
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TOKENS_CNT(5, $user1);
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        },
+        {
+          regionId => 2,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user1 );
 
+test('select power',
+    {
+      action => "selectGivenRace",
+      power => "seafaring",
+      race => "debug",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 3,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 3,
+          tokensNum => 2
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 1,
+      result => "ok"
+    },
+    $user2 );
 
+test('decline 1st',
+    {
+      action => "decline",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user1 );
-
-
-TEST("Select power");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "debug",
-"power": "seafaring"
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 3
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 3, "tokensNum": 2}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "1"
-}',
-$user2 );
-
-
-TEST("decline 1st");
-GO(
-'{
-"action": "decline",
-"sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TEST("finish turn");
-GO('
-{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user1 );
-
-
-my $checker = sub {
-    my ($reg) = @_;
-    my $res = defined $reg->{owner} &&
-              $reg->{owner} eq $user1->{_userId} &&
-              defined $reg->{tokensNum} &&
-               $reg->{tokensNum} eq 1 &&
-              defined $reg->{inDecline} &&
-              defined $reg->{inDecline} eq 1;
-    { res => $res,
-      long => $res ? 'ok' : Dumper($reg)}
-};
-
-OK( check_region_state($checker, 0, $user1),
-    'check is where are tokens on sea after decline' );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user1 );
 
 done_testing();
-

@@ -1,8 +1,7 @@
 package Game::Model::Region;
 use Moose;
 
-use Game::Environment qw(assert db_search_one
-                         early_response_json);
+use Game::Environment qw(:std :db :response);
 use Moose::Util::TypeConstraints;
 use Storable q(dclone);
 

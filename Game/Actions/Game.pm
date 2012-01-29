@@ -3,13 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(assert compability is_debug
-                         db db_search db_search_one
-                         early_response_json
-                         init_user_by_sid
-                         global_game
-                         global_user
-                         response response_json);
+use Game::Environment qw(:db :response);
 use Game::Model::Game;
 use Game::Model::AiUser;
 use Exporter::Easy ( OK => [qw(aiJoin
@@ -130,7 +124,9 @@ sub joinGame {
     assert(!defined global_user()->activeGame(), 'alreadyInGame');
     assert($game->state() eq 'notStarted', 'badGameState');
     assert(@{$game->players()} < $game->map()->playersNum(), 'tooManyPlayers');
-    assert(@{$game->players()} != 0, 'badGameState') if compability();
+    if (feature('delete_empty_game')) {
+        assert(@{$game->players()} != 0, 'badGameState')
+    }
 
     global_user()->activeGame($game);
     $game->add_player(global_user());
@@ -188,7 +184,7 @@ sub setReadinessStatus {
         $game->state('conquer');
     }
 
-    if (compability() && defined $data->{visibleRaces}) {
+    if (is_debug() && defined $data->{visibleRaces}) {
         $game->racesPack([map { ($_) } @{$data->{visibleRaces}}]);
         $game->powersPack([map { ($_) } @{$data->{visibleSpecialPowers}}]);
     }

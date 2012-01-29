@@ -3,13 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(assert compability
-                         db
-                         db_search
-                         db_search_one
-                         global_user
-                         inc_counter
-                         response_json);
+use Game::Environment qw(:db :response);
 use Game::Model::Message;
 
 use Exporter::Easy (

@@ -1,7 +1,7 @@
 package Game::Power::DragonMaster;
 use Moose::Role;
 
-use Game::Environment qw(db early_response_json global_user global_game);
+use Game::Environment qw(:std :db :response);
 
 with( 'Game::Roles::Power' );
 
@@ -65,6 +65,8 @@ after 'inDecline' => sub {
 after '_clear_left_region' => \&__remove_dragon;
 
 after '_clear_declined_region' => \&__remove_dragon;
+
+after '_clear_region_before_redeploy' => \&__remove_dragon;
 
 
 1

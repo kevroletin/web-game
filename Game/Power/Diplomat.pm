@@ -1,8 +1,7 @@
 package Game::Power::Diplomat;
 use Moose::Role;
 
-use Game::Environment qw(db early_response_json
-                         global_user global_game);
+use Game::Environment qw(:std :db :response);
 
 with( 'Game::Roles::Power' );
 
@@ -47,13 +46,10 @@ before 'clear_reg_and_die' => sub {
 
 sub selectFriend {
     my ($self, $friend) = @_;
-    if ($friend eq global_user()) {
-        early_response_json({result => 'badUser'})
-    }
+    assert($friend ne global_user(), 'badUser', descr => 'self');
     for (@{global_game()->history()}) {
-        if ($_->{whom} && $_->{whom} eq global_user()) {
-            early_response_json({result => 'badUser'})
-        }
+        assert(!$_->{whom} || $_->{whom} ne $friend, 'badUser',
+               descr => 'attacked');
     }
     $self->friendId($friend->id());
     my $public_state = { diplomat => global_user()->id(),

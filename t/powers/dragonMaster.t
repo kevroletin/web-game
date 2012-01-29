@@ -1,250 +1,197 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-use JSON;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
 use Tester::State;
-use Tester::CheckState;
-
-init_logs('powers/dragonMaster');
-ok( reset_server(123), 'reset server' );
+use Tester::New;
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'farmland'], ['border', 'farmland'],
-  ['border', 'hill'], ['border', 'hill']);
+   ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
+);
 
+test('dragonattack without selected power',
+    {
+      action => "dragonAttack",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "badStage"
+    },
+    $user1 );
 
-TEST("dragonAttack without selected power");
-$user1->{_userId} = $user2->{_userId};
-GO(
-'{
-  "action": "dragonAttack",
-  "regionId": 2,
-  "sid": ""
-}'
-,
-'{
-"result": "badStage"
-}',
-$user1 );
+test('select power',
+    {
+      action => "selectGivenRace",
+      power => "dragonMaster",
+      race => "debug",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+actions->check_tokens_cnt(5, $user1);
 
-TEST("Select power");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "debug",
-"power": "dragonMaster"
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+actions->check_tokens_cnt(3, $user1);
 
-TOKENS_CNT(5, $user1);
+test('dragonattack on your region',
+    {
+      action => "dragonAttack",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "badRegion"
+    },
+    $user1 );
 
+test('dragonattack',
+    {
+      action => "dragonAttack",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "regionId": 1,
-  "sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(2, $user1);
 
+actions->check_reg(1, {currentRegionState => {'dragon' => true}}, $user1);
 
-TOKENS_CNT(3, $user1);
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        },
+        {
+          regionId => 2,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user1 );
 
-TEST("dragonAttack on your region");
-GO(
-'{
-  "action": "dragonAttack",
-  "regionId": 1,
-  "sid": ""
-}'
-,
-'{
-"result": "badRegion"
-}',
-$user1 );
+actions->check_reg(1, {currentRegionState => {'dragon' => true}}, $user1);
 
+test('select power',
+    {
+      action => "selectGivenRace",
+      power => "dragonMaster",
+      race => "debug",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("dragonAttack");
-GO(
-'{
-  "action": "dragonAttack",
-  "regionId": 2,
-  "sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 3,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('dragonattack',
+    {
+      action => "dragonAttack",
+      regionId => 4,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TOKENS_CNT(2, $user1);
+actions->check_reg(3, {currentRegionState => {'dragon' => true}}, $user1);
 
+test('dragonattack twice',
+    {
+      action => "dragonAttack",
+      regionId => 4,
+      sid => undef
+    },
+    {
+      result => "badStage"
+    },
+    $user2 );
 
-REGION_EXTRA_ITEM('dragon', 1, 1, $user1);
+test('redeploy and leave dragon',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 3,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+actions->check_reg(1, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
 
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 1,
+      result => "ok"
+    },
+    $user2 );
 
+test('decline 1st',
+    {
+      action => "decline",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("finish turn");
-GO('
-{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user1 );
-
-
-REGION_EXTRA_ITEM('dragon', 1, 1, $user1);
-
-
-TEST("Select power");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "debug",
-"power": "dragonMaster"
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "regionId": 3,
-  "sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("dragonAttack");
-GO(
-'{
-  "action": "dragonAttack",
-  "regionId": 4,
-  "sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-REGION_EXTRA_ITEM('dragon', 1, 3, $user2);
-
-
-TEST("dragonAttack twice");
-GO(
-'{
-  "action": "dragonAttack",
-  "regionId": 4,
-  "sid": ""
-}'
-,
-'{
-"result": "badStage"
-}',
-$user2 );
-
-
-TEST("redeploy and leave dragon");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 3, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-REGION_EXTRA_ITEM('dragon', 0, 3, $user2);
-
-
-TEST("finish turn");
-GO('
-{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "1"
-}',
-$user2 );
-
-
-TEST("decline 1st");
-GO(
-'{
-"action": "decline",
-"sid": ""
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-REGION_EXTRA_ITEM('dragon', 0, 1, $user1);
-
+actions->check_reg(1, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
 
 done_testing();

@@ -12,53 +12,93 @@ use Search::GIN::Query::Set;
 use Game::Exception;
 use Game::Model::Counter;
 
+
 use Exporter::Easy (
-    OK => [ qw(assert
-               compability
-               db
-               db_search
-               db_search_one
-               db_scope
-               early_response
-               early_response_json
-               environment
-               global_game
-               global_user
-               is_debug
-               if_debug
-               inc_counter
-               init_user_by_sid
-               request
-               response
-               response_json
-               response_raw
-               stack_trace) ]
+    EXPORT => [qw(assert
+                  config
+                  feature
+                  is_debug
+                  global_game
+                  global_user)],
+    TAGS => [
+         std => [qw(assert bool config feature is_debug global_game global_user)],
+         db => [qw(db db_search db_search_one db_scope inc_counter)],
+         config => [qw(environment request stack_trace)],
+         response => [qw(response response_json
+                         early_response early_response_json
+                         response_raw)]
+        ],
+    OK => [qw(assert
+              bool
+              config
+              feature
+              db
+              db_search
+              db_search_one
+              db_scope
+              early_response
+              early_response_json
+              environment
+              global_game
+              global_user
+              is_debug
+              if_debug
+              inc_counter
+              init_user_by_sid
+              request
+              response
+              response_json
+              response_raw
+              stack_trace )]
 );
 
-my ($compability,
+
+my ($config,
     $db,
     $db_scope,
     $environment,
     $global_user,
-    $is_debug,
     $request,
     $response,
     $stack_trace);
 
+sub init {
+    $config = {
+               features => {
+                            error_description => 1,
+                            log_requests => 0,
+
+                            compatibility => 0,
+                            redeploy_all_tokens => 0,
+                            delete_empty_game => 0,
+                            durty_gameState => 0
+                           },
+               debug => 0
+              };
+}
+
 sub assert {
     my ($ok, $msg) = (shift, shift);
     return if $ok;
-#    if (compability()) {
-#        early_response_json({result => $msg})
-#    } else {
-        early_response_json({result => $msg, @_});
-#    }
+    if (feature('error_description')) {
+        early_response_json({result => $msg})
+    } else {
+        early_response_json({result => $msg, @_})
+    }
     1
 }
 
-sub compability {
-    if (@_) { $compability = $_[0] }
-    $compability
+sub bool {
+    $_[0] ? JSON::true : JSON::false;
+}
+
+sub config {
+    return $config unless @_;
+}
+
+sub feature {
+    return $config->{features} unless @_;
+    @{$config->{features}}{@_}
 }
 
 sub db {
@@ -123,12 +163,12 @@ sub global_user {
 }
 
 sub is_debug {
-    if (@_) { $is_debug = $_[0] }
-    $is_debug
+    if (@_) { $config->{debug} = $_[0] }
+    $config->{debug}
 }
 
 sub if_debug {
-    return unless $is_debug;
+    return unless $config->{debug};
     if (@_ > 1 && ref($_[0]) eq 'CODE') {
         my $code = shift;
         $code->(@_)

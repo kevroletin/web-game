@@ -1,7 +1,7 @@
 package Game::Race::Halflings;
 use Moose;
 
-use Game::Environment qw(db early_response_json global_user global_game);
+use Game::Environment qw(:std :db :response);
 
 extends( 'Game::Race' );
 with( 'Game::Roles::Race' );

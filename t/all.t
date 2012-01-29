@@ -1,11 +1,12 @@
 use Test::Harness;
 
 {
-    runtests("lobby/basic.t",
-             "lobby/complicated.t",
+    runtests(
+#             "t/lobby/basic.t",
+             "t/lobby/complicated.t",
 #             "game_creation.t", #TODO: fix default maps
 #             "gameplay.t",
-             (map { "races/$_.t" } qw(amazons
+             (map { "t/races/$_.t" } qw(amazons
                                       dwarves
                                       elves
                                       giants
@@ -18,7 +19,7 @@ use Test::Harness;
                                       tritons
                                       trolls
                                       wizards)),
-             (map { "powers/$_.t" } qw(alchemist
+             (map { "t/powers/$_.t" } qw(alchemist
                                        berserk
                                        bivouacking
                                        commando

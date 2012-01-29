@@ -1,170 +1,135 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-use JSON;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
 use Tester::State;
-use Tester::CheckState;
-
-init_logs('races/skeletons');
-ok( reset_server(), 'reset server' );
+use Tester::New;
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'farmland'], ['border', 'farmland'],
-  ['border', 'hill'], ['border', 'hill'],
-  0, 1,
-  0, 0);
+   ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill'],   0, 1,   0, 0
+);
 
+test('select race',
+    {
+      action => "selectGivenRace",
+      power => "debug",
+      race => "skeletons",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("Select Race");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "skeletons",
-"power": "debug"
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(6, $user1);
 
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TOKENS_CNT(6, $user1);
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+actions->check_tokens_cnt(5, $user1);
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 1,
+      result => "ok"
+    },
+    $user1 );
 
+test('select race',
+    {
+      action => "selectGivenRace",
+      power => "debug",
+      race => "skeletons",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(6, $user2);
 
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TOKENS_CNT(5, $user1);
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        },
+        {
+          regionId => 2,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "1"
-}',
-$user1 );
+actions->check_tokens_cnt(5, $user2);
 
-
-TEST("Select Race");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "skeletons",
-"power": "debug"
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TOKENS_CNT(6, $user2);
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TOKENS_CNT(5, $user2);
-
-
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user2 );
-
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user2 );
 
 done_testing();

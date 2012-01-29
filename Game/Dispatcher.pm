@@ -37,9 +37,7 @@ use Game::Actions::Map qw(createDefaultMaps
                           getMapInfo
                           getMapList
                           uploadMap);
-use Game::Environment qw(init_user_by_sid is_debug
-                         response response_json
-                         response_raw stack_trace);
+use Game::Environment qw(init_user_by_sid :std :config :response);
 use utf8;
 
 

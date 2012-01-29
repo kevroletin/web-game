@@ -5,7 +5,7 @@ use strict;
 use Exporter::Easy ( EXPORT => [qw(inc_counter
                                    params_from_proto
                                    proto)] );
-use Game::Environment qw(assert db db_search_one early_response_json);
+use Game::Environment qw(:std :response);
 use Game::Model::Counter;
 
 my $last_data = undef;

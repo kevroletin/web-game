@@ -6,12 +6,8 @@ use Game::Constants;
 use Game::Actions;
 use Game::Race::Debug;
 use Game::Power::Debug;
-use Game::Environment qw(db db_search db_search_one
-                         early_response_json
-                         global_game
-                         global_user
-                         response response_json);
-use Moose::Util qw( apply_all_roles );
+use Game::Environment qw(:std :db :response);
+use Moose::Util q(apply_all_roles);
 use Exporter::Easy ( EXPORT => [qw(resetServer
                                    doSmth
                                    setBadge

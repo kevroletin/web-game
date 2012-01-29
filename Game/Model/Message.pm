@@ -1,7 +1,7 @@
 package Game::Model::Message;
 use Moose;
 
-use Game::Environment qw(assert compability inc_counter);
+use Game::Environment qw(:std :db);
 use Moose::Util::TypeConstraints;
 
 our @db_index = qw(messageId);

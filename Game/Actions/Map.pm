@@ -4,14 +4,7 @@ use warnings;
 
 use Game::Actions;
 use Game::Constants::Map;
-use Game::Environment qw(db
-                         db_search
-                         db_search_one
-                         early_response_json
-                         init_user_by_sid
-                         global_user
-                         global_game
-                         response_json);
+use Game::Environment qw(:std :db :response);
 use Game::Model::Map;
 use Game::Model::Region;
 use Exporter::Easy ( OK => [qw(createDefaultMaps

@@ -1,7 +1,7 @@
 package Tester::State;
 
 use strict;
-use warnings;
+#use warnings;
 
 use Test::More;
 
@@ -10,9 +10,11 @@ use Data::Compare;
 use Data::Dumper::Concise;
 
 use lib '..';
-use Tester;
+#use Tester;
 #use Tester::OK;
-use Tester::Hooks;
+#use Tester::Hooks;
+
+use Tester::New;
 use Exporter::Easy (
     EXPORT => [ qw( get_game_state ) ],
 );
@@ -83,70 +85,56 @@ sub register_two_users_and_create_square_map {
 
     my @fields_to_save = ('sid', 'gameId', 'mapId', 'coins',
                           'activeGame', 'userId');
-    my $user1 = params_same(@fields_to_save);
-    my $user2 = params_same(@fields_to_save);
+    my ($user1, $user2) =
+        map { hooks_sync_values(@fields_to_save) } 1, 2;
 
-    TEST("register 1st user");
-    $user1->{_number_in_game} = 0;
-    GO(
-    '{
-    "action": "register",
-    "username": "user1",
-    "password": "password1"
-    }'
-    ,
-    '{
-    "result": "ok"
-    }'
-    , {} );
+test('reset server', {action => 'resetServer'}, {result => 'ok'} );
 
+test('register 1st user',
+    {
+      action => "register",
+      password => "password1",
+      username => "user1"
+    },
+    {
+      result => "ok"
+    });
 
-    TEST("login 1st user");
-    GO(
-    '{
-    "action": "login",
-    "username": "user1",
-    "password": "password1"
-    }'
-    ,
-    '{
-    "result": "ok",
-    "sid": "",
-    "userId": ""
-    }'
-    , $user1 );
+test('login 1st user',
+    {
+      action => "login",
+      password => "password1",
+      username => "user1"
+    },
+    {
+      result => "ok",
+      sid => undef,
+      userId => undef
+    },
+    $user1 );
 
+test('register 2nd user',
+    {
+      action => "register",
+      password => "password2",
+      username => "user2"
+    },
+    {
+      result => "ok"
+    });
 
-    TEST("register 2nd user");
-    $user2->{_number_in_game} = 1;
-    GO(
-    '{
-    "action": "register",
-    "username": "user2",
-    "password": "password2"
-    }'
-    ,
-    '{
-    "result": "ok"
-    }'
-    , {} );
-
-
-    TEST("login 2nd user");
-    GO(
-    '{
-    "action": "login",
-    "username": "user2",
-    "password": "password2"
-    }'
-    ,
-    '{
-    "result": "ok",
-    "sid": "",
-    "userId": ""
-    }'
-    , $user2 );
-
+test('login 2nd user',
+    {
+      action => "login",
+      password => "password2",
+      username => "user2"
+    },
+    {
+      result => "ok",
+      sid => undef,
+      userId => undef
+    },
+    $user2 );
 
     #+---------------+----------------+
     #|0              |1               |
@@ -167,8 +155,8 @@ sub register_two_users_and_create_square_map {
     #| ~  ~  ~  ~    |''''''''''''''''|
     #+---------------+----------------+
 
-    TEST("upload map");
-    GO(to_json({
+test("upload map",
+    {
       action => "uploadMap",
       mapName => "uploadedMap",
       turnsNum => "10",
@@ -225,12 +213,15 @@ sub register_two_users_and_create_square_map {
           population => $c4
         }
       ]
-    }),
-    '{
-    "result": "ok",
-    "mapId": ""
-    }',
+    },
+    {
+    result => 'ok',
+    mapId => undef
+    },
     $user1 );
+
+    $user1->{info}{number_in_game} = 0;
+    $user2->{info}{number_in_game} = 1;
 
     ($user1, $user2)
 }
@@ -239,115 +230,108 @@ sub square_map_two_users {
     my ($user1, $user2) =
         register_two_users_and_create_square_map(@_);
 
-    TEST("Create Game 1st user");
-    GO(
-    '{
-    "action": "createGame",
-    "sid": "",
-    "gameName": "game1",
-    "gameDescr": "game1 descr",
-    "mapId": ""
-    }',
-    '{
-    "result": "ok",
-    "gameId": ""
-    }',
+test('create game 1st user',
+    {
+      action => 'createGame',
+      sid => undef,
+      gameName => 'game1',
+      gameDescr => 'game1 descr',
+      mapId =>  undef
+    },
+    {
+      result => 'ok',
+      gameId => undef
+    },
     $user1 );
+
+    $user2->{data}{gameId} = $user1->{data}{gameId};
 
 =begin comment
 
-    TEST("Join Game");
-    GO(
-    '{
-    "action": "joinGame",
-    "sid": "",
-    "gameId": ""
-    }'
-    ,
-    '{
-    "result": "ok"
-    }',
+test('join game',
+    {
+      action => "joinGame",
+      gameId => undef,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
     $user1 );
 
 =cut comment
 
-    TEST("Join Game 2nd user");
-    $user2->{_gameId} = $user1->{_gameId};
-    GO(
-    '{
-    "action": "joinGame",
-    "sid": "",
-    "gameId": ""
-    }'
-    ,
-    '{
-    "result": "ok"
-    }',
+test('join game 2nd user',
+    {
+      action => "joinGame",
+      gameId => undef,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
     $user2 );
 
-    TEST("1st user ready");
-    GO(
-    '
+test('1st user ready',
     {
-      "action": "setReadinessStatus",
-      "sid": "",
-      "isReady": 1
-    }'
-    ,
-    '{
-    "result": "ok"
-    }',
+      action => "setReadinessStatus",
+      isReady => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
     $user1 );
 
-    TEST("2nd user ready");
-    GO(
-    '
+test('2nd user ready',
     {
-      "action": "setReadinessStatus",
-      "sid": "",
-      "isReady": 1
-    }'
-    ,
-    '{
-    "result": "ok"
-    }',
+      action => "setReadinessStatus",
+      isReady => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
     $user2 );
 
-    TEST("1st getUserInfo");
-    GO(
-    '{
-      "action": "getUserInfo",
-      "sid": ""
-    }'
-    ,
-    '{
-      "userId" : "",
-      "activeGame" : "",
-      "result" : "ok",
-      "username" : "user1"
-    }',
+=begin comment
+
+test('1st getuserinfo',
+    {
+      action => "getUserInfo",
+      sid => undef
+    },
+    {
+      activeGame => undef,
+      result => "ok",
+      userId => undef,
+      username => "user1"
+    },
     $user1 );
 
-    TEST("2nd getUserInfo");
-    GO(
-    '{
-      "action": "getUserInfo",
-      "sid": ""
-    }'
-    ,
-    '{
-      "userId" : "",
-      "activeGame" : "",
-      "result" : "ok",
-      "username" : "user2"
-    }',
+test('2nd getuserinfo',
+    {
+      action => "getUserInfo",
+      sid => undef
+    },
+    {
+      activeGame => undef,
+      result => "ok",
+      userId => undef,
+      username => "user2"
+    },
     $user2 );
 
-
-    FINISH();
+=cut comment
 
     ($user1, $user2)
 }
+
+sub square_map_two_users_debug_state {
+  square_map_two_users(@_)
+}
+
+=begin comment
 
 sub square_map_two_users_debug_state {
     my $p_user1 = \$_[0];
@@ -403,5 +387,7 @@ sub square_map_two_users_debug_state {
     before_request( $chack_game_loading );
 
 }
+
+=cut comment
 
 1;

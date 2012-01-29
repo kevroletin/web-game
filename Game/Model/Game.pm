@@ -3,11 +3,7 @@ use Moose;
 use v5.10;
 
 use Game::Constants qw(races_with_debug powers_with_debug);
-use Game::Environment qw(assert compability db_search_one
-                         early_response_json
-                         global_user
-                         inc_counter
-                         if_debug);
+use Game::Environment qw(:std :db);
 use Game::Model::Map;
 use Game::Model::User;
 use KiokuDB::Set;
@@ -242,7 +238,13 @@ sub _extract_map_state {
             given ($_) {
                 when ('hole') {
                     $c = 'holeInTheGround';
-                    $d = $reg->extraItems()->{$_} ? JSON::true : JSON::false
+                    $d = bool($reg->extraItems()->{$_})
+                }
+                when ('hero') {
+                    ($c, $d) = ('hero', bool($reg->extraItems()->{$_}));
+                }
+                when ('dragon') {
+                    ($c, $d) = ('dragon', bool($reg->extraItems()->{$_}));
                 }
                 default { ($c, $d) = ($_, $reg->extraItems()->{$_}) }
             };

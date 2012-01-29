@@ -18,11 +18,20 @@ our ($descr, $in, $out, $hooks) = (('') x 4);
 
 sub OK {
     write_log($_[1]);
-    ok($_[0]->{res}, $_[1]);
+
+    my $t = Test::More->builder->new();
+    $t->level(2);
+    $t->ok($_[0]->{res}, $_[1]);
     $_[0]->{quick} ||= $_[0]->{res} ? 'ok' : 'not ok';
     $_[0]->{long} ||= $_[0]->{quick};
     write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
     write_msg($_[0]->{long} . "\n") if $_[0]->{long};
+
+    unless ($_[0]->{res}) {
+        my $fh = $t->failure_output();
+        printf $fh "#   %s", $_[0]->{long};
+    }
+
 }
 
 sub GO {

@@ -2,7 +2,7 @@ package Game::Race::Sorcerers;
 use Moose;
 use JSON;
 
-use Game::Environment qw(assert db early_response_json global_user global_game);
+use Game::Environment qw(:std :db :response);
 
 extends( 'Game::Race' );
 with( 'Game::Roles::Race' );
@@ -32,7 +32,7 @@ sub enchant {
     assert($reg->owner(), 'nothingToEnchant');
     assert(!$reg->inDecline() && $reg->owner() ne global_user(),
            'badAttackedRace');
-    assert($reg->tokensNum() == 1,
+    assert($reg->tokensNum() == 1 &&
            $self->_region_is_adjacent_with_our($reg), 'badRegion');
 
     $self->_check_land_immune($reg);

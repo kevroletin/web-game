@@ -1,315 +1,260 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-use JSON;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
 use Tester::State;
-use Tester::CheckState;
-
-init_logs('races/sorcerers');
-ok( reset_server(), 'reset server' );
+use Tester::New;
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'farmland'], ['border', 'farmland'],
-  ['border', 'hill'], ['border', 'hill']);
+   ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
+);
 
+test('select race',
+    {
+      action => "selectGivenRace",
+      power => "debug",
+      race => "sorcerers",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("Select Race");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "sorcerers",
-"power": "debug"
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(5, $user1);
 
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TOKENS_CNT(5, $user1);
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+actions->check_tokens_cnt(1, $user1);
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        },
+        {
+          regionId => 2,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user1 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+actions->check_tokens_cnt(3, $user1);
 
+test('enchant before select race',
+    {
+      action => "enchant",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "badStage"
+    },
+    $user2 );
 
-TOKENS_CNT(1, $user1);
+test('select race',
+    {
+      action => "selectGivenRace",
+      power => "debug",
+      race => "sorcerers",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('enchant not adjacent',
+    {
+      action => "enchant",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "badRegion"
+    },
+    $user2 );
 
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 3,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('enchant not adjacent',
+    {
+      action => "enchant",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "badRegion"
+    },
+    $user2 );
 
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user1 );
+test('enchant',
+    {
+      action => "enchant",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 2
+        },
+        {
+          regionId => 3,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TOKENS_CNT(3, $user1);
+actions->check_tokens_cnt(3, $user2);
 
+actions->check_tokens_cnt(3, $user1);
 
-TEST("enchant before select race");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 2
-}'
-,
-'{
-"result": "badStage"
-}',
-$user2 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user2 );
 
+test('enchant region with 2 tokens',
+    {
+      action => "enchant",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "badRegion"
+    },
+    $user1 );
 
-TEST("Select Race");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "sorcerers",
-"power": "debug"
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 4,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+test('redeploy',
+    {
+      action => "redeploy",
+      regions => [
+        {
+          regionId => 2,
+          tokensNum => 1
+        },
+        {
+          regionId => 4,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("enchant not adjacent");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 2
-}'
-,
-'{
-"result": "badRegion"
-}',
-$user2 );
+test('finish turn',
+    {
+      action => "finishTurn",
+      sid => undef
+    },
+    {
+      coins => 2,
+      result => "ok"
+    },
+    $user1 );
 
+test('enchant',
+    {
+      action => "enchant",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user2 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 3
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("enchant not adjacent");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 2
-}'
-,
-'{
-"result": "badRegion"
-}',
-$user2 );
-
-
-TEST("enchant");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 2},
-  {"regionId": 3, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TOKENS_CNT(3, $user2);
-
-TOKENS_CNT(3, $user1);
-
-
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user2 );
-
-
-TEST("enchant region with 2 tokens");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 1
-}'
-,
-'{
-"result": "badRegion"
-}',
-$user1 );
-
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 4
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 2, "tokensNum": 1},
-  {"regionId": 4, "tokensNum": 1}
-]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TEST("finish turn");
-GO(
-'{
-"action": "finishTurn",
-"sid": ""
-}'
-,
-'{
-"result": "ok",
-"coins": "2"
-}',
-$user1 );
-
-
-TEST("enchant");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 2
-}'
-,
-'{
-"result": "ok"
-}',
-$user2 );
-
-
-TEST("enchant twice");
-GO(
-'{
-"action": "enchant",
-"sid": "",
-"regionId": 1
-}'
-,
-'{
-"result": "badStage"
-}',
-$user2 );
-
+test('enchant twice',
+    {
+      action => "enchant",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "badStage"
+    },
+    $user2 );
 
 done_testing();
-

@@ -1,7 +1,7 @@
 package Game::Race::Orcs;
 use Moose;
 
-use Game::Environment qw(early_response_json global_user global_game);
+use Game::Environment qw(:std :response);
 
 extends( 'Game::Race' );
 with( 'Game::Roles::Race' );

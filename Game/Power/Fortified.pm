@@ -1,7 +1,7 @@
 package Game::Power::Fortified;
 use Moose::Role;
 
-use Game::Environment qw(early_response_json global_user global_game);
+use Game::Environment qw(:std :response);
 use List::Util qw( sum );
 
 with( 'Game::Roles::Power' );

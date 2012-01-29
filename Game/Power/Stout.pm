@@ -1,8 +1,7 @@
 package Game::Power::Stout;
 use Moose::Role;
 
-use Game::Environment qw(db early_response_json global_user
-                         global_game);
+use Game::Environment qw(:std :db :response);
 
 with( 'Game::Roles::Power' );
 

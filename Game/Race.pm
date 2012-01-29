@@ -1,12 +1,7 @@
 package Game::Race;
 use Moose;
 
-use Game::Environment qw(assert
-                         compability
-                         db
-                         early_response_json
-                         global_user
-                         global_game);
+use Game::Environment qw(:std :db :response);
 use List::Util qw( sum );
 
 
@@ -17,7 +12,7 @@ has 'inDecline' => ( isa => 'Bool',
 # compatibility
 has 'tokenBadgeId' => ( isa => 'Int',
                         is => 'rw',
-                        required => 1 );
+                        default => -1 );
 
 sub extract_state {
     my ($self) = @_;
@@ -206,7 +201,8 @@ sub defend {
     my ($self, $moves) = @_;
     assert($moves->{units_sum} <= global_user()->tokensInHand(),
            'notEnoughTokens');
-    if (compability()) {
+
+    if (feature('redeploy_all_tokens')) {
         assert($moves->{units_sum} == global_user()->tokensInHand(),
                'thereAreTokensInTheHand');
     }
@@ -247,7 +243,7 @@ sub redeploy {
         $self->_clear_left_region($_) unless $_->tokensNum()
     }
 
-    if (compability() && global_user()->tokensInHand() != 0) {
+    if (feature('redeploy_all_tokens') && global_user()->tokensInHand() != 0) {
         next unless @{$moves->{units_moves}};
         my $reg = $moves->{units_moves}[-1][0];
         $reg->tokensNum($reg->tokensNum() + global_user()->tokensInHand());

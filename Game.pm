@@ -8,12 +8,10 @@ use Plack::Response;
 use Plack::Request;
 use Game::Constants;
 
-use Game::Environment qw(environment compability
-                         is_debug if_debug
-                         request response response_json
-                         stack_trace);
 use Game::Dispatcher;
 use Game::Model;
+use Game::Environment qw(:std :config :response);
+use Data::Dumper::Concise;
 
 
 sub _dier {
@@ -32,11 +30,19 @@ $SIG{INT} = \&_dier;
 
 sub setup_environment {
     my ($env) = @_;
+
+    Game::Environment::init();
     environment($env);
-    compability($ENV{compability} &&
-                $ENV{compability} eq 'true');
-    is_debug($ENV{environment} &&
-             $ENV{environment} eq 'debug');
+
+    if ($ENV{compability} && $ENV{compability} eq 'true') {
+        $_ = config()->{features};
+        $_->{compatibility} = 1;
+        $_->{redeploy_all_tokens} = 1;
+        $_->{delete_empty_game} = 1;
+        $_->{durty_gameState} = 1;
+    }
+    config()->{debug} = $ENV{environment} &&
+                        $ENV{environment} eq 'debug';
     response(Plack::Response->new(200));
     response()->content_type('text/x-json; charset=utf-8');
     request(Plack::Request->new($env));
@@ -51,8 +57,7 @@ sub parse_request {
 
     my $json = request()->raw_body();
 
-    use Data::Dumper;
-    print Dumper($json);
+    print Dumper($json) if feature('log_requests');
 
     my $data = '';
     eval {
@@ -63,11 +68,11 @@ sub parse_request {
             result => 'badJson'
         });
     } else {
+        use Game::Dispatcher;
         Game::Dispatcher::process_request($data, $env);
     }
 
-    use Data::Dumper;
-    print Dumper(response()->body());
+    print Dumper(response()->body()) if feature('log_requests');
 
     response()->finalize();
 };

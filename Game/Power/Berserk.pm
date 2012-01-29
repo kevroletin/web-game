@@ -1,7 +1,7 @@
 package Game::Power::Berserk;
 use Moose::Role;
 
-use Game::Environment qw(assert db response_json early_response_json global_user global_game);
+use Game::Environment qw(:std :db :response);
 
 with( 'Game::Roles::Power' );
 
@@ -18,7 +18,7 @@ sub throwDice {
     assert(!defined $self->lastDiceValue(), 'badStage',
            descr => 'alreadyUsed', value => $self->lastDiceValue());
     assert(global_user()->tokensInHand() > 0, 'badStage', descr => 'noUnits');
-    $dice ||= global_game()->random_dice();
+    $dice = global_game()->random_dice() unless defined $dice;
     $self->lastDiceValue($dice);
     db()->update($self);
 

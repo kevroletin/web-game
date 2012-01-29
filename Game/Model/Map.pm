@@ -1,7 +1,7 @@
 package Game::Model::Map;
 use Moose;
 
-use Game::Environment qw(assert compability early_response_json inc_counter);
+use Game::Environment qw(:std :db :response);
 use Game::Model::Region;
 use Moose::Util::TypeConstraints;
 

@@ -1,7 +1,7 @@
 package Game::Power::Hill;
 use Moose::Role;
 
-use Game::Environment qw(early_response_json global_user global_game);
+use Game::Environment qw(:std :response);
 
 with( 'Game::Roles::Power' );
 

@@ -4,7 +4,7 @@ use Moose;
 #use Digest::SHA1 ();
 
 use Game::Constants qw(races_with_debug powers_with_debug);
-use Game::Environment qw(assert is_debug early_response_json inc_counter);
+use Game::Environment qw(:std :db :response);
 use Game::Model::Game;
 use Moose::Util::TypeConstraints;
 use Moose::Util qw( apply_all_roles );
@@ -89,7 +89,7 @@ has 'raceSelected' => ( isa => 'Bool',
 sub BUILD {
     my ($self) = @_;
     unless ($self->isAi()) {
-        my $ok = $self->{username} =~ /^[A-Za-z][A-Za-z0-9\_\-]{2,15}$/;
+        my $ok = $self->{username} =~ /^[A-Za-z][A-Za-z0-9\-]{2,15}$/;
         assert($ok, 'badUsername');
     }
     $self->{id} = inc_counter('Game::Model::User::id');

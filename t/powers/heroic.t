@@ -1,92 +1,75 @@
 use strict;
 use warnings;
 
-use Test::More;
-
-use JSON;
-
 use lib '..';
-use Tester;
-use Tester::OK;
-use Tester::Hooks;
 use Tester::State;
-use Tester::CheckState;
-use Data::Dumper::Concise;
-
-init_logs('powers/heroic');
-ok( reset_server(), 'reset server' );
+use Tester::New;
 
 my ($user1, $user2) = Tester::State::square_map_two_users(
-  ['border', 'farmland'], ['border', 'farmland'],
-  ['border', 'hill'], ['border', 'hill']);
+   ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
+);
 
-TEST("Select power");
-GO(
-'{
-"action": "selectGivenRace",
-"sid": "",
-"race": "debug",
-"power": "heroic"
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('select power',
+    {
+      action => "selectGivenRace",
+      power => "heroic",
+      race => "debug",
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+actions->check_tokens_cnt(5, $user1);
 
-TOKENS_CNT(5, $user1);
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 1,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
+test('conquer',
+    {
+      action => "conquer",
+      regionId => 2,
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 1
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
+test('redeploy',
+    {
+      action => "redeploy",
+      heroes => [
+        1,
+        2
+      ],
+      regions => [
+        {
+          regionId => 1,
+          tokensNum => 1
+        },
+        {
+          regionId => 2,
+          tokensNum => 1
+        }
+      ],
+      sid => undef
+    },
+    {
+      result => "ok"
+    },
+    $user1 );
 
-
-TEST("conquer");
-GO(
-'{
-  "action": "conquer",
-  "sid": "",
-  "regionId": 2
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-
-TEST("redeploy");
-GO(
-'{
-"action": "redeploy",
-"sid": "",
-"regions": [
-  {"regionId": 1, "tokensNum": 1},
-  {"regionId": 2, "tokensNum": 1}
-],
-"heroes": [1, 2]
-}'
-,
-'{
-"result": "ok"
-}',
-$user1 );
-
-REGION_EXTRA_ITEM('hero', 1, 0,  $user1);
-
-REGION_EXTRA_ITEM('hero', 1, 1,  $user1);
-
-# TODO: create good tests ^_^
+actions->check_reg(0, { currentRegionState => { hero => true } }, $user1);
+actions->check_reg(1, { currentRegionState => { hero => true } }, $user1);
 
 done_testing();

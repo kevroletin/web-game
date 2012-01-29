@@ -3,9 +3,8 @@ use warnings;
 use strict;
 
 use Game::Actions;
-use Game::Environment qw( assert response_json early_response_json
-                          db global_game global_user is_debug );
-use Moose::Util qw( apply_all_roles );
+use Game::Environment qw(:std :db :response);
+use Moose::Util q(apply_all_roles);
 
 #TODO: move to separate module or use smth. like Module::Find
 use Game::Power::Alchemist;
@@ -345,7 +344,7 @@ sub finishTurn {
             $race_d ? $stat_from_race->($race_d) :
             [['Regions', @reg_a + @reg_d]];
 
-    response_json({result => 'ok', 'statistics' => $stat})
+    response_json({result => 'ok', statistics => $stat, coins => $coins})
 }
 
 sub redeploy {

@@ -3,12 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(assert compability db db_search db_search_one
-                         early_response_json
-                         global_user
-                         inc_counter
-                         init_user_by_sid
-                         response response_json);
+use Game::Environment qw(:std :db :response);
 use Game::Model::User;
 use Moose::Util::TypeConstraints;
 
