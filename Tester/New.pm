@@ -11,6 +11,7 @@ use LWP::ConnCache;
 use File::Spec;
 use Test::More;
 use Data::Dumper::Concise;
+use Devel::StackTrace;
 use Exporter::Easy ( EXPORT => [ qw(actions
                                     done_testing
                                     hooks_sync_values
@@ -20,21 +21,43 @@ use Exporter::Easy ( EXPORT => [ qw(actions
                                     true
                                     false
                                     bool
-                                    null_or_val_checker) ] );
+                                    null_or_val_checker
+                                    record
+                                    replay) ] );
 
 sub true { JSON::true }
 sub false { JSON::false }
 sub bool { $_[0] ? JSON::true : JSON::false }
 
 use Carp;
-$SIG{__DIE__} = sub { Carp::confess @_ };
-$SIG{__WARN__} = sub { Carp::confess @_ };
+$SIG{__DIE__} = \&Carp::confess;
+$SIG{__WARN__} = \&Carp::confess;
+$SIG{INT} = \&Carp::confess;
 
 my $context;
 
 {
     my $actions = Tester::New::ProtocolActions->new();
     sub actions { $actions }
+}
+
+sub record {
+    init();
+    $context->{record_history} = 1;
+    $context->{history} = [];
+}
+
+sub replay {
+    $context->{url} = $_ if ($_ = shift);
+    $context->{record_history} = 0;
+
+    my $i = 0;
+
+    for (@{$context->{history}}) {
+        test("replay_" . ++$i,
+             $_->[0], $_->[1], {}, {stack_level => 2,
+                                    print_on_error => $_->[2]});
+    }
 }
 
 sub message {
@@ -59,6 +82,9 @@ sub init {
     $context->{ua} = LWP::UserAgent->new(agent => "web-game-tester");
     $context->{ua}->conn_cache(LWP::ConnCache->new());
     $context->{server_died_cnt} = 0;
+    $context->{record_history} = 0;
+    $context->{history} = [];
+    1
 }
 
 sub request {
@@ -66,8 +92,13 @@ sub request {
     my $req = HTTP::Request->new(POST => $context->{url});
     $req->content($content);
     my $res = $context->{ua}->request($req);
-    write_log( "\n---REQUEST---\n", $req->content() );
-    write_log( "\n---RESPONSE---\n", $res->content(), "\n" );
+    write_log( "\n---REQUEST---\n", $a = $req->content() );
+    write_log( "\n---RESPONSE---\n", $b = $res->content(), "\n" );
+    if ($context->{record_history}) {
+        my $t = Devel::StackTrace->new->frame(-1);
+        my $place = sprintf( "#   at %s line %s\n", $t->filename(), $t->line());
+        push @{$context->{history}}, [$a, $b, $place];
+    }
     $res
 }
 
@@ -99,7 +130,7 @@ sub _safe_request {
 }
 
 sub send_test {
-    my ($in, $out, $params) = @_;
+    my ($in, $out, $params, $test_params) = @_;
     $params ||= {};
     my $c = {};
     ($c->{in}, $c->{out}, $c->{params}) = ($in, $out, $params);
@@ -128,16 +159,16 @@ sub send_test {
     }
 
     my $diff = Tester::Diff::compare($c->{resp}, $c->{out},
-                                     $params->{diff_method});
+                                     $test_params->{diff_method});
 
     my $err = $diff->errors_report();
 
     unless ($err) {
         return ({ res => 1, quick => 'ok', long => 'ok' }, $c)
     } else {
-        my $msg = sprintf("expected:%s\nget:%s\n",
+        my $msg = sprintf("\n\nexpected:%s\nget:%s\n",
                           map { Dumper $_ } $c->{out}, $c->{resp});
-        return ({ res => 0, quick => 'diff failed', long => $msg . $err }, $c)
+        return ({ res => 0, quick => 'diff failed', long => $err . $msg }, $c)
     }
 }
 
@@ -145,7 +176,7 @@ sub test {
     my ($test_name, $in, $out, $params, $test_params) = @_;
     init() unless defined $context;
     write_log("---$test_name---");
-    my ($res, $c) = send_test($in, $out, $params);
+    my ($res, $c) = send_test($in, $out, $params, $test_params);
 
     return if $test_params->{show_only_errors} && $res->{ok};
 
@@ -165,6 +196,7 @@ sub test {
     unless ($res->{res}) {
         my $fh = $t->failure_output();
         if (defined $c->{resp}) {
+            print $fh $_ if ($_ = $test_params->{print_on_error});
             printf $fh "#   at %s line %d.\n",
                        $context->{msg_file_name},
                        $msg_file_line
@@ -266,5 +298,117 @@ sub check_reg {
                     {show_only_errors => 0,
                      stack_level => $stack_level || 2 });
 }
+
+sub check_magic_game_stage {
+    my ($self, $stage, $params, $stack_level) = @_;
+    my $res = test( 'check game stage',
+                    {action => 'getGameState', gameId => undef},
+                    {gameState => { stage => $stage } },
+                    $params,
+                    {show_only_errors => 0,
+                     stack_level => $stack_level || 2 });
+}
+
+sub _state_vs_num {
+    my %h = (
+             'wait'    => 1, # ожидаем игроков
+             1         => 'wait',
+             'begin'   => 0, # игра началась, ждем первых действий
+             0         => 'begin',
+             'in_game' => 2, # игра во всю идет (первое действие было сделано)
+             2         => 'in_game',
+             'finish'  => 3, # игра закончилась, но игроки ее еще не покинули
+             3         => 'finish',
+             'empty'   => 4, # игра закончилась, все игроки покинули ее
+             4         => 'empty'
+            );
+    defined ($_ = $h{$_[0]}) ?
+        (defined $_ ? $_ : 'undef') :
+        $_[0]
+}
+
+sub check_magic_game_state {
+    my ($self, $state, $params, $stack_level) = @_;
+    my $checker = sub {
+        my ($data, $res) = @_;
+        unless ( $state ~~ /^\d+$/) {
+            $state = _state_vs_num($state);
+        }
+        $res->{ok} = $state eq $data;
+        unless ($res->{ok}) {
+            $res->{msg} = sprintf( "%s(%s) vs %s(%s)",
+                                   _state_vs_num($data), $data,
+                                   _state_vs_num($state), $state );
+        }
+        $res->{ok}
+    };
+    my $res = test( 'check game stage',
+                    {action => 'getGameState', gameId => undef},
+                    {gameState => { state => $checker } },
+                    $params,
+                    {show_only_errors => 0,
+                     stack_level => $stack_level || 2 });
+}
+
+sub _last_event_vs_num {
+    my %h = (
+             'wait'    => 1, # ожидаем игроков
+             1         => 'wait',
+             'begin'   => 0, # игра началась, ждем первых действий
+             0         => 'begin',
+             'in_game' => 2, # игра во всю идет (первое действие было сделано)
+             2         => 'in_game',
+             'finish'  => 3, # игра закончилась, но игроки ее еще не покинули
+             3         => 'finish',
+             'empty'   => 4, # игра закончилась, все игроки покинули ее
+             4         => 'empty',
+
+             'finish_turn' => 4,
+             4 => 'finish_turn',
+             'select_race' =>  5,
+             5 => 'select_race',
+             'conquer'  =>  6,
+             6 => 'conquer',
+             'decline'   =>  7,
+             7 => 'decline',
+             'redeploy' => 8,
+             8 => 'redeploy',
+             'throw_dice' => 9,
+             9 => 'throw_dice',
+             'defend' => 12,
+             12 => 'defend',
+             'select_friend' => 13,
+             13 => 'select_friend',
+             'failed_conquer' => 14,
+             14 => 'failed_conquer'
+            );
+    defined ($_ = $h{$_[0]}) ?
+        (defined $_ ? $_ : 'undef') :
+        $_[0]
+}
+
+sub check_magic_last_event {
+    my ($self, $la, $params, $stack_level) = @_;
+    my $checker = sub {
+        my ($data, $res) = @_;
+        unless ( $la ~~ /^\d+$/) {
+            $la = _last_event_vs_num($la);
+        }
+        $res->{ok} = $la eq $data;
+        unless ($res->{ok}) {
+            $res->{msg} = sprintf( "%s(%s) vs %s(%s)",
+                                   _last_event_vs_num($data), $data,
+                                   _last_event_vs_num($la), $la );
+        }
+        $res->{ok}
+    };
+    my $res = test( 'check game stage',
+                    {action => 'getGameState', gameId => undef},
+                    {gameState => { state => $checker } },
+                    $params,
+                    {show_only_errors => 0,
+                     stack_level => $stack_level || 2 });
+}
+
 
 1;

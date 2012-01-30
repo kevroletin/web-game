@@ -146,6 +146,8 @@ sub _control_state {
         $power->('berserk');
         $ok->(!defined global_game()->lastDiceValue(), descr => 'diceUsed');
     }
+
+    global_game()->last_action( $data->{action} );
 }
 
 sub conquer {
@@ -272,6 +274,7 @@ sub dragonAttack {
     my $reg = global_game()->map()->region_by_id($data->{regionId});
 
     global_user()->activeRace()->dragonAttack($reg);
+    db->update( global_game() );
 
     response_json({result => 'ok'})
 }
@@ -283,6 +286,7 @@ sub enchant {
 
     my $reg = global_game()->map()->region_by_id($data->{regionId});
     global_user()->activeRace()->enchant($reg);
+    db->update( global_game() );
 
     response_json({result => 'ok'})
 }
@@ -374,6 +378,8 @@ sub selectFriend {
     }
 
     global_user()->activeRace()->selectFriend($friend);
+    db()->update( global_game() );
+
     response_json({result => 'ok'})
 }
 
@@ -397,8 +403,10 @@ sub selectRace {
 
     my ($race, $power, $id) = $game->pick_tokens($p);
 
-    my $pair = ("Game::Race::" . ucfirst($race))->new(tokenBadgeId => $id);
+    my  $pair = ("Game::Race::" . ucfirst($race))->new(tokenBadgeId => $id);
     apply_all_roles($pair, ("Game::Power::" . ucfirst($power)));
+    $pair->meta->make_immutable;
+
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
     global_user()->raceSelected(1);
@@ -416,6 +424,7 @@ sub throwDice {
 
     my $dice = is_debug() ? $data->{dice} : 0;
     global_user()->activeRace()->throwDice($dice);
+    db->update( global_game() );
 }
 
 1;

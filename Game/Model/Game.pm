@@ -15,24 +15,15 @@ use Data::Dumper;
 our @db_index = qw(gameName gameId);
 
 
-# TODO: use full type names since types are global objects
-subtype 'GameName',
+subtype 'Game::Model::Game::GameName',
     as 'Str',
-    where {
-        0 < length($_) && length($_) <= 50
-    },
-    message {
-        early_response_json({result => 'badGameName'})
-    };
+    where { 0 < length($_) && length($_) <= 50 },
+    message { assert(0, 'badGameName'), };
 
-subtype 'playersNum',
-    as 'Int',
-    where {
-        0 < $_ && $_ <= 5
-    },
-    message {
-        early_response_json({result => 'badnumberOfPlayers'})
-    };
+#subtype 'Game::Model::Game::GameName::PlayersNum',
+#    as 'Int',
+#    where { 0 < $_ && $_ <= 5 },
+#    message { assert(0, 'badnumberOfPlayers') }
 
 subtype 'Game::Model::Game::GameDescr',
     as 'Maybe[Str]',
@@ -45,7 +36,7 @@ subtype 'Game::Model::Game::Ai',
     message { assert(0, 'badAi' ) };
 
 
-has 'gameName' => ( isa => 'GameName',
+has 'gameName' => ( isa => 'Game::Model::Game::GameName',
                     is => 'ro',
                     required => 1 );
 
@@ -54,8 +45,7 @@ has 'map' => ( isa => 'Game::Model::Map',
                required => 0 );
 
 has 'gameDescr' => ( isa => 'Game::Model::Game::GameDescr',
-                     is => 'rw',
-                     default => '' );
+                     is => 'rw' );
 
 has 'players' => ( isa => 'ArrayRef[Game::Model::User]',
                    is => 'rw',
@@ -73,11 +63,11 @@ has 'state' => ( isa => 'Str',
                  is => 'rw',
                  default => 'notStarted' );
 
+# TODO: consolidate into one structure next 4 fields
 has 'racesPack' => ( isa => 'ArrayRef[Str]',
                      is => 'rw',
                      default => sub { [] } );
 
-# FIXME: construct token badges with game #############
 has 'powersPack' => ( isa => 'ArrayRef[Str]',
                       is => 'rw',
                       default => sub { [] } );
@@ -89,7 +79,6 @@ has 'bonusMoney' => ( isa => 'ArrayRef[Int]',
 has 'tokenBadgeIds' => ( isa => 'ArrayRef[Int]',
                          is => 'rw',
                          default => sub { [1 .. 6] } );
-#######################################################
 
 has 'lasTokenBadgeId' => ( isa => 'Int',
                            is => 'rw',
@@ -111,24 +100,28 @@ has 'aiJoined' => ( isa => 'Int',
                     is => 'rw',
                     default => 0 );
 
-# TODO: process game turn during gameplay
 has 'turn' => ( isa => 'Int',
                 is => 'rw',
                 default => 0 );
-
-has 'prevGenNum' => ( isa => 'Int',
-                      is => 'rw',
-                      default => 0 );
 
 has 'lastDiceValue' => ( isa => 'Maybe[Int]',
                          is => 'rw',
                          required => 0 );
 
+has 'last_action' => ( isa => 'Str',
+                       is => 'rw' );
+
+# TODO: store raceSelected here or add new game state
+sub raceSelected {
+    my ($self) = @_;
+    return undef unless $self->activePlayer();
+    $self->activePlayer()->raceSelected()
+}
 
 sub BUILD {
     my ($self) = @_;
-    $self->{gameId} = inc_counter('Game::Model::Game::gameId');
     assert($self->ai() <= $self->map()->playersNum, 'badAiNum');
+    $self->{gameId} = inc_counter('Game::Model::Game::gameId');
 }
 
 before 'state' => sub {
@@ -166,28 +159,92 @@ sub _create_tokens_pack {
     $self->powersPack([shuffle @Game::Constants::powers]);
 }
 
+sub remove_player {
+    my ($self, $user) = @_;
+    my $nu = [ grep { $_ ne $user } @{$self->players()} ];
+    $self->players($nu);
+}
+
+sub lastAttack {
+    my $self = shift;
+    return undef unless @{$self->history()};
+    $self->{history}->[-1]
+}
+
+sub next_player {
+    my ($self) = @_;
+    my $n = $self->activePlayerNum() + 1;
+    if ($n >= @{$self->players()}) {
+        $n = 0;
+        $self->turn($self->turn() + 1);
+    }
+    $self->history([]);
+    $self->activePlayerNum($n);
+    $self->lastDiceValue(undef);
+}
+
+sub number_of_user {
+    my ($self, $user) = @_;
+    return undef unless $user;
+    my $i = 0;
+    for (@{$self->players()}) {
+        return $i if $_ eq $user;
+        ++$i
+    }
+    undef
+}
+
+sub ready {
+    my ($self) = @_;
+    return 0 unless @{$self->players()} > 1;
+    return 0 if $self->ai() != $self->aiJoined();
+    for my $user (@{$self->players()}) {
+        return 0 unless $user->readinessStatus()
+    }
+    1
+}
+
+sub pick_tokens {
+    my ($self, $race_num) = @_;
+    my $race = splice @{$self->racesPack()}, $race_num, 1;
+    my $power = splice @{$self->powersPack()}, $race_num, 1;
+    my $coins = splice @{$self->bonusMoney()}, $race_num, 1;
+    my $id =  splice @{$self->tokenBadgeIds()}, $race_num, 1;
+    push @{$self->bonusMoney()}, 0;
+    push @{$self->tokenBadgeIds()}, ++$self->{lasTokenBadgeId};
+    ($race, $power, $id, $coins)
+}
+
+sub put_back_tokens {
+    my ($self, $race) = @_;
+    push @{$self->racesPack()}, $race->race_name();
+    push @{$self->powersPack()}, $race->power_name();
+}
+
+sub random_dice { int rand(4) }
+
+# --- extract state ---
+
 sub _extract_last_attack {
     my ($self) = @_;
     my $la = $self->lastAttack();
     return undef unless $la;
-    { #whom => $self->number_of_user($la->{whom}),
-      whom => $la->{whom} ? $la->{whom}->id() : undef,
+    { whom => $la->{whom} ? $la->{whom}->id() : undef,
       tokensNum => $la->{tokensNum},
-      reg => $self->number_of_region($la->{region}) }
+      reg => $self->($la->{region}->regionId()) }
 }
 
 sub _extract_visible_tokens {
     my ($self) = @_;
     my @res;
+    use Data::Dumper;
+#    print Dumper $self->racesPack();
     for my $i (0 .. 5) {
         my $tok = {};
+        my $uc_f = sub { defined $_[0] ? ucfirst($_[0]) : undef };
         $tok->{tokenBadgeId} = $self->tokenBadgeIds()->[$i];
-        $tok->{raceName} = ucfirst($self->racesPack()->[$i]);
-        # FIXME:
-        $tok->{specialPowerName} =
-            $self->powersPack()->[$i] eq 'dragonmaster' ?
-                'DragonMaster' :
-                ucfirst($self->powersPack()->[$i]);
+        $tok->{raceName} = $uc_f->($self->racesPack()->[$i]);
+        $tok->{specialPowerName} = $uc_f->($self->powersPack()->[$i]);
         $tok->{position} = $i;
         $tok->{bonusMoney} = $self->bonusMoney()->[$i];
         push @res, $tok
@@ -196,9 +253,14 @@ sub _extract_visible_tokens {
 }
 
 sub _copy_races_state_storage {
-    my ($self, $state) = @_;
+    my ($self, $st) = @_;
+
+    $st->{dragonAttacked} = bool(0);
+    $st->{enchanted} = bool(0);
+    $st->{gotWealthy} = bool(0);
+
     for (keys %{$self->raceStateStorage()}) {
-        $state->{$_} = $self->raceStateStorage()->{$_}
+        $st->{$_} = $self->raceStateStorage()->{$_}
     }
 }
 
@@ -207,55 +269,11 @@ sub _extract_history {
     my $h = sub {
         my $r = $_[0];
         $r->{whom} = $r->{whom}->id() if ($r->{whom} );
-        $r->{region} = $self->number_of_region($r->{region});
+        $r->{region} = $r->{region}->regionId();
         $r
     };
     my @res = map { $h->($_) } @{$self->history()};
     \@res
-}
-
-sub _extract_map_state {
-    my ($s) = @_;
-    my $m = $s->map();
-    my $res = {};
-    $res->{mapId} = $m->id();
-    $res->{mapName} = $m->mapName();
-    $res->{playersNum} = $m->playersNum();
-    $res->{turnsNum} = $m->turnsNum();
-    $res->{regions} = [];
-    for my $reg (@{$s->map()->regions()}) {
-        my $st = {};
-        $st->{constRegionState} = $reg->landDescription;
-        $st->{adjacentRegions} = $reg->adjacent();
-        $st->{currentRegionState} = {
-            ownerId => $reg->owner() ? $reg->owner()->id() : undef,
-            tokensNum => $reg->population(),
-            tokenBadgeId => $reg->owner_race() ?
-                                $reg->owner_race()->tokenBadgeId() : undef
-        };
-        for (keys %{$reg->extraItems()}) {
-            my ($c, $d);
-            given ($_) {
-                when ('hole') {
-                    $c = 'holeInTheGround';
-                    $d = bool($reg->extraItems()->{$_})
-                }
-                when ('hero') {
-                    ($c, $d) = ('hero', bool($reg->extraItems()->{$_}));
-                }
-                when ('dragon') {
-                    ($c, $d) = ('dragon', bool($reg->extraItems()->{$_}));
-                }
-                default { ($c, $d) = ($_, $reg->extraItems()->{$_}) }
-            };
-            $st->{currentRegionState}{$c} = $d;
-        }
-# TODO: DEBUG:
-        $st->{regionId} = $reg->{regionId};
-
-        push @{$res->{regions}}, $st
-    }
-    $res
 }
 
 sub _extract_players_state {
@@ -268,15 +286,17 @@ sub _extract_players_state {
         $st->{username} = $p->username();
         $st->{coins} = $p->coins();
         $st->{priority} = $i + 1;
-        $st->{isReady} = $p->readinessStatusBool;
+        $st->{isReady} = bool( $p->readinessStatus );
         $st->{tokensInHand} = $p->tokensInHand();
+        $st->{inGame} = bool(1);
         my $extract_race = sub {
             my ($race) = @_;
             return undef unless $race;
             {
                 raceName => ucfirst($race->race_name()),
                 specialPowerName => ucfirst($race->power_name()),
-                tokenBadgeId => $race->tokenBadgeId()
+                tokenBadgeId => $race->tokenBadgeId(),
+                totalTokensNum => $race->total_tokens_num()
             }
         };
         $st->{currentTokenBadge} = $extract_race->($p->activeRace());
@@ -293,14 +313,19 @@ sub extract_state {
     $res->{activePlayerId} = $s->activePlayer() ?
                                  $s->activePlayer()->id() : undef;
     $res->{currentPlayersNum} = @{$s->players()};
+    $res->{activePlayerId} = $s->activePlayer() ?
+        $s->activePlayer()->userId() : undef;
     $res->{currentTurn} = $s->turn();
     $res->{gameDescription} = $s->gameDescr();
+    $res->{gameDescr} = $s->gameDescr();
     $res->{gameId} = $s->gameId();
     $res->{gameName} = $s->gameName();
     $res->{players} = $s->_extract_players_state();
-    $res->{stage} = $s->stage();
     $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
-    $res->{map} = $s->_extract_map_state();
+    $res->{map} = $s->map()->extract_state();
+
+    $res->{aiRequiredNum} = $s->ai() - $s->aiJoined();
+    $res->{state} = $s->magic_game_state();
 
     if ($s->state() eq 'defend') {
         $res->{defendingInfo} = {
@@ -308,11 +333,15 @@ sub extract_state {
             regionId => $s->lastAttack()->{region}->regionId()
         }
     }
+    my @regions;
+    push @regions, $_->extract_state() for @{$s->map()->regions()};
+
+    $res->{stage} = $s->stage();
+    $res->{lastEvent} = num($s->magic_last_event());
+
 #    $res->{activePlayerNum} = $s->activePlayerNum();
 #    $res->{lastAttack} = $s->_extract_last_attack();
 #    $res->{state} = $s->state();
-    my @regions;
-    push @regions, $_->extract_state() for @{$s->map()->regions()};
 #    $res->{regions} = \@regions;
 #    $res->{attacksHistory} = $s->_extract_history();
 #    $res->{mapId} = $s->map()->id();
@@ -321,16 +350,98 @@ sub extract_state {
     $res
 }
 
+sub game_state {
+    my ($s) = @_;
+    if ($s->state() eq 'notStarted') {
+        'wait'
+    } elsif ($s->state() eq 'finished') {
+        if (@{$s->players()}) {
+            'finish'
+        } else {
+            'empty'
+        }
+    } else {
+        if (defined $s->last_action()) {
+            'in_game'
+        } else {
+            'begin'
+        }
+    }
+}
+
+sub magic_game_state {
+    {
+        wait    => 1,
+        begin   => 0,
+        in_game => 2,
+        finish  => 3,
+        empty   => 4
+    }->{shift->game_state()}
+}
+
+sub last_event {
+    my ($self) = @_;
+    my $state = $self->game_state();
+
+    return $state unless $state eq 'in_game';
+    given ($self->last_action) {
+        when ($_ eq 'conquer' && defined $self->lastDiceValue()) {
+            return 'failed_conquer'
+        }
+        return $_;
+    }
+}
+
+sub magic_last_event {
+    my ($self) = @_;
+    my %h = (
+        wait       =>  1,
+#        begin   => not used
+        in_game    =>  2,
+        finish     =>  4,   # as finishTurn
+        empty      =>  4,  # as finishTurn
+        finishTurn =>  4,
+        selectRace =>  5,
+        conquer    =>  6,
+        dragonAttack => 6, # as conquer
+        enchant    =>  6,  # as conquer
+        decline    =>  7,
+        redeploy   =>  8,
+        throw_dice =>  9,
+        defend     => 12,
+        select_friend  => 13,
+
+        failed_conquer => 14
+    );
+    $h{$self->last_event()};
+}
+
 sub stage {
     my ($self) = @_;
     my $st = $self->state();
     given ($st) {
         when ('conquer') {
-            if (defined $self->activePlayer()->activeRace()) {
+            if (global_game()->raceSelected()) {
+#                return 'beforeConquest';
+                return 'conquest'
+            } elsif (defined $self->activePlayer()->activeRace()) {
+                return 'beforeConquest' unless @{$self->history()};
                 return 'conquest'
             } else {
                 return 'selectRace'
             }
+        }
+        when ('notStarted') {
+            return 'selectRace'
+        }
+        when ('redeployed') {
+            return 'beforeFinishTurn'
+        }
+        when ('declined') {
+            return 'finishTurn'
+        }
+        when ('finished') {
+            return 'gameOver'
         }
         default {
             return $st
@@ -353,17 +464,36 @@ use constant GS_IS_OVER            => 'gameOver'         ;
 
 }
 
-sub remove_player {
-    my ($self, $user) = @_;
-    my $nu = [ grep { $_ ne $user } @{$self->players()} ];
-    $self->players($nu);
+sub short_info {
+    my ($s) = @_;
+    my $res = {
+        gameId => $s->gameId(),
+        gameName => $s->gameName(),
+        gameDescr => $s->gameDescr(),
+        playersNum => scalar @{$s->players()},
+        maxPlayersNum => $s->map()->playersNum(),
+        activePlayerId => ($_ = $s->activePlayer()) ? $_->id() : undef,
+        turn => $s->turn(),
+        turnsNum => $s->map()->turnsNum(),
+        mapId => $s->map()->id(),
+        mapName => $s->map()->mapName(),
+        aiRequiredNum => $s->ai() - $s->aiJoined(),
+        state => $s->magic_game_state()
+    };
+    my $extract_user = sub {
+        my ($user) = @_;
+        {
+            isReady => bool( $user->readinessStatus() ),
+            userId => $user->{id},
+            username => $user->{username},
+            inGame => bool($user->activeGame())
+        }
+    };
+    $res->{players} = [map { $extract_user->($_) } @{$s->players()}];
+    $res
 }
 
-sub lastAttack {
-    my $self = shift;
-    return undef unless @{$self->history()};
-    $self->{history}->[-1]
-}
+# --- load state ---
 
 sub _load_players_from_state {
     my ($self, $data) = @_;
@@ -489,110 +619,5 @@ sub load_state {
     $self->activePlayerNum($data->{activePlayerNum});
 }
 
-sub next_player {
-    my ($self) = @_;
-    my $n = $self->activePlayerNum() + 1;
-    if ($n >= @{$self->players()}) {
-        $n = 0;
-        $self->turn($self->turn() + 1);
-    }
-    $self->history([]);
-    $self->activePlayerNum($n);
-    $self->lastDiceValue(undef);
-}
 
-sub number_of_user {
-    my ($self, $user) = @_;
-    return undef unless $user;
-    my $i = 0;
-    for (@{$self->players()}) {
-        return $i if $_ eq $user;
-        ++$i
-    }
-    undef
-}
-
-sub number_of_region {
-    my ($self, $region) = @_;
-    return undef unless $region;
-    my $i = 1;
-    for (@{$self->map()->regions()}) {
-        return $i if $_ eq $region;
-        ++$i
-    }
-    undef
-}
-
-sub ready {
-    my ($self) = @_;
-    return 0 unless @{$self->players()} > 1;
-    return 0 if $self->ai() != $self->aiJoined();
-    for my $user (@{$self->players()}) {
-        return 0 unless $user->readinessStatus()
-    }
-    1
-}
-
-sub short_info {
-    my ($s) = @_;
-    my $res = {
-        gameId => $s->gameId(),
-        gameName => $s->gameName(),
-        gameDescr => $s->gameDescr(),
-        playersNum => scalar @{$s->players()},
-        maxPlayersNum => $s->map()->playersNum(),
-        activePlayerId => $s->activePlayer()->id(),
-        turn => $s->turn(),
-        turnsNum => $s->map()->turnsNum(),
-        mapId => $s->map()->id(),
-        mapName => $s->map()->mapName()
-    };
-    my $extract_user = sub {
-        my ($user) = @_;
-        {
-            isReady => $user->readinessStatusBool(),
-            userId => $user->{id},
-            username => $user->{username}
-        }
-    };
-    $res->{players} = [map { $extract_user->($_) } @{$s->players()}];
-    $res
-}
-
-sub pick_tokens {
-    my ($self, $race_num) = @_;
-    my $race = splice @{$self->racesPack()}, $race_num, 1;
-    my $power = splice @{$self->powersPack()}, $race_num, 1;
-    my $coins = splice @{$self->bonusMoney()}, $race_num, 1;
-    my $id =  splice @{$self->tokenBadgeIds()}, $race_num, 1;
-    push @{$self->bonusMoney()}, 0;
-    push @{$self->tokenBadgeIds()}, ++$self->{lasTokenBadgeId};
-    ($race, $power, $id, $coins)
-}
-
-sub put_back_tokens {
-    my ($self, $race) = @_;
-    push @{$self->racesPack()}, $race->race_name();
-    push @{$self->powersPack()}, $race->power_name();
-}
-
-sub random_dice { int rand(4) }
-
-=begin comment
-
-# константы для работы алгоритма случайных чисел
-use constant RAND_A    =>     16807;
-use constant RAND_M    => 2**31 - 1;
-use constant RAND_EXPR =>     47127;
-
-sub random_dice {
-    my ($self, $dice) = @_;
-    return $dice if defined $dice;
-    $self->prevGenNum((RAND_A * $self->{prevGenNum}) % RAND_M);
-    my $result = $self->prevGenNum() % 6;
-    $result > 3 ? 0 : $result;
-}
-
-=cut comment
-
-1
+__PACKAGE__->meta->make_immutable;

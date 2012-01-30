@@ -9,53 +9,39 @@ use Moose::Util::TypeConstraints;
 our @db_index = qw(mapName id);
 
 
-subtype 'MapName',
+subtype 'Game::Model::Map::MapName',
     as 'Str',
-    where {
-        0 < length($_) && length($_) < 16
-    },
-    message {
-        early_response_json({result => 'badMapName'})
-    };
+    where { 0 < length($_) && length($_) < 16 },
+    message { assert(0, 'badMapName') };
 
-subtype 'PlayersNum',
+subtype 'Game::Model::Map::PlayersNum',
     as 'Int',
-    where {
-        1 < $_ && $_ <= 5
-    },
-    message {
-        early_response_json({result => 'badPlayersNum'})
-    };
+    where { 1 < $_ && $_ <= 5 },
+    message { assert(0, 'badPlayersNum') };
 
-subtype 'TurnsNum',
+subtype 'Game::Model::Map::TurnsNum',
     as 'Str',
-    where {
-        5 <= $_ && $_ <= 10;
-    },
-    message {
-        early_response_json({result => 'badTurnsNum'})
-    };
+    where { 5 <= $_ && $_ <= 10; },
+    message { assert(0, 'badTurnsNum') };
 
-
-has 'mapName' => ( isa => 'MapName',
+has 'mapName' => ( isa => 'Game::Model::Map::MapName',
                    is  => 'rw',
                    required => 1 );
 
-has 'playersNum' => ( isa => 'PlayersNum',
+has 'playersNum' => ( isa => 'Game::Model::Map::PlayersNum',
                       is  => 'ro',
                       required => 1 );
 
-has 'turnsNum' => ( isa => 'TurnsNum',
+has 'turnsNum' => ( isa => 'Game::Model::Map::TurnsNum',
                     is => 'ro',
                     required => 1 );
 
-has 'regions' => ( isa => 'ArrayRef[Game::Model::Region]|Undef',
+has 'regions' => ( isa => 'ArrayRef[Game::Model::Region]',
                    is => 'rw',
-                   required => 0 );
+                   required => 1 );
 
-has 'id' => ( isa => 'Int',
-              is => 'ro',
-              required => 0 );
+has 'id' => ( isa => 'Maybe[Int]',
+              is => 'rw' );
 
 has 'picture' => ( isa => 'Str',
                    is => 'rw',
@@ -89,6 +75,60 @@ sub BUILD {
     $self->{id} = inc_counter('Game::Model::Map::id');
 }
 
+sub get_region {
+    my ($s, $i) = @_;
+    $s->regions()->[$i - 1]
+}
+
+sub region_by_id {
+    my ($self, $id) = @_;
+    my $region = undef;
+    my $ok = find_type_constraint('Int')->check($id) && $id > 0;
+    $region = $self->get_region($id) if $ok;
+    assert($region, 'badRegionId');
+#    assert($region, 'badRegion', descr => 'badId');
+    $region;
+}
+
+# --- state ---
+
+sub extract_state {
+    my ($s) = @_;
+    my $res = $s->short_info();
+    $res->{mapId} = $s->id();
+    $res->{mapName} = $s->mapName();
+    $res->{playersNum} = $s->playersNum();
+    $res->{turnsNum} = $s->turnsNum();
+    $res->{regions} = [];
+    for my $reg (@{$s->regions()}) {
+        my $st = {};
+        $st->{coordinates} = $reg->coordinates();
+        $st->{raceCoords} = $reg->raceCoords();
+        $st->{powerCoords} = $reg->powerCoords();
+        $st->{constRegionState} = $reg->landDescription;
+        $st->{adjacentRegions} = $reg->adjacent();
+        $_ = $reg->extraItems();
+        $st->{currentRegionState} = {
+             ownerId => $reg->owner() ? $reg->owner()->id() : undef,
+             tokenBadgeId => $reg->owner_race() ?
+                 $reg->owner_race()->tokenBadgeId() : undef,
+             dragon => bool($_->{dragon}),
+             encampment => num($_->{encampment}),
+             fortified => bool($_->{fortified}),
+             hero => bool($_->{hero}),
+             holeInTheGround => bool($_->{hole}),
+             inDecline => bool($reg->inDecline() || !$reg->owner()),
+             tokensNum => num($reg->population())
+        };
+
+# TODO: DEBUG:
+        $st->{regionId} = $reg->{regionId};
+
+        push @{$res->{regions}}, $st
+    }
+    $res
+}
+
 sub short_info {
     my ($s) = @_;
     my %h = %{$s};
@@ -106,19 +146,5 @@ sub full_info {
     $r
 }
 
-sub get_region {
-    my ($s, $i) = @_;
-    $s->regions()->[$i - 1]
-}
 
-sub region_by_id {
-    my ($self, $id) = @_;
-    my $region = undef;
-    my $ok = find_type_constraint('Int')->check($id) && $id > 0;
-    $region = $self->get_region($id) if $ok;
-    assert($region, 'badRegionId');
-#    assert($region, 'badRegion', descr => 'badId');
-    $region;
-}
-
-1
+__PACKAGE__->meta->make_immutable;

@@ -36,7 +36,9 @@ sub createDefaultMaps {
 
 sub getMapList {
     my @q = db_search({ CLASS => 'Game::Model::Map' })->all();
-    my @maps = map { $_->short_info() } @q;
+    my @maps = feature('durty_gameList') ?
+        map { $_->extract_state() } @q :
+        map { $_->short_info()    } @q;
     response_json({result => 'ok', maps => \@maps});
 }
 

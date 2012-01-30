@@ -63,6 +63,7 @@ sub _cmp_hash {
             }
             if ($method eq 'EXACT') {
                 for my $k (sort keys %$a) {
+                    next if exists $b->{$k};
                     push @res,
                         _deep_compare($a->{$k}, $b->{$k}, $method, "${path}{$k}")
 #                    unless (exists $a->{$k}) {

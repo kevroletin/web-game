@@ -13,32 +13,20 @@ use JSON;
 our @db_index = qw(id sid username password);
 
 
-subtype 'Username',
+subtype 'Game::Model::User::Username',
     as 'Str',
-    where {
-        /^[A-Za-z_][A-Za-z0-9\_\-\.]{2,15}$/
-    },
-    message {
-        early_response_json({result => 'badUsername'})
-    };
+    where { /^[A-Za-z_][A-Za-z0-9\_\-\.]{2,15}$/ },
+    message { assert(0, 'badUsername') };
 
-subtype 'Password',
+subtype 'Game::Model::User::Password',
     as 'Str',
-    where {
-        /^.{6,18}$/
-    },
-    message {
-        early_response_json({result => 'badPassword'})
-    };
+    where { /^.{6,18}$/},
+    message { assert(0, 'badPassword') };
 
-subtype 'ReadinessStatus',
+subtype 'Game::Model::User::ReadinessStatus',
     as 'Int',
-    where {
-        $_ == 0 || $_ == 1
-    },
-    message {
-        early_response_json({result => 'badReadinessStatus'})
-    };
+    where { $_ == 0 || $_ == 1 },
+    message { assert(0, 'badReadinessStatus') };
 
 has isAi => ( is => 'Bool',
               is => 'rw',
@@ -48,18 +36,18 @@ has 'sid' => ( isa => 'Str',
                is  => 'rw',
                required => 0 );
 
-has 'username' => ( isa => 'Username',
+has 'username' => ( isa => 'Game::Model::User::Username',
                     is  => 'rw',
                     required => 1 );
 
-has 'password' => ( isa => 'Password',
+has 'password' => ( isa => 'Game::Model::User::Password',
                     is  => 'rw',
                     required => 1 );
 
 has 'activeGame' => ( isa => 'Game::Model::Game|Undef',
                       is => 'rw' );
 
-has 'readinessStatus' => ( isa => 'ReadinessStatus',
+has 'readinessStatus' => ( isa => 'Game::Model::User::ReadinessStatus',
                            is => 'rw',
                            default => 0 );
 
@@ -82,6 +70,7 @@ has 'activeRace' => ( isa => 'Game::Race|Undef',
 has 'declineRace' => ( isa => 'Game::Race|Undef',
                        is => 'rw' );
 
+# TODO: move into Game::Model::Game
 has 'raceSelected' => ( isa => 'Bool',
                         is => 'rw',
                         default => 0 );
@@ -120,6 +109,24 @@ sub generate_sid {
     $self->sid( $sid )
 }
 
+sub have_owned_regions {
+    my ($self) = @_;
+    return 0 unless $self->activeGame();
+    for (@{$self->activeGame()->map()->regions()}) {
+        return 1 if $_->owner() && $_->owner() eq $self
+    }
+    0
+}
+
+sub owned_regions {
+    my ($self) = @_;
+    return undef unless $self->activeGame();
+    grep { $_->owner() && $_->owner() eq $self
+          } @{$self->activeGame()->map()->regions()}
+}
+
+# --- state ---
+
 sub extract_state {
     my ($self) = @_;
     return undef unless $self->activeGame();
@@ -143,15 +150,6 @@ sub extract_state {
         $res->{declineState} = $st if $st
     }
     $res
-}
-
-sub have_owned_regions {
-    my ($self) = @_;
-    return 0 unless $self->activeGame();
-    for (@{$self->activeGame()->map()->regions()}) {
-        return 1 if $_->owner() && $_->owner() eq $self
-    }
-    0
 }
 
 sub load_state {
@@ -188,16 +186,6 @@ sub load_state {
                                     $d->{declineState}) );
 }
 
-sub number_in_game {
-}
-
-sub owned_regions {
-    my ($self) = @_;
-    return undef unless $self->activeGame();
-    grep { $_->owner() && $_->owner() eq $self
-          } @{$self->activeGame()->map()->regions()}
-}
-
 sub short_info {
     my ($s) = @_;
     unless ($s->activeGame()) {
@@ -220,12 +208,8 @@ sub short_info {
     $res
 }
 
-sub readinessStatusBool {
-    my ($s) = @_;
-    $s->readinessStatus() ? JSON::true : JSON::false
-}
 
-1
+__PACKAGE__->meta->make_immutable;
 
 __END__
 

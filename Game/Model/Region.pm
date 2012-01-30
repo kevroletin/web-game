@@ -15,11 +15,7 @@ subtype 'Game::Model::Region::ExtraItems',
         for my $k (keys %$_) { $ok &&= $k ~~ $a }
         $ok
     },
-    message {
-        #use Data::Dumper::Concise;
-        #Dumper($_) . "is bad Game::Model::Region::ExtraItems."
-        early_response_json({result => 'badRegions'})
-    };
+    message { assert(0, 'badRegions') };
 
 subtype 'Game::Model::Region::landDescription',
     as 'ArrayRef',
@@ -31,10 +27,7 @@ subtype 'Game::Model::Region::landDescription',
         for my $k (@$_) { $ok &&= $k ~~ $a }
         $ok
     },
-    message {
-        #"$_ is bad Game::Model::Region::landDescription"
-        early_response_json({result => 'badRegions'})
-    };
+    message { assert(0, 'badRegions') };
 
 subtype 'Game::Model::Region::Population',
     as 'Int',
@@ -106,31 +99,6 @@ sub tokensNum {
     shift->population(@_);
 }
 
-sub extract_state {
-    my ($self) = @_;
-    my $res = {};
-    $res->{tokensNum} = $self->tokensNum();
-    $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
-    $res->{inDecline} = $self->inDecline();
-    $res->{extraItems} = dclone($self->extraItems());
-    $res
-}
-
-sub extract_const_descr {
-    my ($s) = @_;
-    my $r = {};
-    $r->{adjacent} = $s->{adjacent};
-    $r->{coordinates} = $s->{coordinates};
-    $r->{landDescription} = $s->{landDescription};
-    $r->{bonusCoords} = $s->{bonusCoords};
-    $r->{raceCoords} = $s->{raceCoords};
-    $r->{powerCoords} = $s->{powerCoords};
-    for (qw(magicCoords mineCoords cavernCoords)) {
-        $r->{$_} = $s->{$_} if $s->{$_};
-    }
-    $r
-}
-
 # should be already checked: $data->{regions}->[$i]->{owner}
 sub load_state {
     my ($self, $data) = @_;
@@ -166,4 +134,31 @@ sub owner_race {
                          $self->owner()->activeRace()
 }
 
-1
+# --- state ---
+sub extract_state {
+    my ($self) = @_;
+    my $res = {};
+    $res->{tokensNum} = $self->tokensNum();
+    $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
+    $res->{inDecline} = $self->inDecline();
+    $res->{extraItems} = dclone($self->extraItems());
+    $res
+}
+
+sub extract_const_descr {
+    my ($s) = @_;
+    my $r = {};
+    $r->{adjacent} = $s->{adjacent};
+    $r->{coordinates} = $s->{coordinates};
+    $r->{landDescription} = $s->{landDescription};
+    $r->{bonusCoords} = $s->{bonusCoords};
+    $r->{raceCoords} = $s->{raceCoords};
+    $r->{powerCoords} = $s->{powerCoords};
+    for (qw(magicCoords mineCoords cavernCoords)) {
+        $r->{$_} = $s->{$_} if $s->{$_};
+    }
+    $r
+}
+
+
+__PACKAGE__->meta->make_immutable;

@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(:db :response);
+use Game::Environment qw(:std :db :response);
 use Game::Model::Message;
 
 use Exporter::Easy (

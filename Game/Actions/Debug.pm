@@ -102,6 +102,8 @@ sub selectGivenRace {
 
     my $pair = ("Game::Race::" . ucfirst($race))->new();
     apply_all_roles($pair, ("Game::Power::" . ucfirst($power)));
+    $pair->meta->make_immutable;
+
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
 

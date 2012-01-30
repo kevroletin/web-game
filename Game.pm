@@ -34,12 +34,15 @@ sub setup_environment {
     Game::Environment::init();
     environment($env);
 
+    #config()->{features}{log_requests} = 1;
+
     if ($ENV{compability} && $ENV{compability} eq 'true') {
         $_ = config()->{features};
         $_->{compatibility} = 1;
         $_->{redeploy_all_tokens} = 1;
         $_->{delete_empty_game} = 1;
         $_->{durty_gameState} = 1;
+        $_->{durty_gameList} = 1;
     }
     config()->{debug} = $ENV{environment} &&
                         $ENV{environment} eq 'debug';

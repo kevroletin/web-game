@@ -6,6 +6,7 @@ use Game::Actions;
 use Game::Environment qw(:db :response);
 use Game::Model::Game;
 use Game::Model::AiUser;
+use Storable q(dclone);
 use Exporter::Easy ( OK => [qw(aiJoin
                                createGame
                                joinGame
@@ -32,10 +33,13 @@ sub _construct_new_game {
         early_response_json({result => 'badMapId'});
     }
 
+    my $map_clone = dclone($map);
+    $map_clone->id(undef);
+
     $data->{ai} ||= 0;
     my $game = Game::Model::Game->new(
                    params_from_proto('gameName', 'gameDescr', 'ai'),
-                   map => $map
+                   map => $map_clone
                );
     $game
 }
@@ -49,7 +53,9 @@ sub createGame {
     }
     my $game = _construct_new_game($data);
 
-    global_user()->activeGame($game);
+    if (feature('join_game_after_creation')) {
+        global_user()->activeGame($game);
+    }
     $game->add_player(global_user());
 
     db()->store_nonroot($game);

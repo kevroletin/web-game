@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(:std :db :response);
+use Game::Environment qw(init_user_by_sid :std :db :response);
 use Game::Model::User;
 use Moose::Util::TypeConstraints;
 
@@ -45,9 +45,9 @@ sub login {
     my ($data) = @_;
     proto($data, 'username', 'password');
 
-    my $ok_name = find_type_constraint('Username')->check($data->{username});
+    my $ok_name = find_type_constraint('Game::Model::User::Username')->check($data->{username});
     assert($ok_name, 'badUsername');
-    my $ok_pass = find_type_constraint('Password')->check($data->{password});
+    my $ok_pass = find_type_constraint('Game::Model::User::Password')->check($data->{password});
     assert($ok_pass, 'badPassword');
 
     my @q = ({ username => $data->{username} },

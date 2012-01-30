@@ -21,7 +21,7 @@ use Exporter::Easy (
                   global_game
                   global_user)],
     TAGS => [
-         std => [qw(assert bool config feature is_debug global_game global_user)],
+         std => [qw(assert bool num config feature is_debug global_game global_user)],
          db => [qw(db db_search db_search_one db_scope inc_counter)],
          config => [qw(environment request stack_trace)],
          response => [qw(response response_json
@@ -71,7 +71,9 @@ sub init {
                             compatibility => 0,
                             redeploy_all_tokens => 0,
                             delete_empty_game => 0,
-                            durty_gameState => 0
+                            durty_gameState => 0,
+                            durty_gameList => 0,
+                            join_game_after_creation => 1
                            },
                debug => 0
               };
@@ -90,6 +92,10 @@ sub assert {
 
 sub bool {
     $_[0] ? JSON::true : JSON::false;
+}
+
+sub num {
+    defined $_[0] ? $_[0] : 0
 }
 
 sub config {

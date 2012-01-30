@@ -9,10 +9,17 @@ has 'inDecline' => ( isa => 'Bool',
                      is => 'rw',
                      default => 0 );
 
-# compatibility
 has 'tokenBadgeId' => ( isa => 'Int',
                         is => 'rw',
                         default => -1 );
+
+# TODO:
+sub total_tokens_num {
+    my ($self) = @_;
+#    ...
+#    $self->max_tokens() => _power_max_tokens();
+    0
+}
 
 sub extract_state {
     my ($self) = @_;
