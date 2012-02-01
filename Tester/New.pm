@@ -12,8 +12,10 @@ use File::Spec;
 use Test::More;
 use Data::Dumper::Concise;
 use Devel::StackTrace;
+use Text::Diff;
 use Exporter::Easy ( EXPORT => [ qw(actions
                                     done_testing
+                                    tests_context
                                     hooks_sync_values
                                     init request
                                     ok
@@ -35,6 +37,8 @@ $SIG{__WARN__} = \&Carp::confess;
 $SIG{INT} = \&Carp::confess;
 
 my $context;
+
+sub tests_context { $context }
 
 {
     my $actions = Tester::New::ProtocolActions->new();
@@ -84,6 +88,7 @@ sub init {
     $context->{server_died_cnt} = 0;
     $context->{record_history} = 0;
     $context->{history} = [];
+    $context->{use_text_diff} = 0;
     1
 }
 
@@ -139,7 +144,7 @@ sub send_test {
         $params->{hooks}{before_req}->($c);
     }
 
-    $c->{in_json} = ref($in) ? eval { to_json($in) } : $in;
+    $c->{in_json} = ref($in) ? eval { to_json($in, {pretty => 1}) } : $in;
     $c->{out} = ref($out) ? $out : from_json($out);
     if ($@) {
         return ({ res => 0, quick => 'bad json in test INPUT or OUTPUT',
@@ -166,9 +171,18 @@ sub send_test {
     unless ($err) {
         return ({ res => 1, quick => 'ok', long => 'ok' }, $c)
     } else {
-        my $msg = sprintf("\n\nexpected:%s\nget:%s\n",
-                          map { Dumper $_ } $c->{out}, $c->{resp});
-        return ({ res => 0, quick => 'diff failed', long => $err . $msg }, $c)
+        my $msg;
+        if ($context->{use_text_diff} && defined $c->{resp}) {
+            # we can insert subroutines in nested data structures in $c->{out}
+            # hence to_json will fail
+            $msg = eval { diff map { \to_json($_, {pretty => 1, canonical => 1}) }
+                            $c->{out}, $c->{resp} };
+        }
+        unless ($msg) {
+            $msg = sprintf("\n\nexpected:%s\nget:%s\n",
+                           map { Dumper($_) } $c->{out}, $c->{resp});
+        }
+        return ({ res => 0, quick => 'diff failed', long => $err . "\n" . $msg }, $c)
     }
 }
 

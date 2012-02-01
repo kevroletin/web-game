@@ -159,7 +159,7 @@ test("upload map",
     {
       action => "uploadMap",
       mapName => "uploadedMap",
-      turnsNum => "10",
+      turnsNum => 10,
       playersNum => 2,
       regions => [
         {
@@ -170,7 +170,6 @@ test("upload map",
             [100, 100],
             [100, 0]
           ],
-          bonusCoords => [10, 60],
           raceCoords => [10, 10],
           powerCoords => [60, 10],
           landDescription => [ @$d_1 ],
@@ -185,6 +184,7 @@ test("upload map",
             [100, 100]
           ],
           raceCoords => [10, 110],
+          powerCoords => [60, 110],
           landDescription => [ @$d_2 ],
           population => $c2
         },
@@ -197,6 +197,7 @@ test("upload map",
             [200, 0]
           ],
           raceCoords => [110, 10],
+          powerCoords => [110, 60],
           landDescription => [ @$d_3 ],
           population => $c3
         },
@@ -209,6 +210,7 @@ test("upload map",
             [200, 100]
           ],
           raceCoords => [110, 110],
+          powerCoords => [60, 60],
           landDescription => [ @$d_4 ],
           population => $c4
         }

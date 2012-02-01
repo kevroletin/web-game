@@ -34,7 +34,7 @@ sub setup_environment {
     Game::Environment::init();
     environment($env);
 
-    #config()->{features}{log_requests} = 1;
+    config()->{features}{log_requests} = 1;
 
     if ($ENV{compability} && $ENV{compability} eq 'true') {
         $_ = config()->{features};
@@ -60,7 +60,7 @@ sub parse_request {
 
     my $json = request()->raw_body();
 
-    print Dumper($json) if feature('log_requests');
+    print $json, "\n" if feature('log_requests');
 
     my $data = '';
     eval {
@@ -75,8 +75,9 @@ sub parse_request {
         Game::Dispatcher::process_request($data, $env);
     }
 
-    print Dumper(response()->body()) if feature('log_requests');
+    print response()->body(), "\n" if feature('log_requests');
 
+    response()->headers(['Access-Control-Allow-Origin', '*']);
     response()->finalize();
 };
 
