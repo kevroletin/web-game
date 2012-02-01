@@ -15,4 +15,3 @@ sub next {
 
 
 __PACKAGE__->meta->make_immutable;
-

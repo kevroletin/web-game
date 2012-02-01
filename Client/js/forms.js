@@ -1,168 +1,169 @@
-var ui_forms = {
 
-  _gen_simple_form: function(form_name) {
+function ui_forms_type() {}
 
-    var obj = this[form_name];
-    var f = make('form')
+var ui_forms = new ui_forms_type();
 
+ui_forms_type.prototype._gen_simple_form = function(form_name) {
 
-    f.attr('id', obj.id).
-      attr('onSubmit', 'ui_forms.' + form_name + 
-                       '.checker(this); return false');
-    var ff = f.append('fieldset');
-    ff.append('legend').text(obj.descr);
-    ff.append('p').attr('id', 'msg_box');
-
-    t = ff.append('table');
-    
-    ff.selectAll('tr').data(obj.fields)
-      .enter()
-      .append('tr')
-      .each(function(d) {
-        var tr = d3.select(this)
-        tr.append('td')
-          .text(d.descr);
-        tr.append('td')
-          .append('input')
-            .attr('name', d.name)
-            .attr('type', d.type ? d.type : 'text');
-      });
-    ff.append('input')
-      .attr('name', 'ok')
-      .attr('type', 'submit')
-      .attr('value', 'ok');
-
-    return f.node();
-  },
-
-  login: {
-    id: "login",
-    descr: "Login",
-    fields: [{name: "username", descr: "Username"},
-             {name: "password", descr: "Password", type: "password"}],
-    gen_form: function() { return ui_forms._gen_simple_form('login'); },
-    checker: function(f) {
-      var name = f['username'].value;
-      var pasw = f['password'].value;
-      
-      var q = { action: "login", 
-                username: name, 
-                password: pasw };
-      net.send(q, this['_on_resp'] );
-
-      return false;
-    },
-    _show_err: function(field, err) {
-      log.ui.error(field + ': ' + err);
-    },
-    _on_resp: function (resp) {
-      d3.select('p#msg_box').text(resp.result);
-      if (resp.result == 'ok') {
-        state.store('sid', resp.sid);
-        state.store('userId', resp.userId);
-        events.exec('state.sid_stored');
-        events.exec('login.success', resp);
-      }
-    }
-  },
-
-  register: {
-    id: "register",
-    descr: "Register",
-    fields: [{name: "username", descr: "Username"},
-             {name: "password", descr: "Password", type: "password"},
-             {name: "password2", descr: "Password2", type: "password"}],
-    gen_form: function() { return ui_forms._gen_simple_form('register'); },
-    checker: function(f) {
-      var name = f['username'].value;
-      var pasw = f['password'].value;
-      var pasw2 = f['password2'].value;
-
-      var q = { action: "register", 
-                username: name, 
-                password: pasw };
-      net.send(q, this['_on_resp'] );
-      
-      return false;
-    },
-    _show_err: function(field, err) {
-      log.ui.error(field + ': ' + err);
-    },
-    _on_resp: function (resp) {
-      d3.select('p#msg_box').text(resp.result);
-    }
-  },
-
-  game_list: {
-    gen_form: function(game_list) {
-
-      var t = make('table');
-      t.append('tr').selectAll('th')
-        .data(['Название', 'Описание', 'Состояние', 'Игроков'])
-        .enter()
-        .append('th')
-          .text(String);
-   
-      t.selectAll('td').data(game_list).enter()
-        .append('tr')
-        .each(function(d) {
-          var tr = d3.select(this);
-          var on_txt = 'major_modes.change(\'explore_game\', ' + 
-                        d.gameId + '); return false;'
-          tr.append('a')
-            .attr('onclick', on_txt)
-            .attr('href', '#')
-            .text(d.gameName);
-          
-          tr.selectAll(null).data(
-              [d.gameDescr, d.state, 
-               d.maxPlayersNum + '/' + d.playersNum])
-            .enter()
-            .append('td')
-            .text(String);
-        });
-
-      return t.node();
-    }
-  }, 
-
-  maps_list: {
-    gen_form: function(maps_list) {
-
-      var t = make('table');
-      t.append('tr').selectAll('th')
-        .data(['Название', 'Игроков', 'Размер', 'Ходов'])
-        .enter()
-        .append('th')
-          .text(String);
-   
-      t.selectAll('td').data(maps_list).enter()
-        .append('tr')
-        .each(function(d) {
-          var tr = d3.select(this);
-          var on_txt = 'major_modes.change(\'explore_map\', ' + 
-                        d.mapId + '); return false;'
-          tr.append('a')
-            .attr('onclick', on_txt)
-            .attr('href', '#')
-            .text(d.mapName);
-          
-          tr.selectAll(null).data(
-              [d.playersNum, d.regionsNum, d.turnsNum])
-            .enter()
-            .append('td')
-            .text(String);
-        });
-
-      return t.node();
-    }
-
-  }, 
+  var obj = this[form_name];
+  var f = make('form')
 
 
+  f.attr('id', obj.id).
+    attr('onSubmit', 'ui_forms.' + form_name +
+         '.checker(this); return false');
+  var ff = f.append('fieldset');
+  ff.append('legend').text(obj.descr);
+  ff.append('p').attr('id', 'msg_box');
+
+  t = ff.append('table');
+
+  ff.selectAll('tr').data(obj.fields)
+    .enter()
+    .append('tr')
+    .each(function(d) {
+      var tr = d3.select(this)
+      tr.append('td')
+        .text(d.descr);
+      tr.append('td')
+        .append('input')
+        .attr('name', d.name)
+        .attr('type', d.type ? d.type : 'text');
+    });
+  ff.append('input')
+    .attr('name', 'ok')
+    .attr('type', 'submit')
+    .attr('value', 'ok');
+
+  return f.node();
 };
 
-var ui_elements = {};
+ui_forms.login = {
+  id: "login",
+  descr: "Login",
+  fields: [{name: "username", descr: "Username"},
+           {name: "password", descr: "Password", type: "password"}],
+  gen_form: function() { return ui_forms._gen_simple_form('login'); },
+  checker: function(f) {
+    var name = f['username'].value;
+    var pasw = f['password'].value;
+
+    var q = { action: "login",
+              username: name,
+              password: pasw };
+    net.send(q, this['_on_resp'] );
+
+    return false;
+  },
+  _show_err: function(field, err) {
+    log.ui.error(field + ': ' + err);
+  },
+  _on_resp: function (resp) {
+    d3.select('p#msg_box').text(resp.result);
+    if (resp.result == 'ok') {
+      state.store('sid', resp.sid);
+      state.store('userId', resp.userId);
+      events.exec('state.sid_stored');
+      events.exec('login.success', resp);
+    }
+  }
+}
+
+ui_forms.register = {
+  id: "register",
+  descr: "Register",
+  fields: [{name: "username", descr: "Username"},
+           {name: "password", descr: "Password", type: "password"},
+           {name: "password2", descr: "Password2", type: "password"}],
+  gen_form: function() { return ui_forms._gen_simple_form('register'); },
+  checker: function(f) {
+    var name = f['username'].value;
+    var pasw = f['password'].value;
+    var pasw2 = f['password2'].value;
+
+    var q = { action: "register",
+              username: name,
+              password: pasw };
+    net.send(q, this['_on_resp'] );
+
+    return false;
+  },
+  _show_err: function(field, err) {
+    log.ui.error(field + ': ' + err);
+  },
+  _on_resp: function (resp) {
+    d3.select('p#msg_box').text(resp.result);
+  }
+};
+
+ui_forms.game_list = {
+  gen_form: function(game_list) {
+
+    var t = make('table');
+    t.append('tr').selectAll('th')
+      .data(['Название', 'Описание', 'Состояние', 'Игроков'])
+      .enter()
+      .append('th')
+      .text(String);
+
+    t.selectAll('td').data(game_list).enter()
+      .append('tr')
+      .each(function(d) {
+        var tr = d3.select(this);
+        var on_txt = 'major_modes.change(\'explore_game\', ' +
+          d.gameId + '); return false;'
+        tr.append('a')
+          .attr('onclick', on_txt)
+          .attr('href', '#')
+          .text(d.gameName);
+
+        tr.selectAll(null).data(
+          [d.gameDescr, d.state,
+           d.maxPlayersNum + '/' + d.playersNum])
+          .enter()
+          .append('td')
+          .text(String);
+      });
+
+    return t.node();
+  }
+};
+
+ui_forms.maps_list = {
+  gen_form: function(maps_list) {
+
+    var t = make('table');
+    t.append('tr').selectAll('th')
+      .data(['Название', 'Игроков', 'Размер', 'Ходов'])
+      .enter()
+      .append('th')
+      .text(String);
+
+    t.selectAll('td').data(maps_list).enter()
+      .append('tr')
+      .each(function(d) {
+        var tr = d3.select(this);
+        var on_txt = 'major_modes.change(\'explore_map\', ' +
+          d.mapId + '); return false;'
+        tr.append('a')
+          .attr('onclick', on_txt)
+          .attr('href', '#')
+          .text(d.mapName);
+
+        tr.selectAll(null).data(
+          [d.playersNum, d.regionsNum, d.turnsNum])
+          .enter()
+          .append('td')
+          .text(String);
+      });
+
+    return t.node();
+  }
+};
+
+function ui_elements_type() {}
+
+var ui_elements = new ui_elements_type();
 
 ui_elements.menu = function(modes_list) {
   var m = make('ul');
@@ -170,12 +171,12 @@ ui_elements.menu = function(modes_list) {
     .data(modes_list).enter()
     .append('li')
     .attr('onclick',
-          function(d) { 
-            return 'major_modes.change(\'' + d.name + '\')' 
+          function(d) {
+            return 'major_modes.change(\'' + d.name + '\')'
           })
     .attr('id', function(d) { return 'nav_' + d.name + '' })
     .text(function(d) { return d.obj.descr });
-  
+
   return m.node();
 };
 
@@ -191,15 +192,15 @@ ui_elements._append_player_info = function(gameInfo, data_enter) {
         .append('input')
         .attr('type', 'submit')
         .attr('name', 'readiness')
-        .attr('value', 
+        .attr('value',
               choose(d.readinessStatus, ['ready', 'wait']))
         .on('click', function(d) {
           var t = d3.select(this);
           a = ['ready', 'wait'],
           val = zero_or_one(this.value == 'ready');
-          
+
           t.attr('value', a[val]);
-          var q = {action: 'setReadinessStatus',         
+          var q = {action: 'setReadinessStatus',
                    isReady: val};
           var h = function(resp) {
             if (resp.result == 'ok') {
@@ -221,7 +222,7 @@ ui_elements._append_player_info = function(gameInfo, data_enter) {
   function u_inf_game_started(d, t) {
     t.append('div')
       .classed('in_decline', 1)
-      .text('in decline: ' + 
+      .text('in decline: ' +
             choose(d.inDecline, ['no', 'yes']));
     t.append('div')
       .classed('tokens_in_hand', 1)
@@ -244,7 +245,7 @@ ui_elements._append_player_info = function(gameInfo, data_enter) {
     .append('div')
     .attr('id', function(d, i) { return 'player_' + i })
     .classed('player', 1)
-    .classed('active_player', 
+    .classed('active_player',
              function(d, i) { return i == gameInfo.activePlayerNum; })
     .each(function(d) {
       var t = d3.select(this);
@@ -274,15 +275,15 @@ ui_elements.game_info = function(d, gameInfo) {
 ui_elements.update_game_info = function(d, gameState) {
   var data = d.selectAll('div.player')
     .data(gameState.players)
-    .classed('active_player', 
+    .classed('active_player',
              function(d, i) { return i == gameState.activePlayerNum; })
     .each(function(d) {
       var t = d3.select(this);
       t.select('div.in_decline')
-        .text('in decline: ' + 
+        .text('in decline: ' +
               choose(d.inDecline, ['no', 'yes']));
       t.select('div.tokens_in_hand')
-        .text('tokens in hand: ' + 
+        .text('tokens in hand: ' +
               zero_if_null(d.tokensInHand));
       t.select('div.active_race')
         .text('active race: ' + no_if_null(d.activeRace));
@@ -295,7 +296,9 @@ ui_elements.update_game_info = function(d, gameState) {
     });
 };
 
-var playfield = {};
+function playfield_type() {}
+
+var playfield =  new playfield_type;
 
 playfield.create = function(svg, map) {
 
@@ -333,7 +336,7 @@ playfield.create = function(svg, map) {
   var extra = field.append('g').attr('id', 'extra_items');
   var free_tks = field.append('g').attr('id', 'free_tokens');
   var tks = field.append('g').attr('id', 'tokens');
-  
+
   var line = d3.svg.line();
 
   tks.selectAll('g')
@@ -351,14 +354,14 @@ playfield.create = function(svg, map) {
     .on('click', function(d, i) { events.exec('game.region.click', i)});
 
   reg_g.append("svg:path")
-    .style('fill', function(d) { 
-      var res = d.landDescription.filter(function(d) { 
+    .style('fill', function(d) {
+      var res = d.landDescription.filter(function(d) {
         return in_arr(d, bg);
       });
       return 'url(#bg_' + res[0] + ')';
     })
     .attr('class', function(d) {
-      return 'm_r , ' + 
+      return 'm_r , ' +
         d.landDescription
         .map(function(e) { return 'm_r_t_' + e })
         .join(' ');
@@ -394,7 +397,7 @@ playfield.create = function(svg, map) {
     ['magic', 'mine', 'cavern'].forEach(function(extra_item) {
       var field = extra_item + 'Coords';
       log.d.info(field);
-      
+
       if (!is_null(d[field])) {
         g.append('svg:image')
           .attr('xlink:href', function(d) { return rsc('img.ex')(extra_item) })
@@ -439,7 +442,7 @@ playfield.apply_game_state = function(gameState) {
         .attr('width', '50px')
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) )
-        .on('click', 
+        .on('click',
             function(d) { events.exec('game.region.image.click', i)});;
     });
 

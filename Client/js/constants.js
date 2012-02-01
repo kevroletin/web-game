@@ -1,8 +1,4 @@
 
-function server_url() {
-  return 'engine';
-}
-
 function rsc(type) {
   var storage = {
     'img': 'import/client/css/images',

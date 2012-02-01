@@ -1,53 +1,71 @@
-var net = {
-  send: function(msg, on_resp, to_log) { 
-    if (is_null(msg.sid)) {
-      msg.sid = state.get('sid');
-    }
-    var h = function(text) {
-      var parsed = text ? JSON.parse(text) : null
-      if (to_log) {
-        log.ui.info('--response--\n' + text);
-      }
-      on_resp(parsed);
-    };
-    var req = JSON.stringify(msg);
-    if (to_log) {
-      log.ui.info('--request--\n' + req);
-    }
-    this._send_raw(req,
-                   "application/json", 
-                   h);
-  },
-  _send_raw: function(msg, mime, callback) {
-    var req = new XMLHttpRequest;
-    if (mime && req.overrideMimeType) req.overrideMimeType(mime);
-    req.open("POST", server_url(), true);
-    req.onreadystatechange = function() {
-      if (req.readyState === 4) callback(req.responseText);
-    };
-    req.send(msg);
+
+/* State & Net prototypes */
+
+function net_type() {}
+var net_proto = net_type.prototype;
+
+function state_type() { this.storage = {} }
+var state_proto = state_type.prototype;
+
+/* State & Net instances */
+
+var net = new net_type();
+var state = new state_type();
+
+/* State & Net realization */
+
+net.server_url = "http://localhost:5000/engine";
+
+net_proto.send = function(msg, on_resp, to_log) {
+  if (is_null(msg.sid)) {
+    msg.sid = state.get('sid');
   }
+  var h = function(text) {
+    var parsed = text ? JSON.parse(text) : null
+    if (to_log) {
+      log.ui.info('--response--\n' + text);
+    }
+    on_resp(parsed);
+  };
+  var req = JSON.stringify(msg);
+  if (to_log) {
+    log.ui.info('--request--\n' + req);
+  }
+  this._send_raw(req,
+                 "application/json",
+                 h);
 };
 
-var state = {
-  store: function(key, value) {
-//    this.storage[key] = value;
-    set_obj_field(this.storage, key, value);
-  },
-  get: function() {
-    for (var i = 0; i < arguments.length; ++i) {
-      var d = get_obj_field(this.storage, arguments[i]);
-      if (!is_null(d)) {
-        return d
-      }
-    }
-    return null;
-  },
-  delete: function(key) {
-    delete this.storage[key];
-  },
-  storage: {}
+net_proto._send_raw = function(msg, mime, callback) {
+  var req = new XMLHttpRequest;
+  if (mime && req.overrideMimeType) req.overrideMimeType(mime);
+  req.open("POST", this.server_url, true);
+  req.onreadystatechange = function() {
+    if (req.readyState === 4) callback(req.responseText);
+  };
+  req.send(msg);
+}
+
+state_proto.store = function(key, value) {
+  //    this.storage[key] = value;
+  set_obj_field(this.storage, key, value);
 };
+
+state_proto.get = function() {
+  for (var i = 0; i < arguments.length; ++i) {
+    var d = get_obj_field(this.storage, arguments[i]);
+    if (!is_null(d)) {
+      return d
+    }
+  }
+  return null;
+};
+
+state_proto.delete = function(key) {
+  delete this.storage[key];
+};
+
+/* Misc helpers */
 
 function make(tag) {
   var elem;
@@ -58,7 +76,7 @@ function make(tag) {
   } else {
     elem = document.createElement(name)
   }
-    
+
   return d3.select(elem);
 }
 
@@ -86,6 +104,17 @@ function yes_or_no(obj) {
   return choose(obj, ['no', 'yes']);
 }
 
+function in_arr(elem, array) {
+  for (var i in array) {
+    if (elem == array[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/* Helpers to access nested data structured */
+
 function get_obj_field(obj, field_name) {
   var f = field_name.split('.');
   var t = obj;
@@ -101,7 +130,7 @@ function set_obj_field(obj, field_name, value) {
   var t = obj;
   var i;
   for (i = 0; i < f.length - 1 && !is_null(t); ++i) {
-    if (is_null(t[f[i]])) { 
+    if (is_null(t[f[i]])) {
       t[f[i]] = {};
     }
     t = t[f[i]];
@@ -122,14 +151,7 @@ function delete_obj_field(obj, field_name) {
   return t;
 }
 
-function in_arr(elem, array) {
-  for (var i in array) {
-    if (elem == array[i]) {
-      return true;
-    }
-  }
-  return false;
-}
+/* Helpers related to game logic */
 
 function determine_race(gameState, reg) {
   if (is_null(reg.owner)) return null;
@@ -138,8 +160,7 @@ function determine_race(gameState, reg) {
   if (reg.inDecline == 1) {
     if (is_null(p.declineRace)) return null;
     return p.declineRace + '_d';
-  } else { 
+  } else {
     return p.activeRace;
   };
 }
-

@@ -428,4 +428,3 @@ sub throwDice {
 }
 
 1;
-
