@@ -99,6 +99,42 @@ sub tokensNum {
     shift->population(@_);
 }
 
+sub owner_race {
+    my ($self) = @_;
+    return undef unless $self->owner();
+    $self->inDecline() ? $self->owner()->declineRace() :
+                         $self->owner()->activeRace()
+}
+
+# --- extract state ---
+
+sub extract_state {
+    my ($self) = @_;
+    my $res = {};
+    $res->{tokensNum} = $self->tokensNum();
+    $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
+    $res->{inDecline} = $self->inDecline();
+    $res->{extraItems} = dclone($self->extraItems());
+    $res
+}
+
+sub extract_const_descr {
+    my ($s) = @_;
+    my $r = {};
+    $r->{adjacent} = $s->{adjacent};
+    $r->{coordinates} = $s->{coordinates};
+    $r->{landDescription} = $s->{landDescription};
+    $r->{bonusCoords} = $s->{bonusCoords};
+    $r->{raceCoords} = $s->{raceCoords};
+    $r->{powerCoords} = $s->{powerCoords};
+    for (qw(magicCoords mineCoords cavernCoords)) {
+        $r->{$_} = $s->{$_} if $s->{$_};
+    }
+    $r
+}
+
+# --- load state ---
+
 # should be already checked: $data->{regions}->[$i]->{owner}
 sub load_state {
     my ($self, $data) = @_;
@@ -125,39 +161,6 @@ sub load_state {
              )->check($data->{extraItems});
     assert($ok, $err, 'badExtraItems' => $data->{extraItems});
     $self->extraItems($data->{extraItems});
-}
-
-sub owner_race {
-    my ($self) = @_;
-    return undef unless $self->owner();
-    $self->inDecline() ? $self->owner()->declineRace() :
-                         $self->owner()->activeRace()
-}
-
-# --- state ---
-sub extract_state {
-    my ($self) = @_;
-    my $res = {};
-    $res->{tokensNum} = $self->tokensNum();
-    $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
-    $res->{inDecline} = $self->inDecline();
-    $res->{extraItems} = dclone($self->extraItems());
-    $res
-}
-
-sub extract_const_descr {
-    my ($s) = @_;
-    my $r = {};
-    $r->{adjacent} = $s->{adjacent};
-    $r->{coordinates} = $s->{coordinates};
-    $r->{landDescription} = $s->{landDescription};
-    $r->{bonusCoords} = $s->{bonusCoords};
-    $r->{raceCoords} = $s->{raceCoords};
-    $r->{powerCoords} = $s->{powerCoords};
-    for (qw(magicCoords mineCoords cavernCoords)) {
-        $r->{$_} = $s->{$_} if $s->{$_};
-    }
-    $r
 }
 
 

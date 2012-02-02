@@ -92,7 +92,7 @@ sub region_by_id {
 
 # --- state ---
 
-sub extract_state {
+sub extract_state_durty {
     my ($s) = @_;
     my $res = $s->short_info();
     $res->{mapId} = $s->id();

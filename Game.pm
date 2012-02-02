@@ -47,7 +47,10 @@ sub setup_environment {
     config()->{debug} = $ENV{environment} &&
                         $ENV{environment} eq 'debug';
     response(Plack::Response->new(200));
+
+    response()->headers(['Access-Control-Allow-Origin', '*']);
     response()->content_type('text/x-json; charset=utf-8');
+
     request(Plack::Request->new($env));
     # TODO: Process errors
     Game::Model::connect_db();
@@ -75,9 +78,13 @@ sub parse_request {
         Game::Dispatcher::process_request($data, $env);
     }
 
-    print response()->body(), "\n" if feature('log_requests');
+    if (feature('log_requests')) {
+        print ref response()->body() eq 'ARRAY' ?
+            join "\n", @{response()->body()} :
+            response()->body();
+        print "\n"
+    }
 
-    response()->headers(['Access-Control-Allow-Origin', '*']);
     response()->finalize();
 };
 

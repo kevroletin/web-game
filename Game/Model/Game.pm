@@ -237,15 +237,15 @@ sub _extract_last_attack {
 sub _extract_visible_tokens {
     my ($self) = @_;
     my @res;
-    use Data::Dumper;
-#    print Dumper $self->racesPack();
     for my $i (0 .. 5) {
         my $tok = {};
         my $uc_f = sub { defined $_[0] ? ucfirst($_[0]) : undef };
-        $tok->{tokenBadgeId} = $self->tokenBadgeIds()->[$i];
+        if (feature('durty_gameState')) {
+            $tok->{tokenBadgeId} = $self->tokenBadgeIds()->[$i];
+            $tok->{position} = $i
+        }
         $tok->{raceName} = $uc_f->($self->racesPack()->[$i]);
         $tok->{specialPowerName} = $uc_f->($self->powersPack()->[$i]);
-        $tok->{position} = $i;
         $tok->{bonusMoney} = $self->bonusMoney()->[$i];
         push @res, $tok
     }
@@ -277,6 +277,12 @@ sub _extract_history {
 }
 
 sub _extract_players_state {
+    feature('durty_gameState') ?
+        shift->_extract_players_state_durty(@_) :
+        shift->_extract_players_state_clear(@_)
+}
+
+sub _extract_players_state_durty {
     my ($s) = @_;
     my $res = [];
     for my $i (0 .. $#{$s->players()}) {
@@ -306,7 +312,17 @@ sub _extract_players_state {
     $res
 }
 
+sub _extract_players_state_clear {
+    ...
+}
+
 sub extract_state {
+    feature('durty_gameState') ?
+        shift->extract_state_durty(@_) :
+        shift->extract_state_clear(@_)
+}
+
+sub extract_state_durty {
     my ($s) = @_;
     my $res = {};
 
@@ -320,12 +336,12 @@ sub extract_state {
     $res->{gameDescr} = $s->gameDescr();
     $res->{gameId} = $s->gameId();
     $res->{gameName} = $s->gameName();
-    $res->{players} = $s->_extract_players_state();
+    $res->{players} = $s->_extract_players_state_durty();
     $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
-    $res->{map} = $s->map()->extract_state();
+    $res->{map} = $s->map()->extract_state_durty();
 
     $res->{aiRequiredNum} = $s->ai() - $s->aiJoined();
-    $res->{state} = $s->magic_game_state();
+    $res->{state} = $s->magic_game_state_field();
 
     if ($s->state() eq 'defend') {
         $res->{defendingInfo} = {
@@ -333,24 +349,19 @@ sub extract_state {
             regionId => $s->lastAttack()->{region}->regionId()
         }
     }
-    my @regions;
-    push @regions, $_->extract_state() for @{$s->map()->regions()};
 
     $res->{stage} = $s->stage();
     $res->{lastEvent} = num($s->magic_last_event());
-
-#    $res->{activePlayerNum} = $s->activePlayerNum();
-#    $res->{lastAttack} = $s->_extract_last_attack();
-#    $res->{state} = $s->state();
-#    $res->{regions} = \@regions;
-#    $res->{attacksHistory} = $s->_extract_history();
-#    $res->{mapId} = $s->map()->id();
 
     $s->_copy_races_state_storage($res);
     $res
 }
 
-sub game_state {
+sub extract_state_clear {
+    ...
+}
+
+sub game_state_field {
     my ($s) = @_;
     if ($s->state() eq 'notStarted') {
         'wait'
@@ -369,19 +380,19 @@ sub game_state {
     }
 }
 
-sub magic_game_state {
+sub magic_game_state_field {
     {
         wait    => 1,
         begin   => 0,
         in_game => 2,
         finish  => 3,
         empty   => 4
-    }->{shift->game_state()}
+    }->{shift->game_state_field()}
 }
 
 sub last_event {
     my ($self) = @_;
-    my $state = $self->game_state();
+    my $state = $self->game_state_field();
 
     return $state unless $state eq 'in_game';
     given ($self->last_action) {
@@ -398,7 +409,7 @@ sub magic_last_event {
         wait       =>  1,
 #        begin   => not used
         in_game    =>  2,
-        finish     =>  4,   # as finishTurn
+        finish     =>  4,  # as finishTurn
         empty      =>  4,  # as finishTurn
         finishTurn =>  4,
         selectRace =>  5,
@@ -447,24 +458,15 @@ sub stage {
             return $st
         }
     }
-
-=begin comment
-
-# внутриигровые состояния игры (stages)
-use constant GS_DEFEND             => 'defend'           ;
-use constant GS_SELECT_RACE        => 'selectRace'       ;
-use constant GS_BEFORE_CONQUEST    => 'beforeConquest'   ;
-use constant GS_CONQUEST           => 'conquest'         ;
-use constant GS_REDEPLOY           => 'redeploy'         ;
-use constant GS_BEFORE_FINISH_TURN => 'beforeFinishTurn' ;
-use constant GS_FINISH_TURN        => 'finishTurn'       ;
-use constant GS_IS_OVER            => 'gameOver'         ;
-
-=cut comment
-
 }
 
 sub short_info {
+    feature('durty_gameState') ?
+        shift->short_info_durty(@_) :
+        shift->short_info_clear(@_)
+}
+
+sub short_info_durty {
     my ($s) = @_;
     my $res = {
         gameId => $s->gameId(),
@@ -478,7 +480,7 @@ sub short_info {
         mapId => $s->map()->id(),
         mapName => $s->map()->mapName(),
         aiRequiredNum => $s->ai() - $s->aiJoined(),
-        state => $s->magic_game_state()
+        state => $s->magic_game_state_field()
     };
     my $extract_user = sub {
         my ($user) = @_;
@@ -491,6 +493,10 @@ sub short_info {
     };
     $res->{players} = [map { $extract_user->($_) } @{$s->players()}];
     $res
+}
+
+sub short_info_clear {
+    ...
 }
 
 # --- load state ---

@@ -127,7 +127,7 @@ sub owned_regions {
 
 # --- state ---
 
-sub extract_state {
+sub extract_state_clear {
     my ($self) = @_;
     return undef unless $self->activeGame();
     my $res = {};
@@ -186,7 +186,7 @@ sub load_state {
                                     $d->{declineState}) );
 }
 
-sub short_info {
+sub short_info_durty {
     my ($s) = @_;
     unless ($s->activeGame()) {
         return { username => $s->username,
