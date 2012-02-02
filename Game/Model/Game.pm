@@ -313,7 +313,8 @@ sub _extract_players_state_durty {
 }
 
 sub _extract_players_state_clear {
-    ...
+    my ($s) = @_;
+    [ map { $_->extract_state() } @{$s->players()} ]
 }
 
 sub extract_state {
@@ -358,7 +359,24 @@ sub extract_state_durty {
 }
 
 sub extract_state_clear {
-    ...
+    my ($s) = @_;
+    my $res = {};
+
+    $res->{activePlayerNum} = $s->activePlayerNum();
+    $res->{attacksHistory} = $s->_extract_history();
+# Shouldn't be used in theory
+#    $res->{lastAttack} = $s->_extract_last_attack();
+    $res->{mapId} = $s->map()->id();
+    $res->{raceSelected} = bool($s->raceSelected());
+    $res->{state} = $s->state();
+    $res->{turn} = $s->turn();
+
+    $res->{players} = $s->_extract_players_state_clear();
+    $res->{regions} = $s->map()->extract_state_clear();
+    $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
+
+    $s->_copy_races_state_storage($res);
+    $res
 }
 
 sub game_state_field {
@@ -496,7 +514,33 @@ sub short_info_durty {
 }
 
 sub short_info_clear {
-    ...
+    my ($s) = @_;
+    {
+        activePlayerId => $s->activePlayer()->id(),
+        gameId => $s->gameId(),
+        gameName => $s->gameName(),
+        gameDescr => $s->gameDescr(),
+        mapId => $s->map()->id(),
+        mapName => $s->map()->mapName(),
+        maxPlayersNum => $s->map()->playersNum(),
+        playersNum => scalar @{$s->players()},
+        turn => $s->turn(),
+        turnsNum => $s->map()->turnsNum(),
+    }
+}
+
+sub full_info {
+    my ($s) = @_;
+    my $state = $s->extract_state_clear();
+    my $s_i = $s->short_info();
+    for my $k (keys %{$s_i}) {
+        $state->{$k} = $s_i->{$k}
+    }
+    for my $i (0 .. $#{$s->players()}) {
+        $state->{players}->[$i]->{name} =
+            $s->players()->[$i]->{username}
+    }
+    $state
 }
 
 # --- load state ---

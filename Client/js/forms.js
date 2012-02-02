@@ -2,8 +2,9 @@
 function ui_forms_type() {}
 
 var ui_forms = new ui_forms_type();
+var Ui_Forms = ui_forms_type.prototype;
 
-ui_forms_type.prototype._gen_simple_form = function(form_name) {
+Ui_Forms._gen_simple_form = function(form_name) {
 
   var obj = this[form_name];
   var f = make('form')
@@ -38,7 +39,7 @@ ui_forms_type.prototype._gen_simple_form = function(form_name) {
   return f.node();
 };
 
-ui_forms.login = {
+Ui_Forms.login = {
   id: "login",
   descr: "Login",
   fields: [{name: "username", descr: "Username"},
@@ -67,15 +68,15 @@ ui_forms.login = {
       events.exec('login.success', resp);
     }
   }
-}
+};
 
-ui_forms.register = {
+Ui_Forms.register = {
   id: "register",
   descr: "Register",
   fields: [{name: "username", descr: "Username"},
            {name: "password", descr: "Password", type: "password"},
            {name: "password2", descr: "Password2", type: "password"}],
-  gen_form: function() { return ui_forms._gen_simple_form('register'); },
+  gen_form: function() { return Ui_Forms._gen_simple_form('register'); },
   checker: function(f) {
     var name = f['username'].value;
     var pasw = f['password'].value;
@@ -96,7 +97,7 @@ ui_forms.register = {
   }
 };
 
-ui_forms.game_list = {
+Ui_Forms.game_list = {
   gen_form: function(game_list) {
 
     var t = make('table');
@@ -129,7 +130,7 @@ ui_forms.game_list = {
   }
 };
 
-ui_forms.maps_list = {
+Ui_Forms.maps_list = {
   gen_form: function(maps_list) {
 
     var t = make('table');
@@ -164,8 +165,9 @@ ui_forms.maps_list = {
 function ui_elements_type() {}
 
 var ui_elements = new ui_elements_type();
+var Ui_Elements = ui_elements_type.prototype;
 
-ui_elements.menu = function(modes_list) {
+Ui_Elements.menu = function(modes_list) {
   var m = make('ul');
   m.selectAll('li')
     .data(modes_list).enter()
@@ -180,7 +182,7 @@ ui_elements.menu = function(modes_list) {
   return m.node();
 };
 
-ui_elements._append_player_info = function(gameInfo, data_enter) {
+Ui_Elements._append_player_info = function(gameInfo, data_enter) {
 
   function u_inf_game_not_started(d, t) {
     t.append('div')
@@ -261,7 +263,7 @@ ui_elements._append_player_info = function(gameInfo, data_enter) {
     });
 };
 
-ui_elements.game_info = function(d, gameInfo) {
+Ui_Elements.game_info = function(d, gameInfo) {
   d.append('h1').text(gameInfo.gameName);
   d.append('div').text('game state: ' + gameInfo.state);
   var data = d.append('div').attr('id', 'players')
@@ -272,7 +274,7 @@ ui_elements.game_info = function(d, gameInfo) {
   return d.node();
 };
 
-ui_elements.update_game_info = function(d, gameState) {
+Ui_Elements.update_game_info = function(d, gameState) {
   var data = d.selectAll('div.player')
     .data(gameState.players)
     .classed('active_player',
@@ -299,8 +301,9 @@ ui_elements.update_game_info = function(d, gameState) {
 function playfield_type() {}
 
 var playfield =  new playfield_type;
+var Playfield = playfield_type.prototype;
 
-playfield.create = function(svg, map) {
+Playfield.create = function(svg, map) {
 
   svg
     .attr('class', 'playfield')
@@ -423,7 +426,7 @@ playfield.create = function(svg, map) {
   return svg.node();
 };
 
-playfield.apply_game_state = function(gameState) {
+Playfield.apply_game_state = function(gameState) {
 //  log.d.pretty(gameState);
   var tks = d3.select('g#tokens');
   tks.selectAll('g')

@@ -1,7 +1,12 @@
+
 var features = {
-  getUserInfo: 0,
-  getMapInfo: 0,
-  getGameInfo: 0
+  getUserInfo: 1,
+  getMapInfo: 1,
+  getGameInfo: 1
+};
+
+var config = {
+  log_all_requests: 1
 };
 
 var ui = {
@@ -19,39 +24,42 @@ var ui = {
 
 };
 
-var protocol = {
-};
+var protocol = {};
 
-var game = {
+function game_type() {}
+var Game = game_type.prototype;
 
-  init: function() {
-    events.reg_h('login.success', 'ui_set_logined_mode',
-                 function() { minor_modes.enable('logined');
-                       game.get_current_user_info();
-                     });
+var game = new game_type();
 
-    events.reg_h('user_info.success', 'ui_fix_in_game_mode',
-                 function(resp) {
-                   if (is_null(state.get('gameId'))) {
-                     minor_modes.disable('in_game');
-                   } else {
-                     minor_modes.enable('in_game');
-                   }
-                 });
+Game.init = function() {
+  log.d.trace('Game.init');
 
+  events.reg_h('login.success', 'ui_set_logined_mode',
+               function() { minor_modes.enable('logined');
+                     game.get_current_user_info();
+                   });
 
-    events.reg_h('logout.success', 'ui_disable_logined_mode',
-                 function() { minor_modes.disable('logined');
-                       /* ui.disable_minor_mode('in_game'); */ });
+  events.reg_h('user_info.success', 'ui_fix_in_game_mode',
+               function(resp) {
+                 if (is_null(state.get('gameId'))) {
+                   minor_modes.disable('in_game');
+                 } else {
+                   minor_modes.enable('in_game');
+                 }
+               });
 
-    events.reg_h('game.ui_initialized', 'start main loop',
-                 game.request_game_state );
+  events.reg_h('logout.success', 'ui_disable_logined_mode',
+               function() { minor_modes.disable('logined');
+                     /* ui.disable_minor_mode('in_game'); */ });
 
-if (1) {
+  events.reg_h('game.ui_initialized', 'start main loop',
+               game.request_game_state );
+
+  if (1) {
     events.reg_h('ui.refresh_menu', 'ui_create_menu',
                  ui.create_menu);
     major_modes.change('login');
-} else {
+  } else {
     var i = 1
     ;
     state.store('sid', i);
@@ -60,14 +68,14 @@ if (1) {
     game.get_current_user_info()
     minor_modes.enable('in_game');
     major_modes.change('play_game');
-}
-
-    log.d.info('Game core initialized');
   }
+
+  log.d.info('Game core initialized');
 };
 
+Game.get_current_user_info = function() {
+  log.d.trace('Game.get_current_user_info');
 
-game.get_current_user_info = function() {
   if (features.getUserInfo) {
     var q = { action: "getUserInfo" };
     var h = function(resp) {
@@ -88,11 +96,13 @@ game.get_current_user_info = function() {
   }
 };
 
-game.fix_minor_mode_from_game_state = function() {
+Game.fix_minor_mode_from_game_state = function() {
+  log.d.trace('Game.fix_minor_mode_from_game_state');
+
 //  log.d.info("===fix minor mode===");
 
   var getGameState = state.get(
-    'net.getGameState',
+    'net.getGameState.gameState',
     'net.getGameInfo.gameInfo'
   );
   state_field = getGameState.state;
@@ -148,7 +158,9 @@ game.fix_minor_mode_from_game_state = function() {
 //  log.d.info("=== finished ===");
 };
 
-game.request_game_state = function() {
+Game.request_game_state = function() {
+  log.d.trace('Game.request_game_state');
+
 //  log.d.info('---getGameState---');
   if (minor_modes.have('game_started')) {
     var h = function(resp) {
@@ -161,7 +173,8 @@ game.request_game_state = function() {
   } else {
     var h =function(resp) {
       state.store('net.getGameInfo', resp);
-      state.store('net.getGameState', resp.gameInfo);
+      // gameInfo is superset of gameState
+      state.store('net.getGameState.gameState', resp.gameInfo);
 
       events.exec('net.getGameInfo');
       events.exec('net.getGameState');
@@ -172,20 +185,26 @@ game.request_game_state = function() {
   }
 };
 
-game.state_monitor = {};
+Game.state_monitor = {};
 
-game.state_monitor.start = function() {
+Game.state_monitor.start = function() {
+  log.d.trace('Game.state_monitor.start');
+
   log.d.info('game main loop -> started');
   game.fix_minor_mode_from_game_state();
   game._timer = setInterval(game.request_game_state, 2000);
 };
 
-game.state_monitor.stop = function() {
+Game.state_monitor.stop = function() {
+  log.d.trace('Game.state_monitor.stop');
+
   clearInterval(game._timer);
 };
 
-game.active_player_id = function() {
-  var game_state = state.get('net.getGameState');
+Game.active_player_id = function() {
+  log.d.trace('Game.active_player_id');
+
+  var game_state = state.get('net.getGameState.gameState');
   if (is_null(game_state)) return null;
 
   var is_defend = game_state.state == 'defend';
@@ -197,8 +216,10 @@ game.active_player_id = function() {
   return h[h.length - 1].whom;
 };
 
-game.active_player = function() {
-  var game_state = state.get('net.getGameState');
+Game.active_player = function() {
+  log.d.trace('Game.active_player');
+
+  var game_state = state.get('net.getGameState.gameState');
   if (is_null(game_state)) return null;
 
   var is_defend = game_state.state == 'defend';

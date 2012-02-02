@@ -2,10 +2,10 @@
 /* State & Net prototypes */
 
 function net_type() {}
-var net_proto = net_type.prototype;
+var Net = net_type.prototype;
 
 function state_type() { this.storage = {} }
-var state_proto = state_type.prototype;
+var State  = state_type.prototype;
 
 /* State & Net instances */
 
@@ -15,8 +15,9 @@ var state = new state_type();
 /* State & Net realization */
 
 net.server_url = "http://localhost:5000/engine";
+//net.server_url = "http://server.lena/small_worlds";
 
-net_proto.send = function(msg, on_resp, to_log) {
+Net.send = function(msg, on_resp, to_log) {
   if (is_null(msg.sid)) {
     msg.sid = state.get('sid');
   }
@@ -28,7 +29,7 @@ net_proto.send = function(msg, on_resp, to_log) {
     on_resp(parsed);
   };
   var req = JSON.stringify(msg);
-  if (to_log) {
+  if (to_log || config.log_all_requests) {
     log.ui.info('--request--\n' + req);
   }
   this._send_raw(req,
@@ -36,7 +37,7 @@ net_proto.send = function(msg, on_resp, to_log) {
                  h);
 };
 
-net_proto._send_raw = function(msg, mime, callback) {
+Net._send_raw = function(msg, mime, callback) {
   var req = new XMLHttpRequest;
   if (mime && req.overrideMimeType) req.overrideMimeType(mime);
   req.open("POST", this.server_url, true);
@@ -46,12 +47,12 @@ net_proto._send_raw = function(msg, mime, callback) {
   req.send(msg);
 }
 
-state_proto.store = function(key, value) {
+State.store = function(key, value) {
   //    this.storage[key] = value;
   set_obj_field(this.storage, key, value);
 };
 
-state_proto.get = function() {
+State.get = function() {
   for (var i = 0; i < arguments.length; ++i) {
     var d = get_obj_field(this.storage, arguments[i]);
     if (!is_null(d)) {
@@ -61,7 +62,7 @@ state_proto.get = function() {
   return null;
 };
 
-state_proto.delete = function(key) {
+State.delete = function(key) {
   delete this.storage[key];
 };
 

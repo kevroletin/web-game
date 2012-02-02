@@ -14,6 +14,7 @@ use Game::Actions::Game qw(aiJoin
                            createGame
                            joinGame
                            leaveGame
+                           getGameInfo
                            getGameState
                            getGameList
                            leaveGame
@@ -50,6 +51,7 @@ sub _is_action_without_sid {
                  uploadMap
                  getMessages
                  getUserInfo
+                 getGameInfo
                  getGameList
                  getGameState
                  getGameInfo

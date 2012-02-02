@@ -8,17 +8,15 @@ function major_modes_type() {
   this.storage = {};
 };
 
-var major_modes_ptototype = major_modes_type.prototype;
-
 var major_modes = new major_modes_type();
+var Major_Modes = major_modes_type.prototype;
 
 function minor_modes_type() {
   this.storage = {}
 }
 
-var minor_modes_prototype = minor_modes_type.prototype;
-
 var minor_modes = new minor_modes_type();
+var Minor_Modes = minor_modes_type.prototype;
 
 // Common for minor in major modes
 function _check_if_mod_available(m_obj, only_dependencies) {
@@ -69,7 +67,7 @@ function _check_if_mod_available(m_obj, only_dependencies) {
 
 /* Major modes */
 
-major_modes_ptototype.change = function(new_m, params) {
+Major_Modes.change = function(new_m, params) {
   log.d.info("|new major mode| -> " + new_m);
   log.d.dump(params, 'params');
 
@@ -90,7 +88,7 @@ major_modes_ptototype.change = function(new_m, params) {
   log.ui.modes(curr_modes);
 };
 
-major_modes_ptototype.available_modes = function() {
+Major_Modes.available_modes = function() {
   var res = [];
   for (var i in this.storage) {
     var m = this.storage[i];
@@ -103,7 +101,7 @@ major_modes_ptototype.available_modes = function() {
   return res;
 };
 
-major_modes_ptototype.get = function(mod_name) {
+Major_Modes.get = function(mod_name) {
   return this.storage[mod_name];
 };
 
@@ -271,19 +269,28 @@ major_modes.storage.explore_map = {
   in_menu: false,
   init: function(content, mapId) {
     var c = d3.select(content).text('');
+    var draw_map = function (map) {
+      log.d.pretty(map);
+      c.append('h2').text(map.mapName);
+      var svg = c.append('div').append('svg:svg');
+      content.appendChild(playfield.create(svg, map));
+    };
+
     if (features.getMapInfo) {
       log.d.dump('retrive map info for mapId: ' + mapId);
-      var h = function(resp) {
-        var m = resp.mapInfo;
-        log.d.pretty(m);
-        c.append('h2')
-          .text(m.mapName);
-        var svg = c.append('div').append('svg:svg');
-        content.appendChild(playfield.create(svg, m));
-      }
+      var h = function(resp) { draw_map(resp.mapInfo) };
       net.send({action: 'getMapInfo', mapId: mapId}, h );
     } else {
-      alert('server is not support required command getMapInfo')
+      log.d.dump('retrive map info from maps list for mapId: ' + mapId);
+      var h = function(resp) {
+        for (var i in resp.maps) {
+          if (resp.maps[i].mapId == mapId) {
+            return draw_map(resp.maps[i])
+          }
+        }
+        log.d.err('attempt to find map description in maps list failed');
+      }
+      net.send({action: 'getMapList', mapId: mapId}, h );
     }
   }
 };
@@ -381,7 +388,7 @@ minor_modes.storage.game_started = {
   },
   _create_ui: function() {
     var tok = state.get(
-      'net.getGameState.visibleTokenBadges',
+      'net.getGameState.gameState.visibleTokenBadges',
       'net.getGameInfo.gameInfo.visibleTokenBadges'
     );
 
@@ -402,11 +409,12 @@ minor_modes.storage.game_started = {
         t.append('div').text(d.raceName);
         t.append('div').text(d.specialPowerName);
         t.append('div').text(d.bonusMoney);
+        d.position = i;
       });
   },
   _watch_game_state_updates: function() {
     var h = function() {
-      resp = state.get('net.getGameState');
+      resp = state.get('net.getGameState.gameState');
       var svg = d3.select('svg#playfield')
       div_game_info = d3.select('div#game_info'),
       div_playfield = d3.select('div#playfield_container');
@@ -451,7 +459,7 @@ minor_modes.storage.conquer = {
     };
 
     var h = function(reg_i) {
-      net.send({"action":"conquer","regionId": reg_i},
+      net.send({"action":"conquer","regionId": reg_i + 1},
                on_resp);
     };
     events.reg_h('game.region.click',
@@ -557,13 +565,13 @@ minor_modes.storage.redeploy = {
                   'conquer', 'defend', 'waiting']
   },
   _prepare_redeploy_data: function() {
-    var regions = state.get('net.getGameState.regions');
+    var regions = state.get('net.getGameState.gameState.regions');
     var res = [];
     for (var i in regions) {
       var r = regions[i];
       if (r.owner == state.get('userId')) {
         res.push({tokensNum: r.tokensNum,
-                  regionId: i});
+                  regionId: Number(i) + 1 });
       }
     }
     return res;
@@ -594,7 +602,7 @@ minor_modes.storage.redeploy = {
   },
   _prepare_map_actions: function() {
     var plus = function(reg_i) {
-      var regions = state.get('net.getGameState.regions');
+      var regions = state.get('net.getGameState.gameState.regions');
       var player = game.active_player();
 
       if (!player.tokensInHand) {
@@ -609,7 +617,7 @@ minor_modes.storage.redeploy = {
                  'minor_modes.conquer->game.region.click',
                  plus);
     var minus = function(reg_i) {
-      var regions = state.get('net.getGameState.regions');
+      var regions = state.get('net.getGameState.gameState.regions');
       var player = game.active_player();
 
       if (!regions[reg_i].tokensNum) {
@@ -741,11 +749,11 @@ minor_modes.storage.waiting = {
   }
 };
 
-minor_modes_prototype.have = function(mode) {
+Minor_Modes.have = function(mode) {
   return in_arr(mode, curr_modes.minor);
 };
 
-minor_modes_prototype._enable = function(mode, force, params) {
+Minor_Modes._enable = function(mode, force, params) {
   if (in_arr(mode, curr_modes.minor)) {
     log.d.warn('mode ' + mode + ' already enabled');
     return 0;
@@ -791,15 +799,15 @@ minor_modes_prototype._enable = function(mode, force, params) {
   return 1;
 };
 
-minor_modes_prototype.enable = function(mode, params) {
+Minor_Modes.enable = function(mode, params) {
   return this._enable(mode, 0, params);
 };
 
-minor_modes_prototype.force = function(mode, params) {
+Minor_Modes.force = function(mode, params) {
   return this._enable(mode, 1, params);
 };
 
-minor_modes_prototype.disable = function(mode) {
+Minor_Modes.disable = function(mode) {
 
   if (!(in_arr(mode, curr_modes.minor))) {
     log.d.warn('mode ' + mode + ' is not active');

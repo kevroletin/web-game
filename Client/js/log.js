@@ -7,33 +7,41 @@ var log = {
   ui: new ui_log_type()
 };
 
-var debug_log_proto = debug_log_type.prototype;
-var ui_log_proto = ui_log_type.prototype;
+var Debug_Log = debug_log_type.prototype;
+var Ui_Log = ui_log_type.prototype;
 
 /* Debug log */
 
-debug_log_proto.info = function(msg) { console.info('[info] ' + msg) };
+Debug_Log.info = function(msg) { console.info('[info] ' + msg) };
 
-debug_log_proto.warn = function(msg) { console.warn('[warn] ' + msg) };
+Debug_Log.warn = function(msg) { console.warn('[warn] ' + msg) };
 
-debug_log_proto.error = function(msg) { console.error('[error] ' + msg) };
+Debug_Log.error = function(msg) { console.error('[error] ' + msg) };
 //dump: function(obj) { console.dir(obj) }
 
-debug_log_proto.dump = function(obj, descr) {
+Debug_Log.dump = function(obj, descr) {
   var t = '';
   if (descr) { t = descr + ': ' }
   console.info(t + JSON.stringify(obj))
 };
 
-debug_log_proto.pretty = function(obj, descr) {
+Debug_Log.pretty = function(obj, descr) {
   console.info(JSON.stringify(obj, null, ' '))
 };
 
-debug_log_proto.events = function(msg) {}
+//Debug_Log.events = function(msg) {}
+Debug_Log.events = function(msg) {
+  console.warn('[events] ---' + msg + '---')
+}
+
+//Debug_Log.trace = function() {}
+Debug_Log.trace = function(funct_name) { 
+  console.warn('[trace] ---' + funct_name + '---')
+}
 
 /* UI log */
 
-ui_log_proto.init = function() {
+Ui_Log.init = function() {
   return d3.select('body')
     .append('div')
     .classed('debug_log', 1)
@@ -47,37 +55,37 @@ ui_log_proto.init = function() {
     .style('overflow', 'scroll');
 };
 
-ui_log_proto._get_ui_log = function() {
+Ui_Log._get_ui_log = function() {
   var log = this.init();
   this._get_ui_log = function() { return log }
   return log;
 };
 
-ui_log_proto._append_log = function(msg) {
+Ui_Log._append_log = function(msg) {
   var l = this._get_ui_log();
   l.append('pre').text(msg);
   l.node().scrollIntoTop = l.node().scrollHeight;
 };
 
-ui_log_proto.info = function(msg) { this._append_log('[info] ' + msg) };
+Ui_Log.info = function(msg) { this._append_log('[info] ' + msg) };
 
-ui_log_proto.warn = function(msg) { this._append_log('[warn] ' + msg) };
+Ui_Log.warn = function(msg) { this._append_log('[warn] ' + msg) };
 
-ui_log_proto.error = function(msg) { alert('[error]' + mgs);
+Ui_Log.error = function(msg) { alert('[error]' + mgs);
                               //this._append_log('[error] ' + msg)
                             };
 
-ui_log_proto.dump = function(obj, descr) {
+Ui_Log.dump = function(obj, descr) {
   var t = '';
   if (descr) { t = descr + ': ' }
   this._append_log(t + JSON.stringify(obj))
 },
 
-ui_log_proto.pretty = function(obj, descr) {
+Ui_Log.pretty = function(obj, descr) {
   this._append_log(JSON.stringify(obj, null, ' '))
 };
 
-ui_log_proto._modes_init = function() {
+Ui_Log._modes_init = function() {
   var div = d3.select('body')
     .append('div')
     .classed('debug_modes_log', 1)
@@ -92,13 +100,13 @@ ui_log_proto._modes_init = function() {
   return div.append('pre');
 };
 
-ui_log_proto._get_modes_log = function() {
+Ui_Log._get_modes_log = function() {
   var log = this._modes_init();
   this._get_modes_log = function () { return log }
   return log
 };
 
-ui_log_proto.modes = function(modes) {
+Ui_Log.modes = function(modes) {
   var l = this._get_modes_log();
   l.text(JSON.stringify(modes, null, ' '));
 };

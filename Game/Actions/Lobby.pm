@@ -16,7 +16,8 @@ sub getUserInfo {
     my ($user, $err);
 
     if (defined $data->{userId}) {
-        $user = db_search_one({ id => $data->{userId} });
+        $user = db_search_one({ CLASS => 'Game::Model::User' },
+                              { id => $data->{userId} });
         $err = 'badUserId'
     } elsif (defined $data->{username}) {
         $user = db_search_one({ CLASS => 'Game::Model::User' },

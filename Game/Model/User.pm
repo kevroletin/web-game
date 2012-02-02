@@ -186,6 +186,31 @@ sub load_state {
                                     $d->{declineState}) );
 }
 
+sub extract_state {
+    my ($s) = @_;
+    return undef unless $s->activeGame();
+    my $res = {};
+    if ($s->activeGame()->state() eq 'notStarted') {
+        $res->{readinessStatus} = $s->readinessStatus()
+    }
+    $res->{tokensInHand} = $s->tokensInHand();
+    $res->{coins} = $s->coins();
+    $res->{id} = $s->id();
+    if ($s->activeRace()) {
+        $res->{activeRace} =  $s->activeRace()->race_name();
+        $res->{activePower} =  $s->activeRace()->power_name();
+        my $st = $s->activeRace()->extract_state();
+        $res->{activeState} = $st if $st
+    }
+    if ($s->declineRace()) {
+        $res->{declineRace} = $s->declineRace()->race_name();
+        $res->{declinePower} = $s->declineRace()->power_name();
+        my $st = $s->declineRace()->extract_state();
+        $res->{declineState} = $st if $st
+    }
+    $res
+}
+
 sub short_info_durty {
     my ($s) = @_;
     unless ($s->activeGame()) {

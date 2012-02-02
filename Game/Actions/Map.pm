@@ -4,7 +4,7 @@ use warnings;
 
 use Game::Actions;
 use Game::Constants::Map;
-use Game::Environment qw(:std :db :response);
+use Game::Environment qw(init_user_by_sid :std :db :response);
 use Game::Model::Map;
 use Game::Model::Region;
 use Exporter::Easy ( OK => [qw(createDefaultMaps
@@ -60,9 +60,7 @@ sub getMapInfo {
     } else {
         $err = 'badJson'
     }
-    unless ($map) {
-        early_response_json({result => $err})
-    }
+    assert($map, $err);
     response_json({ result => 'ok',
                     mapInfo => $map->full_info() });
 }

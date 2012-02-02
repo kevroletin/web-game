@@ -129,6 +129,11 @@ sub extract_state_durty {
     $res
 }
 
+sub extract_state_clear {
+    my ($s) = @_;
+    [ map { $_->extract_state() } @{$s->regions()} ]
+}
+
 sub short_info {
     my ($s) = @_;
     my %h = %{$s};

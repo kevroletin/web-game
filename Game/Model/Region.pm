@@ -113,7 +113,7 @@ sub extract_state {
     my $res = {};
     $res->{tokensNum} = $self->tokensNum();
     $res->{owner} = $self->owner() ? $self->owner()->id() : undef;
-    $res->{inDecline} = $self->inDecline();
+    $res->{inDecline} = bool($self->inDecline());
     $res->{extraItems} = dclone($self->extraItems());
     $res
 }

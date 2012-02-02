@@ -2,8 +2,9 @@
 function events_type () { this.storage = {} }
 
 var events = new events_type;
+var Events = events_type.prototype;
 
-events_type.prototype.exec = function(ev_full_name, data) {
+Events.exec = function(ev_full_name, data) {
   log.d.events('event exec: ' + ev_full_name);
   if (!is_null(data)) log.d.dump(data, 'params');
   var ev = get_obj_field(this.storage, ev_full_name);
@@ -20,7 +21,7 @@ events_type.prototype.exec = function(ev_full_name, data) {
   return ev;
 };
 
-events_type.prototype.reg_h = function(ev_full_name, h_name, h_fun) {
+Events.reg_h = function(ev_full_name, h_name, h_fun) {
   var ev = get_obj_field(this.storage, ev_full_name);
   if (is_null(ev)) {
     ev = set_obj_field(this.storage, ev_full_name, []);
@@ -36,7 +37,7 @@ events_type.prototype.reg_h = function(ev_full_name, h_name, h_fun) {
   return ev;
 };
 
-events_type.prototype.del_h = function(ev_full_name, h_name) {
+Events.del_h = function(ev_full_name, h_name) {
   var ev = get_obj_field(this.storage, ev_full_name);
   if (is_null(ev)) { return 0; }
   var i;
@@ -54,6 +55,6 @@ events_type.prototype.del_h = function(ev_full_name, h_name) {
   return ev;
 };
 
-events_type.prototype.delete_tree = function(ev_full_name) {
+Events.delete_tree = function(ev_full_name) {
   delete_obj_field(this.storage, ev_full_name);
 };

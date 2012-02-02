@@ -11,6 +11,7 @@ use Exporter::Easy ( OK => [qw(aiJoin
                                createGame
                                joinGame
                                leaveGame
+                               getGameInfo
                                getGameState
                                getGameList
                                leaveGame
@@ -94,6 +95,23 @@ sub _get_game_by_id {
         early_response_json({result => 'badGameId'})
     }
     $game
+}
+
+sub getGameInfo {
+    my ($data) = @_;
+
+    my ($game, $err);
+    if (defined $data->{gameId}) {
+        $game = _get_game_by_id($data->{gameId});
+        $err = 'badGameId'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $game = global_game()
+    }
+    assert($game, $err);
+
+    my $res = $game->full_info();
+    response_json({result => 'ok', gameInfo => $res})
 }
 
 sub getGameState {
