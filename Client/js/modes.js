@@ -71,9 +71,27 @@ Major_Modes.change = function(new_m, params) {
   log.d.info("|new major mode| -> " + new_m);
   log.d.dump(params, 'params');
 
-  /* TODO: raise error if we want to go into major mode which
-     can not be used with active minor mode or
-     disable needed minor modes */
+  curr_modes.major = new_m;
+
+  /* disable minor mode with can't be used with new major mode */
+  var len = curr_modes.minor.length;
+  for (var i = 0; i < len; ++i) {
+    var mi_name = curr_modes.minor[i];
+    var mi = minor_modes.storage[mi_name];
+    if (!is_null(mi.available_if)) {
+      if (!is_null(mi.available_if.major_m) &&
+          !in_arr(new_m, mi.available_if.major_m) ||
+          !is_null(mi.available_if.not_major_m) &&
+          in_arr(new_m, mi.available_if.not_major_m))
+      {
+        log.d.info('conflicting mode disabled: ' + mi_name);
+        minor_modes.disable(mi_name);
+        i = 0;
+        len = curr_modes.minor.length;
+      }
+    }
+  }
+
   var menu = document.getElementById("menu");
   var content = document.getElementById("content");
 
@@ -82,7 +100,6 @@ Major_Modes.change = function(new_m, params) {
     this.storage[curr_modes.major].uninit();
   }
   this.storage[new_m].init(content, params);
-  curr_modes.major = new_m;
 
   ui.create_menu();
   log.ui.modes(curr_modes);
@@ -316,7 +333,7 @@ major_modes.storage.play_game = {
       state.store('net.getGameInfo', resp);
       state.store('net.getGameState', resp.gameInfo);
 
-      ui_elements.game_info(div_game_info, resp.gameInfo);
+      ui_elements.game_info(resp.gameInfo, div_game_info);
       if (++ans_cnt == 2) {
         playfield.apply_game_state(
           state.get('net.getGameInfo').gameInfo);
@@ -345,8 +362,7 @@ major_modes.storage.play_game = {
     var h = function() {
       var data = state.get('net.getGameInfo');
       var div = d3.select('div#game_info').text('');
-      ui_elements.game_info(div, data.gameInfo);
-
+      ui_elements.game_info(data.gameInfo, div);
     };
     events.reg_h('net.getGameInfo',
                  'major_modes.play_game->net.getGameInfo',
@@ -387,51 +403,15 @@ minor_modes.storage.game_started = {
     minor_m: ['in_game']
   },
   _create_ui: function() {
-    var tok = state.get(
-      'net.getGameState.gameState.visibleTokenBadges',
-      'net.getGameInfo.gameInfo.visibleTokenBadges'
-    );
+    log.d.trace('minor_modes.storage.game_started._create_ui');
 
-    if (is_null(tok)) {
-      alert('visibleTokenBadges is null');
-    }
-
-    d3.select('div#game_info')
-      .append('div')
-      .attr('id', 'tokens_packs')
-      .selectAll('div.tokens_pack')
-      .data(tok)
-      .enter()
-      .append('div')
-      .each(function(d, i) {
-        var t = d3.select(this)
-          .attr('class', 'tokens_pack');
-        t.append('div').text(d.raceName);
-        t.append('div').text(d.specialPowerName);
-        t.append('div').text(d.bonusMoney);
-        d.position = i;
-      });
+    ui_elements._update_token_badges();
   },
   _watch_game_state_updates: function() {
     var h = function() {
-      resp = state.get('net.getGameState.gameState');
-      var svg = d3.select('svg#playfield')
-      div_game_info = d3.select('div#game_info'),
-      div_playfield = d3.select('div#playfield_container');
-
-      ui_elements.update_game_info(div_game_info, resp);
-      playfield.apply_game_state(resp);
-
-      var tok = resp.visibleTokenBadges;
-      d3.select('div#tokens_packs')
-        .selectAll('div.tokens_pack')
-        .data(tok)
-        .each(function(d) {
-          d3.select(this).selectAll('div')
-            .data([d.raceName, d.specialPowerName,
-                   d.bonusMoney])
-            .text(String);
-        });
+      var game_state = state.get('net.getGameState.gameState');
+      ui_elements.update_game_info(game_state);
+      playfield.apply_game_state(game_state);
     };
     events.reg_h('net.getGameState',
                  'minor_modes.game_started->net.getGameState',
@@ -443,7 +423,7 @@ minor_modes.storage.game_started = {
     return 0;
   },
   uninit: function() {
-    event.del_h('minor_modes.game_started->net.getGameState');
+    events.del_h('minor_modes.game_started->net.getGameState');
   }
 }
 
@@ -454,8 +434,10 @@ minor_modes.storage.conquer = {
   },
   _watch_map_onclick: function() {
     var on_resp = function(resp) {
-      game.request_game_state();
-      alert(resp.result);
+      game.direct_request_game_state();
+      if (!resp.result == 'ok') {
+        alert(resp.result);
+      }
     };
 
     var h = function(reg_i) {
@@ -502,7 +484,7 @@ minor_modes.storage.select_race = {
   init : function() {
     var on_resp = function(resp) {
       // TODO:
-      game.request_game_state();
+      game.direct_request_game_state();
       alert(resp.result);
     };
     var h = function(d, i) {
@@ -534,8 +516,10 @@ minor_modes.storage.decline = {
   init : function() {
     var on_resp = function(resp) {
       // TODO:
-      game.request_game_state();
-      alert(resp.result);
+      if (resp.result !== 'ok') {
+        alert(resp.result);
+      }
+      game.direct_request_game_state();
     };
 
     var h = function() {
@@ -581,24 +565,36 @@ minor_modes.storage.redeploy = {
     var h = function(resp) {
       if (resp.result !== 'ok') {
         minor_modes.force('redeploy');
+        alert(resp.result);
+      } else {
+        minor_modes.force('redeployed');
       }
-      alert(resp.result);
-      minor_modes.force('redeployed');
     };
     net.send({"regions": data, action: "redeploy"}, h, 1);
   },
   _prepare_ui: function() {
-    var h = function() {
+    var submit_h = function() {
       d3.event.preventDefault();
       minor_modes.storage.redeploy._send_redeploy();
     };
-    d3.select('div#actions')
-      .append('form')
+    var undo_h = function() {
+      game.direct_request_game_state();
+    };
+    var act = d3.select('div#actions');
+    act.append('form')
+      .attr('onsubmit', 'return false;')
       .attr('id', 'finish_redeploy')
-      .on('submit', h)
+      .on('submit', submit_h)
       .append('input')
       .attr('type', 'submit')
       .attr('value', 'submit');
+    act.append('form')
+      .attr('onsubmit', 'return false;')
+      .attr('id', 'undo_redeploy')
+      .on('submit', undo_h)
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'undo');
   },
   _prepare_map_actions: function() {
     var plus = function(reg_i) {
@@ -641,6 +637,7 @@ minor_modes.storage.redeploy = {
     events.del_h('game.region.click',
                  'minor_modes.conquer->game.region.click');
     d3.select('form#finish_redeploy').remove();
+    d3.select('form#undo_redeploy').remove();
   }
 };
 
@@ -714,11 +711,12 @@ minor_modes.storage.defend = {
     var h = function() {
       var data = r_m._prepare_redeploy_data();
       var h = function(resp) {
-        if (resp.result !== 'ok') {
+        if (resp.result == 'ok') {
+          minor_modes.force('waiting');
+        } else {
           minor_modes.force('defend');
+          alert(resp.result);
         }
-        alert(resp.result);
-        minor_modes.force('waiting');
       };
       net.send({"regions": data, action: "defend"}, h, 1);
     };
@@ -736,6 +734,7 @@ minor_modes.storage.defend = {
 
 minor_modes.storage.waiting = {
   available_if: {
+    major_m: ['play_game'],
     minor_m: ['in_game'],
     not_minor_m: ['conquer', 'redeploy', 'redeployed', 'defend',
                   'declined']

@@ -5,6 +5,7 @@ var ui_forms = new ui_forms_type();
 var Ui_Forms = ui_forms_type.prototype;
 
 Ui_Forms._gen_simple_form = function(form_name) {
+  log.d.trace('Ui_Forms._gen_simple_form');
 
   var obj = this[form_name];
   var f = make('form')
@@ -168,6 +169,8 @@ var ui_elements = new ui_elements_type();
 var Ui_Elements = ui_elements_type.prototype;
 
 Ui_Elements.menu = function(modes_list) {
+  log.d.trace('Ui_Elements.menu');
+
   var m = make('ul');
   m.selectAll('li')
     .data(modes_list).enter()
@@ -183,6 +186,8 @@ Ui_Elements.menu = function(modes_list) {
 };
 
 Ui_Elements._append_player_info = function(gameInfo, data_enter) {
+  log.d.trace('Ui_Elements._append_player_info');
+
 
   function u_inf_game_not_started(d, t) {
     t.append('div')
@@ -263,7 +268,9 @@ Ui_Elements._append_player_info = function(gameInfo, data_enter) {
     });
 };
 
-Ui_Elements.game_info = function(d, gameInfo) {
+Ui_Elements.game_info = function(gameInfo, d) {
+  log.d.trace('Ui_Elements.game_info');
+
   d.append('h1').text(gameInfo.gameName);
   d.append('div').text('game state: ' + gameInfo.state);
   var data = d.append('div').attr('id', 'players')
@@ -271,14 +278,28 @@ Ui_Elements.game_info = function(d, gameInfo) {
     .data(gameInfo.players);
   this._append_player_info(gameInfo, data.enter());
 
+  div_game_info
+    .append('div')
+    .attr('id', 'tokens_packs');
+
   return d.node();
 };
 
-Ui_Elements.update_game_info = function(d, gameState) {
-  var data = d.selectAll('div.player')
-    .data(gameState.players)
+Ui_Elements._update_players_info = function(game_state, div) {
+  log.d.trace('Ui_Elements._update_players_info');
+
+  if (is_null(game_state)) {
+    game_state = state.get('net.getGameState.gameState',
+                           'net.getGameInfo.gameInfo');
+  }
+  if (is_null(div)) {
+    div = d3.select('div#game_info');
+  }
+
+  var data = div.selectAll('div.player')
+    .data(game_state.players)
     .classed('active_player',
-             function(d, i) { return i == gameState.activePlayerNum; })
+             function(d, i) { return i == game_state.activePlayerNum; })
     .each(function(d) {
       var t = d3.select(this);
       t.select('div.in_decline')
@@ -296,14 +317,69 @@ Ui_Elements.update_game_info = function(d, gameState) {
       t.select('div.decline_power', 1)
         .text('decline power: ' + no_if_null(d.declinePower));
     });
+}
+
+Ui_Elements._update_token_badges = function(game_state, div) {
+  log.d.trace('Ui_Elements._update_token_badges');
+
+  if (is_null(game_state)) {
+    game_state = state.get('net.getGameState.gameState',
+                           'net.getGameInfo.gameInfo');
+  }
+  if (is_null(div)) {
+    div = d3.select('div#tokens_packs')
+  }
+
+  var tok = game_state.visibleTokenBadges;
+
+  var data = div.selectAll('div.tokens_pack')
+    .data(tok);
+
+  data
+    .enter()
+    .append('div')
+    .each(function(d, i) {
+      var t = d3.select(this)
+        .attr('class', 'tokens_pack');
+      t.append('div').text(d.raceName);
+      t.append('div').text(d.specialPowerName);
+      t.append('div').text(d.bonusMoney);
+      d.position = i;
+    });
+
+  data.enter()
+    .append('div')
+    .each(function(d, i) {
+      var t = d3.select(this)
+        .attr('class', 'tokens_pack');
+      t.append('div').text(d.raceName);
+      t.append('div').text(d.specialPowerName);
+      t.append('div').text(d.bonusMoney);
+      d.position = i;
+    });
+
+  data.each(function(d) {
+    d3.select(this).selectAll('div')
+      .data([d.raceName, d.specialPowerName,
+             d.bonusMoney])
+      .text(String);
+  });
+}
+
+Ui_Elements.update_game_info = function() {
+  log.d.trace('Ui_Elements.update_game_info');
+
+  this._update_players_info();
+  this._update_token_badges();
 };
 
 function playfield_type() {}
 
-var playfield =  new playfield_type;
+var playfield = new playfield_type;
 var Playfield = playfield_type.prototype;
 
 Playfield.create = function(svg, map) {
+  log.d.trace('Playfield.create');
 
   svg
     .attr('class', 'playfield')
@@ -426,17 +502,24 @@ Playfield.create = function(svg, map) {
   return svg.node();
 };
 
-Playfield.apply_game_state = function(gameState) {
+Playfield.apply_game_state = function(game_state) {
+  log.d.trace('Playfield.apply_game_state');
+
 //  log.d.pretty(gameState);
+  if (is_null(game_state)) {
+    game_state = state.get('net.getGameState.gameState',
+                           'net.getGameInfo.gameInfo');
+  }
+
   var tks = d3.select('g#tokens');
   tks.selectAll('g')
-    .data(gameState.regions)
+    .data(game_state.regions)
     .each(function(d, i) {
 
       var cs = this.constState;
       var data = d3.select(this).selectAll('image')
                    .data(d3.range(0, d.tokensNum));
-      var race = determine_race(gameState, d);
+      var race = determine_race(game_state, d);
       data.enter().append('svg:image')
       data.exit().remove();
       d3.select(this).selectAll('image')
@@ -450,14 +533,14 @@ Playfield.apply_game_state = function(gameState) {
     });
 
   var free_tks = d3.select('g#free_tokens');
-  var data = free_tks.selectAll('g').data(gameState.players);
+  var data = free_tks.selectAll('g').data(game_state.players);
   data.enter().
     append('svg:g')
     .attr('id', function(d, i) { return 'ftoks_' + i });
   free_tks.selectAll('g')
     .each(function(d, player_i) {
       var r = d3.range(0, d.tokensInHand);
-      var race = gameState.players[player_i].activeRace;
+      var race = game_state.players[player_i].activeRace;
       var data = d3.select(this).selectAll('image').data(r);
       data.exit().remove();
       data.enter().append('svg:image');

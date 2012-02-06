@@ -35,7 +35,7 @@ Debug_Log.events = function(msg) {
 }
 
 //Debug_Log.trace = function() {}
-Debug_Log.trace = function(funct_name) { 
+Debug_Log.trace = function(funct_name) {
   console.warn('[trace] ---' + funct_name + '---')
 }
 

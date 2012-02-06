@@ -6,7 +6,7 @@ var features = {
 };
 
 var config = {
-  log_all_requests: 1
+  log_all_requests: 0
 };
 
 var ui = {
@@ -35,7 +35,8 @@ Game.init = function() {
   log.d.trace('Game.init');
 
   events.reg_h('login.success', 'ui_set_logined_mode',
-               function() { minor_modes.enable('logined');
+               function() { minor_modes.disable('in_game');
+                     minor_modes.enable('logined');
                      game.get_current_user_info();
                    });
 
@@ -101,10 +102,8 @@ Game.fix_minor_mode_from_game_state = function() {
 
 //  log.d.info("===fix minor mode===");
 
-  var getGameState = state.get(
-    'net.getGameState.gameState',
-    'net.getGameInfo.gameInfo'
-  );
+  var getGameState = state.get('net.getGameState.gameState',
+                               'net.getGameInfo.gameInfo');
   state_field = getGameState.state;
 
   if (state_field == 'notStarted') {
@@ -158,6 +157,18 @@ Game.fix_minor_mode_from_game_state = function() {
 //  log.d.info("=== finished ===");
 };
 
+Game.direct_request_game_state = function() {
+  log.d.trace('Game.direct_request_game_state');
+
+  if (is_null(game._timer)) {
+    this.request_game_state();
+  } else {
+    clearInterval(game._timer);
+    this.request_game_state();
+    game._timer = setInterval(game.request_game_state, 2000);
+  }
+}
+
 Game.request_game_state = function() {
   log.d.trace('Game.request_game_state');
 
@@ -191,7 +202,7 @@ Game.state_monitor.start = function() {
   log.d.trace('Game.state_monitor.start');
 
   log.d.info('game main loop -> started');
-  game.fix_minor_mode_from_game_state();
+  game.request_game_state();
   game._timer = setInterval(game.request_game_state, 2000);
 };
 
@@ -236,3 +247,7 @@ Game.active_player = function() {
   }
   return null;
 };
+
+Game.apply_game_state = function() {
+  ui_elements.apply_game_state();
+}
