@@ -68,6 +68,10 @@ State.delete = function(key) {
 
 /* Misc helpers */
 
+function deep_copy(obj) {
+  return JSON.parse( JSON.stringify(obj) );
+}
+
 function make(tag) {
   var elem;
   var name = d3.ns.qualify(tag);
@@ -165,3 +169,4 @@ function determine_race(gameState, reg) {
     return p.activeRace;
   };
 }
+

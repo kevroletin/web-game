@@ -272,7 +272,8 @@ Ui_Elements.game_info = function(gameInfo, d) {
   log.d.trace('Ui_Elements.game_info');
 
   d.append('h1').text(gameInfo.gameName);
-  d.append('div').text('game state: ' + gameInfo.state);
+  d.append('div').text('game state: ' + gameInfo.state)
+                 .attr('id', 'game_state_field');
   var data = d.append('div').attr('id', 'players')
     .selectAll('div')
     .data(gameInfo.players);
@@ -344,7 +345,6 @@ Ui_Elements._update_token_badges = function(game_state, div) {
       t.append('div').text(d.raceName);
       t.append('div').text(d.specialPowerName);
       t.append('div').text(d.bonusMoney);
-      d.position = i;
     });
 
   data.enter()
@@ -355,10 +355,10 @@ Ui_Elements._update_token_badges = function(game_state, div) {
       t.append('div').text(d.raceName);
       t.append('div').text(d.specialPowerName);
       t.append('div').text(d.bonusMoney);
-      d.position = i;
     });
 
-  data.each(function(d) {
+  data.each(function(d, i) {
+    d.position = i;
     d3.select(this).selectAll('div')
       .data([d.raceName, d.specialPowerName,
              d.bonusMoney])
@@ -368,6 +368,10 @@ Ui_Elements._update_token_badges = function(game_state, div) {
 
 Ui_Elements.update_game_info = function() {
   log.d.trace('Ui_Elements.update_game_info');
+
+  var game_state = state.get('net.getGameState.gameState',
+                             'net.getGameInfo.gameInfo');
+  d3.select('div#game_state_field').text('game state: ' + game_state.state)
 
   this._update_players_info();
   this._update_token_badges();
@@ -524,7 +528,7 @@ Playfield.apply_game_state = function(game_state) {
       data.exit().remove();
       d3.select(this).selectAll('image')
         .attr('x', function(d, i) { return (cs.raceCoords[0] + i*4) })
-        .attr('y', function(d, i) { return (cs.raceCoords[1] + i*4) })
+        .attr('y', function(d, i) { return (cs.raceCoords[1] - i*4) })
         .attr('width', '50px')
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) )
@@ -545,8 +549,10 @@ Playfield.apply_game_state = function(game_state) {
       data.exit().remove();
       data.enter().append('svg:image');
       d3.select(this).selectAll('image').data(r)
-        .attr('x', function(d, i) { return ( -100 + i*4) })
-        .attr('y', function(d, i) { return ( player_i*70 + i*4) })
+        .attr('x', function(d, i) { return ( -100 + i*2) })
+        .attr('y', function(d, i) { 
+          return ( 30 + player_i*70 - i*2 ) 
+        })
         .attr('width', '50px')
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) );

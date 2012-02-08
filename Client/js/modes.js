@@ -485,7 +485,9 @@ minor_modes.storage.select_race = {
     var on_resp = function(resp) {
       // TODO:
       game.direct_request_game_state();
-      alert(resp.result);
+      if (resp.result !== 'ok') {
+        alert(resp.result);
+      }
     };
     var h = function(d, i) {
       net.send({"position": d.position,
@@ -553,7 +555,9 @@ minor_modes.storage.redeploy = {
     var res = [];
     for (var i in regions) {
       var r = regions[i];
-      if (r.owner == state.get('userId')) {
+      if (r.owner == state.get('userId') && r.tokensNum > 0 &&
+          !r.inDecline)
+      {
         res.push({tokensNum: r.tokensNum,
                   regionId: Number(i) + 1 });
       }
@@ -601,6 +605,10 @@ minor_modes.storage.redeploy = {
       var regions = state.get('net.getGameState.gameState.regions');
       var player = game.active_player();
 
+      if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
+
       if (!player.tokensInHand) {
         alert('no tokens in hand')
       } else {
@@ -615,6 +623,11 @@ minor_modes.storage.redeploy = {
     var minus = function(reg_i) {
       var regions = state.get('net.getGameState.gameState.regions');
       var player = game.active_player();
+
+
+      if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
 
       if (!regions[reg_i].tokensNum) {
         alert('no tokens on region')
@@ -648,11 +661,21 @@ minor_modes.storage.redeployed = {
   },
   init : function() {
     var on_resp = function(resp) {
-      alert(resp.result);
       if (resp.result == 'ok')  {
-        minor_modes.force('waiting');
+        game.direct_request_game_state();
+//        minor_modes.force('waiting');
+      } else {
+        alert(resp.result);
       }
     };
+
+    if (1) {
+      net.send({action: 'finishTurn'}, on_resp, 1)
+      return 0;
+    }
+    // This button is needed to some races which can do additional
+    // actions before finishTurn
+
     var h = function() {
       d3.event.preventDefault();
       net.send({action: 'finishTurn'}, on_resp, 1)
@@ -678,11 +701,21 @@ minor_modes.storage.declined = {
   },
   init : function() {
     var on_resp = function(resp) {
-      alert(resp.result);
       if (resp.result == 'ok')  {
-        minor_modes.force('waiting');
+        game.direct_request_game_state();
+//        minor_modes.force('waiting');
+      } else {
+        alert(resp.result);
       }
     };
+
+    if (1) {
+      net.send({action: 'finishTurn'}, on_resp, 1)
+      return 0;
+    }
+    // This button is needed to some races which can do additional
+    // actions before finishTurn
+
     var h = function() {
       d3.event.preventDefault();
       net.send({action: 'finishTurn'}, on_resp, 1)
@@ -706,29 +739,115 @@ minor_modes.storage.defend = {
     minor_m: ['in_game'],
     not_minor_m: ['conquer', 'redeploy', 'waiting']
   },
-  init : function() {
-    var r_m = minor_modes.storage.redeploy;
-    var h = function() {
-      var data = r_m._prepare_redeploy_data();
-      var h = function(resp) {
-        if (resp.result == 'ok') {
-          minor_modes.force('waiting');
-        } else {
-          minor_modes.force('defend');
-          alert(resp.result);
-        }
-      };
-      net.send({"regions": data, action: "defend"}, h, 1);
+  _prepare_defend_data: function() {
+    var regions = state.get('net.getGameState.gameState.regions');
+    var regions_old = minor_modes.storage.defend.__old_regions__;
+    var res = [];
+    for (var i in regions) {
+      var r_new = regions[i];
+      var r_old = regions_old[i];
+      if (r_new.owner == state.get('userId') &&
+          r_new.tokensNum - r_old.tokensNum > 0 &&
+          !r_new.inDecline)
+      {
+        res.push({tokensNum: r_new.tokensNum - r_old.tokensNum,
+                  regionId: Number(i) + 1 });
+      }
+    }
+    return res;
+  },
+  _send_defend: function() {
+    var data = this._prepare_defend_data();
+    var h = function(resp) {
+      if (resp.result == 'ok') {
+        minor_modes.force('waiting');
+      } else {
+        minor_modes.force('defend');
+        alert(resp.result);
+      }
     };
+    net.send({"regions": data, action: "defend"}, h, 1);
+  },
+  _prepare_ui: function() {
+    var submit_h = function() {
+      d3.event.preventDefault();
+      minor_modes.storage.defend._send_defend();
+    };
+    var undo_h = function() {
+      game.direct_request_game_state();
+    };
+    var act = d3.select('div#actions');
+    act.append('form')
+      .attr('onsubmit', 'return false;')
+      .attr('id', 'finish_defend')
+      .on('submit', submit_h)
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'submit');
+    act.append('form')
+      .attr('onsubmit', 'return false;')
+      .attr('id', 'undo_defend')
+      .on('submit', undo_h)
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'undo');
+  },
+  _prepare_map_actions: function() {
+    var plus = function(reg_i) {
+      var regions = state.get('net.getGameState.gameState.regions');
+      var player = game.active_player();
 
-    r_m._prepare_ui.call(r_m);
-    r_m._prepare_map_actions.call(r_m);
-    d3.select('form#finish_redeploy')
-      .on('submit', h);
+      if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
+
+      if (!player.tokensInHand) {
+        alert('no tokens in hand')
+      } else {
+        --player.tokensInHand;
+        ++regions[reg_i].tokensNum;
+        events.exec('net.getGameState');
+      }
+    };
+    events.reg_h('game.region.click',
+                 'minor_modes.conquer->game.region.click',
+                 plus);
+    var minus = function(reg_i) {
+      var regions = state.get('net.getGameState.gameState.regions');
+      var regions_old = minor_modes.storage.defend.__old_regions__;
+      var player = game.active_player();
+
+      if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
+
+      if (!regions[reg_i].tokensNum) {
+        alert('no tokens on region')
+      } else if (regions[reg_i].tokensNum  == regions_old[reg_i].tokensNum) {
+        alert("can't remove tokens from region during defend");
+      } else {
+        ++player.tokensInHand;
+        --regions[reg_i].tokensNum;
+        events.exec('net.getGameState');
+      }
+    };
+    events.reg_h('game.region.image.click',
+                 'minor_modes.conquer->game.region.image.click',
+                 minus);
+  },
+  init : function() {
+    minor_modes.storage.defend.__old_regions__ =
+      deep_copy(state.get('net.getGameState.gameState.regions'));
+
+    this._prepare_ui.call();
+    this._prepare_map_actions.call();
     return 0;
   },
   uninit: function() {
-    minor_modes.storage.redeploy.uninit();
+    events.del_h('game.region.click',
+                 'minor_modes.conquer->game.region.click');
+    d3.select('form#finish_defend').remove();
+    d3.select('form#undo_defend').remove();
   }
 };
 

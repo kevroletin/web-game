@@ -102,9 +102,9 @@ Game.fix_minor_mode_from_game_state = function() {
 
 //  log.d.info("===fix minor mode===");
 
-  var getGameState = state.get('net.getGameState.gameState',
+  var game_state = state.get('net.getGameState.gameState',
                                'net.getGameInfo.gameInfo');
-  state_field = getGameState.state;
+  state_field = game_state.state;
 
   if (state_field == 'notStarted') {
     minor_modes.disable('game_started');
@@ -116,6 +116,7 @@ Game.fix_minor_mode_from_game_state = function() {
     defend: 0,
     redeploy: 0,
     redeployed: 0,
+    select_race: 0,
     waiting: 0,
   };
 
@@ -126,10 +127,10 @@ Game.fix_minor_mode_from_game_state = function() {
   } else {
     var a = {
       conquer: function() {
-        if (getGameState.attacksHistory.length == 0) {
+        if (game_state.attacksHistory.length == 0) {
           if (is_null(game.active_player().activeRace)) {
             new_modes['select_race'] = 1
-          } else {
+          } else if(!game_state.raceSelected) {
             new_modes['decline'] = 1
           }
         }
@@ -200,8 +201,8 @@ Game.state_monitor = {};
 
 Game.state_monitor.start = function() {
   log.d.trace('Game.state_monitor.start');
+  clearInterval(game._timer);
 
-  log.d.info('game main loop -> started');
   game.request_game_state();
   game._timer = setInterval(game.request_game_state, 2000);
 };
