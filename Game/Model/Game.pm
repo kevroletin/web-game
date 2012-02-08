@@ -111,12 +111,10 @@ has 'lastDiceValue' => ( isa => 'Maybe[Int]',
 has 'last_action' => ( isa => 'Str',
                        is => 'rw' );
 
-# TODO: store raceSelected here or add new game state
-sub raceSelected {
-    my ($self) = @_;
-    return undef unless $self->activePlayer();
-    $self->activePlayer()->raceSelected()
-}
+has 'raceSelected' => ( isa => 'Bool',
+                        is => 'rw',
+                        default => 0 );
+
 
 sub BUILD {
     my ($self) = @_;
@@ -181,6 +179,7 @@ sub next_player {
     $self->history([]);
     $self->activePlayerNum($n);
     $self->lastDiceValue(undef);
+    $self->raceSelected(0);
 }
 
 sub number_of_user {

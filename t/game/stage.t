@@ -183,7 +183,7 @@ actions->check_magic_game_stage('conquest', $user1);
 actions->check_magic_game_state('in_game', $user1);
 actions->check_magic_last_event('in_game', $user1);
 
-test('qonquer',
+test('conquer',
      {
       action => 'conquer',
       regionId => 2,

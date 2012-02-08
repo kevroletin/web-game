@@ -1,11 +1,7 @@
 use Test::Harness;
 
 {
-    runtests(
-#             "t/lobby/basic.t",
-             "t/lobby/complicated.t",
-#             "game_creation.t", #TODO: fix default maps
-#             "gameplay.t",
+    runtests('t/game/race_selected.t',
              (map { "t/races/$_.t" } qw(amazons
                                       dwarves
                                       elves

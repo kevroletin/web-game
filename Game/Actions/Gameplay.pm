@@ -91,7 +91,7 @@ sub _control_state {
     };
     my $start_moving = sub {
         $state->('conquer');
-        $ok->(!@{$game->history()} && !global_user()->raceSelected());
+        $ok->(!@{$game->history()} && !global_game()->raceSelected());
     };
     my $have_race = sub {
         $ok->($game->activePlayer()->activeRace())
@@ -315,7 +315,6 @@ sub finishTurn {
         $coins += global_user()->declineRace()->compute_coins(\@reg_d, $stat)
     }
     global_user()->coins(global_user()->coins() + $coins);
-    global_user()->raceSelected(0);
 
     $game->next_player();
     my $tok_cnt = $game->activePlayer()->tokensInHand();
@@ -409,7 +408,7 @@ sub selectRace {
 
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
-    global_user()->raceSelected(1);
+    global_game()->raceSelected(1);
 
     $game->state('conquer');
     db()->store_nonroot($pair);

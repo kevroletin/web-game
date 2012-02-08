@@ -10,14 +10,13 @@ use Data::Compare;
 use Data::Dumper::Concise;
 
 use lib '..';
-#use Tester;
-#use Tester::OK;
-#use Tester::Hooks;
-
+use Game::Constants;
 use Tester::New;
 use Exporter::Easy (
     EXPORT => [ qw( get_game_state ) ],
 );
+
+
 
 
 my ($descr, $in, $out, $hooks) = (('') x 4);
@@ -228,7 +227,19 @@ test("upload map",
     ($user1, $user2)
 }
 
+sub __compliment_token_badges {
+    my ($tok_b) = @_;
+    my %r = map { ($_ => 1) } @{Game::Constants::races()};
+    my %p = map { ($_ => 1) } @{Game::Constants::powers()};
+    delete $r{$_} for @{$tok_b->{races}};
+    delete $p{$_} for @{$tok_b->{powers}};
+    push @{$tok_b->{races}}, ucfirst($_) for sort keys %r;
+    push @{$tok_b->{powers}}, ucfirst($_) for sort keys %p;
+    $tok_b;
+}
+
 sub square_map_two_users {
+    my $token_badges = ref($_[-1]) eq 'HASH' ? pop @_ : undef;
     my ($user1, $user2) =
         register_two_users_and_create_square_map(@_);
 
@@ -285,12 +296,18 @@ test('1st user ready',
     },
     $user1 );
 
+    my $req = {
+               action => "setReadinessStatus",
+               isReady => 1,
+               sid => undef
+              };
+    if (defined $token_badges) {
+        __compliment_token_badges($token_badges);
+        $req->{visibleRaces} = $token_badges->{races};
+        $req->{visibleSpecialPowers} = $token_badges->{powers};
+    }
 test('2nd user ready',
-    {
-      action => "setReadinessStatus",
-      isReady => 1,
-      sid => undef
-    },
+     $req,
     {
       result => "ok"
     },

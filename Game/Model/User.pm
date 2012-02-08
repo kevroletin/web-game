@@ -70,11 +70,6 @@ has 'activeRace' => ( isa => 'Game::Race|Undef',
 has 'declineRace' => ( isa => 'Game::Race|Undef',
                        is => 'rw' );
 
-# TODO: move into Game::Model::Game
-has 'raceSelected' => ( isa => 'Bool',
-                        is => 'rw',
-                        default => 0 );
-
 sub BUILD {
     my ($self) = @_;
     unless ($self->isAi()) {
