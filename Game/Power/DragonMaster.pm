@@ -66,7 +66,5 @@ after '_clear_left_region' => \&__remove_dragon;
 
 after '_clear_declined_region' => \&__remove_dragon;
 
-after '_clear_region_before_redeploy' => \&__remove_dragon;
-
 
 1

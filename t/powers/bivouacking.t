@@ -23,6 +23,8 @@ my ($user1, $user2) = Tester::State::square_map_two_users(
    ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
 );
 
+actions->compatibility_game_state_format($user1);
+
 test('select power',
     {
       action => "selectGivenRace",
@@ -89,9 +91,9 @@ test('redeploy',
     },
     $user1 );
 
-check_encampment(0, 0, $user1);
-
 check_encampment(0, 1, $user1);
+
+check_encampment(0, 2, $user1);
 
 test('redeploy',
     {
@@ -119,9 +121,9 @@ test('redeploy',
     },
     $user1 );
 
-check_encampment(0, 0, $user1);
-
 check_encampment(0, 1, $user1);
+
+check_encampment(0, 2, $user1);
 
 test('redeploy',
     {
@@ -153,9 +155,9 @@ test('redeploy',
     },
     $user1 );
 
-check_encampment(1, 0, $user1);
+check_encampment(1, 1, $user1);
 
-check_encampment(4, 1, $user1);
+check_encampment(4, 2, $user1);
 
 test('finish turn',
     {
@@ -168,9 +170,9 @@ test('finish turn',
     },
     $user1 );
 
-check_encampment(1, 0, $user1);
+check_encampment(1, 1, $user1);
 
-check_encampment(4, 1, $user1);
+check_encampment(4, 2, $user1);
 
 test('select power',
     {

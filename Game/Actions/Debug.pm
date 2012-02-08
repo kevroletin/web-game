@@ -4,15 +4,18 @@ use warnings;
 
 use Game::Constants;
 use Game::Actions;
+#use Game::Actions::Game;
 use Game::Race::Debug;
 use Game::Power::Debug;
-use Game::Environment qw(:std :db :response);
+use Game::Environment qw(apply_game_features :std :db :response :config);
 use Moose::Util q(apply_all_roles);
 use Exporter::Easy ( EXPORT => [qw(resetServer
                                    doSmth
-                                   setBadge
                                    createBadgesPack
-                                   selectGivenRace)] );
+                                   selectGivenRace
+                                   getServerFeatures
+                                   getGameFeatures
+                                   setGameFeatures)] );
 
 
 sub resetServer {
@@ -35,10 +38,6 @@ sub resetServer {
 
 sub doSmth {
     response_json({result => 'ok'})
-}
-
-sub setBadge {
-    my ($data) = @_;
 }
 
 sub createBadgesPack {
@@ -111,6 +110,56 @@ sub selectGivenRace {
     db()->store_nonroot($pair);
     db()->update($game, global_user());
     response_json({result => 'ok'});
+}
+
+sub getServerFeatures {
+    response_json({result => 'ok', features => config()->{features}})
+}
+
+sub getGameFeatures {
+    my ($data) = @_;
+
+    # FIXME: copypaste from &Game::Actions::Game::getGameInfo
+    my ($game, $err);
+    if (defined $data->{gameId}) {
+        $game = get_game_by_id($data->{gameId});
+        $err = 'badGameId'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $game = global_game()
+    }
+    assert($game, $err);
+    apply_game_features($game);
+
+    response_json({result => 'ok',
+                   features => config()->{features},
+                   gameFeatures => $game->features()})
+}
+
+sub setGameFeatures {
+    my ($data) = @_;
+
+    # FIXME: copypaste from &Game::Actions::Game::getGameInfo
+    my ($game, $err);
+    if (defined $data->{gameId}) {
+        $game = get_game_by_id($data->{gameId});
+        $err = 'badGameId'
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $game = global_game()
+    }
+    assert($game, $err);
+
+    $_ = $game->features();
+    while (my ($k, $v) = each %{$data->{features}}) {
+        $_->{$k} = $v;
+    }
+    db()->update($game);
+    apply_game_features($game);
+
+    response_json({result => 'ok',
+                   features => config()->{features},
+                   gameFeatures => $game->features()})
 }
 
 1;

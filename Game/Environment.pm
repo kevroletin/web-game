@@ -28,7 +28,8 @@ use Exporter::Easy (
                          early_response early_response_json
                          response_raw)]
         ],
-    OK => [qw(assert
+    OK => [qw(apply_game_features
+              assert
               bool
               config
               feature
@@ -77,6 +78,14 @@ sub init {
                            },
                debug => 0
               };
+}
+
+sub apply_game_features {
+    my ($game) = @_;
+    $_ = config()->{features};
+    while (my ($k, $v) = each %{$game->features()}) {
+        $_->{$k} = $v
+    }
 }
 
 sub assert {
@@ -206,6 +215,11 @@ sub init_user_by_sid {
     }
 
     $global_user = $users[0];
+
+    if (defined $global_user->activeGame()) {
+        apply_game_features(global_game());
+    }
+
     1
 }
 

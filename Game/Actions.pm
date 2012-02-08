@@ -3,9 +3,10 @@ use warnings;
 use strict;
 
 use Exporter::Easy ( EXPORT => [qw(inc_counter
+                                   get_game_by_id
                                    params_from_proto
                                    proto)] );
-use Game::Environment qw(:std :response);
+use Game::Environment qw(:std :response :db);
 use Game::Model::Counter;
 
 my $last_data = undef;
@@ -31,5 +32,14 @@ sub proto {
     $last_data = $data;
 }
 
+sub get_game_by_id {
+    my ($id) = @_;
+    my $game = db_search_one({ gameId => $id },
+                             { CLASS => 'Game::Model::Game' });
+    unless ($game) {
+        early_response_json({result => 'badGameId'})
+    }
+    $game
+}
 
 1;

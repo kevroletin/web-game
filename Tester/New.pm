@@ -296,7 +296,7 @@ sub check_reg {
     my $check_state = sub {
         my ($c, $res) = @_;
         $_ = eval {
-            $c->{resp}{gameState}{map}{regions}[$reg_num]
+            $c->{resp}{gameState}{map}{regions}[$reg_num - 1]
         };
         my $diff = Tester::Diff::compare($_, $item, 'AT_LEAST')->errors_report(0);
         $res->{quick} = $diff ?
@@ -422,6 +422,22 @@ sub check_magic_last_event {
                     $params,
                     {show_only_errors => 0,
                      stack_level => $stack_level || 2 });
+}
+
+sub compatibility_game_state_format {
+    my ($self, $params) = @_;
+    send_test({
+           action => 'setGameFeatures',
+           gameId => undef,
+           features => {
+                        durty_gameList => 0,
+                        durty_gameState => 1,
+                        error_description => 1,
+                        compatibility => 1,
+                       }
+          },
+          {},
+          $params);
 }
 
 

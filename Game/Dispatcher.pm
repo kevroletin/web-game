@@ -7,9 +7,11 @@ use Game::Actions::Chat qw(getMessages
                            sendMessage);
 use Game::Actions::Debug qw(resetServer
                             doSmth
-                            setBadge
                             createBadgesPack
-                            selectGivenRace);
+                            selectGivenRace
+                            getServerFeatures
+                            getGameFeatures
+                            setGameFeatures);
 use Game::Actions::Game qw(aiJoin
                            createGame
                            joinGame
@@ -56,7 +58,10 @@ sub _is_action_without_sid {
                  getGameState
                  getGameInfo
                  getMapList
-                 getMapInfo)]
+                 getMapInfo
+                 getServerFeatures
+                 getGameFeatures
+                 setGameFeatures)]
 }
 
 sub process_request {

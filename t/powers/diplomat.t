@@ -113,7 +113,7 @@ test('selectfriend',
     {
       action => "selectFriend",
       sid => undef,
-      userId => undef
+      userId => $user2->{data}{userId}
     },
     {
       result => "ok"

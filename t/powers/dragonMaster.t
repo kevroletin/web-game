@@ -9,6 +9,8 @@ my ($user1, $user2) = Tester::State::square_map_two_users(
    ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
 );
 
+actions->compatibility_game_state_format($user1);
+
 test('dragonattack without selected power',
     {
       action => "dragonAttack",
@@ -71,7 +73,7 @@ test('dragonattack',
 
 actions->check_tokens_cnt(2, $user1);
 
-actions->check_reg(1, {currentRegionState => {'dragon' => true}}, $user1);
+actions->check_reg(2, {currentRegionState => {'dragon' => true}}, $user1);
 
 test('redeploy',
     {
@@ -104,7 +106,7 @@ test('finish turn',
     },
     $user1 );
 
-actions->check_reg(1, {currentRegionState => {'dragon' => true}}, $user1);
+actions->check_reg(2, {currentRegionState => {'dragon' => true}}, $user1);
 
 test('select power',
     {
@@ -140,7 +142,7 @@ test('dragonattack',
     },
     $user2 );
 
-actions->check_reg(3, {currentRegionState => {'dragon' => true}}, $user1);
+actions->check_reg(4, {currentRegionState => {'dragon' => true}}, $user1);
 
 test('dragonattack twice',
     {
@@ -169,7 +171,7 @@ test('redeploy and leave dragon',
     },
     $user2 );
 
-actions->check_reg(1, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
+actions->check_reg(4, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
 
 test('finish turn',
     {
@@ -192,6 +194,6 @@ test('decline 1st',
     },
     $user1 );
 
-actions->check_reg(1, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
+actions->check_reg(4, {currentRegionState => {'dragon' => null_or_val_checker(false) }}, $user1);
 
 done_testing();

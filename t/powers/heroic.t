@@ -9,6 +9,8 @@ my ($user1, $user2) = Tester::State::square_map_two_users(
    ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
 );
 
+actions->compatibility_game_state_format($user1);
+
 test('select power',
     {
       action => "selectGivenRace",
@@ -69,7 +71,7 @@ test('redeploy',
     },
     $user1 );
 
-actions->check_reg(0, { currentRegionState => { hero => true } }, $user1);
 actions->check_reg(1, { currentRegionState => { hero => true } }, $user1);
+actions->check_reg(2, { currentRegionState => { hero => true } }, $user1);
 
 done_testing();

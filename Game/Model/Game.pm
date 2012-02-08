@@ -115,6 +115,10 @@ has 'raceSelected' => ( isa => 'Bool',
                         is => 'rw',
                         default => 0 );
 
+has 'features' => ( isa => 'HashRef',
+                    is => 'rw',
+                    default => sub { {} } );
+
 
 sub BUILD {
     my ($self) = @_;

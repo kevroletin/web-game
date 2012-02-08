@@ -9,6 +9,8 @@ my ($user1, $user2) = Tester::State::square_map_two_users(
    ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
 );
 
+actions->compatibility_game_state_format($user1);
+
 test('select power',
     {
       action => "selectGivenRace",
@@ -34,7 +36,7 @@ test('conquer 1st',
     },
     $user1 );
 
-actions->check_reg(2, { currentRegionState => { fortified => null_or_val_checker(false)} }, $user1);
+actions->check_reg(3, { currentRegionState => { fortified => null_or_val_checker(false)} }, $user1);
 
 test('redeploy on empty region 1st',
     {
@@ -55,7 +57,7 @@ test('redeploy on empty region 1st',
     },
     $user1 );
 
-actions->check_reg(2, { currentRegionState => { fortified => null_or_val_checker(false)} }, $user1);
+actions->check_reg(3, { currentRegionState => { fortified => null_or_val_checker(false)} }, $user1);
 
 test('redeploy 1st',
     {
@@ -76,7 +78,7 @@ test('redeploy 1st',
     },
     $user1 );
 
-actions->check_reg(0, { currentRegionState => { fortified => 1 } }, $user1);
+actions->check_reg(1, { currentRegionState => { fortified => true } }, $user1);
 
 test('finish turn: check extra coins',
     {
@@ -149,7 +151,7 @@ test('decline 1st',
     },
     $user1 );
 
-actions->check_reg(0, { currentRegionState => { fortified => 1 } }, $user1);
+actions->check_reg(1, { currentRegionState => { fortified => true } }, $user1);
 
 test('finish turn: no extra tokens',
     {
