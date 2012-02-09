@@ -43,6 +43,9 @@ has 'regions' => ( isa => 'ArrayRef[Game::Model::Region]',
 has 'id' => ( isa => 'Maybe[Int]',
               is => 'rw' );
 
+has 'prev_id' => ( isa => 'Maybe[Int]',
+                       is => 'rw' );
+
 has 'picture' => ( isa => 'Str',
                    is => 'rw',
                    default => '' );
@@ -72,8 +75,14 @@ sub BUILD {
     }
     assert($population <= 18, 'badRegions', descr => 'tooManyFreeTokens');
 
-    $self->{id} = inc_counter('Game::Model::Map::id');
+    $self->id( inc_counter('Game::Model::Map::id') );
+    $self->prev_id( $self->id() );
 }
+
+after 'id' => sub {
+    my ($self, $id) = @_;
+    $self->prev_id($id) if defined $id
+};
 
 sub get_region {
     my ($s, $i) = @_;
@@ -95,7 +104,7 @@ sub region_by_id {
 sub extract_state_durty {
     my ($s) = @_;
     my $res = $s->short_info();
-    $res->{mapId} = $s->id();
+    $res->{mapId} = $s->prev_id();
     $res->{mapName} = $s->mapName();
     $res->{playersNum} = $s->playersNum();
     $res->{turnsNum} = $s->turnsNum();
@@ -138,7 +147,7 @@ sub short_info {
     my ($s) = @_;
     my %h = %{$s};
     $h{regionsNum} = @{$h{regions}};
-    $h{mapId} = $h{id}; delete $h{id};
+    $h{mapId} = $h{prev_id}; delete $h{id}; delete $h{prev_id};
     delete $h{regions};
     \%h;
 }

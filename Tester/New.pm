@@ -14,6 +14,7 @@ use Data::Dumper::Concise;
 use Devel::StackTrace;
 use Text::Diff;
 use Exporter::Easy ( EXPORT => [ qw(actions
+                                    before_request_hook
                                     done_testing
                                     tests_context
                                     hooks_sync_values
@@ -43,6 +44,10 @@ sub tests_context { $context }
 {
     my $actions = Tester::New::ProtocolActions->new();
     sub actions { $actions }
+}
+
+sub before_request_hook {
+    $context->{before_request_hook} = shift;
 }
 
 sub record {
@@ -89,11 +94,18 @@ sub init {
     $context->{record_history} = 0;
     $context->{history} = [];
     $context->{use_text_diff} = 0;
+    $context->{before_request_hook} = undef;
+    $context->{show_only_errors} = 0;
     1
 }
 
 sub request {
     my ($content) = @_;
+
+    my $br = $context->{before_request_hook};
+    delete $context->{before_request_hook};
+    $br->() if defined $br;
+
     my $req = HTTP::Request->new(POST => $context->{url});
     $req->content($content);
     my $res = $context->{ua}->request($req);
@@ -104,6 +116,9 @@ sub request {
         my $place = sprintf( "#   at %s line %s\n", $t->filename(), $t->line());
         push @{$context->{history}}, [$a, $b, $place];
     }
+
+    $context->{before_request_hook} = $br;
+
     $res
 }
 
@@ -192,7 +207,11 @@ sub test {
     write_log("---$test_name---");
     my ($res, $c) = send_test($in, $out, $params, $test_params);
 
-    return if $test_params->{show_only_errors} && $res->{ok};
+    if ($res->{res} &&
+        ($test_params->{show_only_errors} || $context->{show_only_errors}))
+    {
+        return
+    }
 
     message(sprintf("%s: %s\n", $test_name, $res->{quick}));
     my $msg_file_line = $context->{msg_file_curr_line};
@@ -218,6 +237,7 @@ sub test {
             printf $fh "#   %s\n", $res->{long}
         }
     }
+    ($res, $c)
 }
 
 sub hooks_sync_values {
@@ -438,6 +458,18 @@ sub compatibility_game_state_format {
           },
           {},
           $params);
+}
+
+sub get_game_state {
+    my ($self, $params) = @_;
+    my $res = send_test({ action => 'getGameState',
+                          gameId => $params->{data}{gameId} },
+                        { result => 'ok' });
+    $res
+}
+
+sub reset_server {
+    test('reset server', {action => 'resetServer'}, {result => 'ok'});
 }
 
 

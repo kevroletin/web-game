@@ -154,7 +154,7 @@ sub load_state {
 
     assert($data->{inDecline} ~~ [0, 1], $err,
            badInDecline => $data->{inDecline});
-    $self->inDecline($data->{inDecline});
+    $self->inDecline(from_bool($data->{inDecline}));
 
     my $ok = find_type_constraint(
                  'Game::Model::Region::ExtraItems'

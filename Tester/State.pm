@@ -1,81 +1,21 @@
 package Tester::State;
 
 use strict;
-#use warnings;
+use warnings;
 
 use Test::More;
 
 use JSON;
-use Data::Compare;
 use Data::Dumper::Concise;
 
 use lib '..';
 use Game::Constants;
 use Tester::New;
-use Exporter::Easy (
-    EXPORT => [ qw( get_game_state ) ],
-);
 
-
-
-
-my ($descr, $in, $out, $hooks) = (('') x 4);
-
-my $ok = 1;
-my $fail_test;
-
-sub get_game_state {
-    my ($user) = @_;
-    my $state;
-    my $in = { action => 'getGameState',
-               sid => $user->{_sid} };
-    my $out = { result => 'ok' };
-    my $h = sub {
-        $state = $_[2];
-        defined $state->{result} && $state->{result} eq 'ok'
-    };
-    my $ok = json_custom_compare_test($h, to_json($in), '{}', {});
-    ok( $ok, 'Get game state' );
-
-    write_msg("\n*** Get game state  ***:", $ok);
-    write_msg(Dumper($state)) unless $ok;
-    exit unless $ok;
-    $state
-}
-
-sub OK {
-    $ok &&= $_[0]->{res};
-    $fail_test = \@_ unless $ok;
-#    write_msg("\n*** $_[1]  ***:  ", $_[0]->{quick} . "\n");
-#    write_msg($_[0]->{long} . "\n") if $_[0]->{long};
-}
-
-sub FINISH {
-    my $descr = $fail_test;
-#    $descr = "Create 2x2 map with 2 users" unless $descr;
-    ok($ok, 'Create 2x2 map with 2 users');
-    if ($fail_test) {
-        $_ = $fail_test;
-        write_msg("\n*** $_->[1]  ***:  ", $_->[0]->{quick} . "\n");
-        write_msg($_->[0]->{long} . "\n") if $_->[0]->{long};
-    }
-}
-
-sub GO {
-    $in = $_[0] if $_[0];
-    $out = $_[1] if $_[1];
-    $hooks = $_[2] if $_[2];
-    write_log($descr);
-    OK( json_compare_test($in, $out, $hooks), $descr );
-}
-
-sub IN { if ($_[0]) { $in = $_[0] } $in  }
-
-sub OUT { if ($_[0]) { $out = $_[0] } $out }
-
-sub HOOKS { if ($_[0]) { $hooks = $_[0] } $hooks }
-
-sub TEST { if ($_[0]) { $descr = $_[0] } $descr }
+use Carp;
+$SIG{__DIE__} = \&Carp::confess;
+$SIG{__WARN__} = \&Carp::confess;
+$SIG{INT} = \&Carp::confess;
 
 
 sub register_two_users_and_create_square_map {
@@ -239,6 +179,14 @@ sub __compliment_token_badges {
 }
 
 sub square_map_two_users {
+    if ($ENV{debug_loading}) {
+        __square_map_two_users_debug_state(@_)
+    } else {
+        __square_map_two_users(@_);
+    }
+}
+
+sub __square_map_two_users {
     my $token_badges = ref($_[-1]) eq 'HASH' ? pop @_ : undef;
     my ($user1, $user2) =
         register_two_users_and_create_square_map(@_);
@@ -346,67 +294,54 @@ test('2nd getuserinfo',
     ($user1, $user2)
 }
 
-sub square_map_two_users_debug_state {
-  square_map_two_users(@_)
-}
+sub __square_map_two_users_debug_state {
+    my @map = @_;
+    my ($user1, $user2);
 
-=begin comment
+    my $check_game_loading = sub {
+        $_ = actions->get_game_state($user1);
+        my $state = $_->{resp};
 
-sub square_map_two_users_debug_state {
-    my $p_user1 = \$_[0];
-    my $p_user2 = \$_[1];
-    my ($user1, $user2) = (shift, shift);
-    my $map = \@_;
+        tests_context()->{show_only_errors} = 1;
+        my ($user1_new, $user2_new) =
+            register_two_users_and_create_square_map(@map);
+        %$user1 = %$user1_new;
+        %$user2 = %$user2_new;
 
-    my $chack_game_loading = sub {
+        test('load state',
+             {
+              action => 'loadGame',
+              sid => $user1->{data}{sid},
+              gameName => 'loaded game',
+              gameState => $state->{gameState}
+             },
+             {
+              result => 'ok'
+             },
+             $user1);
 
-        my  $state = get_game_state($$p_user1);
+        tests_context()->{show_only_errors} = 0;
 
-        reset_server();
+        my ($res, $c) = test('check new state',
+             {
+              action => 'getGameState',
+              sid => undef
+             },
+             $state,
+             $user1,
+             { diff_method => 'EXACT',
+               stack_level => 8 });
 
-        ($$p_user1, $$p_user2) =
-            Tester::State::register_two_users_and_create_square_map(@$map);
-        my $res;
-        json_compare_test(
-           '{"action": "loadGame", "sid": "' .$$p_user1->{_sid} .'",' .
-           '"gameName": "COOLGame",' .
-           '"gameState":' . to_json($state) .
-           '}', '{"result": "ok"}',
-           {res_hook => sub { $res = $_[0] }});
 
-        my $ok = defined $res->{result} && $res->{result} eq 'ok';
-        write_msg("\n*** Load Game  ***: $ok\n");
-        write_msg(Dumper $res) unless $ok;
-
-        my $new_state = get_game_state($$p_user1);
-
-        $ok = Compare($state, $new_state);
-        ok( $ok , 'Restore state' );
-        unless ($ok) {
-            write_msg("\n*** Restore state  ***: $ok\n");
-
-            open my $f1, '>>', 'f1.txt';
-            open my $f2, '>>', 'f2.txt';
-
-    #        print $f1 ($state);
-    #        print $f2 ($new_state);
-
-            print $f1 Dumper($state);
-            print $f2 Dumper($new_state);
-
-            close $f1;
-            close $f2;
-
-            exit();
-        }
+        exit() unless $res->{res}
     };
 
-    ($$p_user1, $$p_user2) = square_map_two_users(@$map);
+    ($user1, $user2) = __square_map_two_users(@map);
 
-    before_request( $chack_game_loading );
+    before_request_hook( $check_game_loading );
 
+    ($user1, $user2)
 }
 
-=cut comment
 
 1;

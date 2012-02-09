@@ -21,7 +21,8 @@ use Exporter::Easy (
                   global_game
                   global_user)],
     TAGS => [
-         std => [qw(assert bool num config feature is_debug global_game global_user)],
+         std => [qw(assert from_bool bool num config feature
+                     is_debug global_game global_user)],
          db => [qw(db db_search db_search_one db_scope inc_counter)],
          config => [qw(environment request stack_trace)],
          response => [qw(response response_json
@@ -33,6 +34,7 @@ use Exporter::Easy (
               bool
               config
               feature
+              from_bool
               db
               db_search
               db_search_one
@@ -92,15 +94,19 @@ sub assert {
     my ($ok, $msg) = (shift, shift);
     return if $ok;
     if (feature('error_description')) {
-        early_response_json({result => $msg})
-    } else {
         early_response_json({result => $msg, @_})
+    } else {
+        early_response_json({result => $msg})
     }
     1
 }
 
 sub bool {
     $_[0] ? JSON::true : JSON::false;
+}
+
+sub from_bool {
+    $_[0] ? 1 : 0
 }
 
 sub num {

@@ -369,7 +369,7 @@ sub extract_state_clear {
     $res->{attacksHistory} = $s->_extract_history();
 # Shouldn't be used in theory
 #    $res->{lastAttack} = $s->_extract_last_attack();
-    $res->{mapId} = $s->map()->id();
+    $res->{mapId} = $s->map()->prev_id();
     $res->{raceSelected} = bool($s->raceSelected());
     $res->{state} = $s->state();
     $res->{turn} = $s->turn();
@@ -498,7 +498,7 @@ sub short_info_durty {
         activePlayerId => ($_ = $s->activePlayer()) ? $_->id() : undef,
         turn => $s->turn(),
         turnsNum => $s->map()->turnsNum(),
-        mapId => $s->map()->id(),
+        mapId => $s->map()->prev_id(),
         mapName => $s->map()->mapName(),
         aiRequiredNum => $s->ai() - $s->aiJoined(),
         state => $s->magic_game_state_field()
@@ -523,7 +523,7 @@ sub short_info_clear {
         gameId => $s->gameId(),
         gameName => $s->gameName(),
         gameDescr => $s->gameDescr(),
-        mapId => $s->map()->id(),
+        mapId => $s->map()->prev_id(),
         mapName => $s->map()->mapName(),
         maxPlayersNum => $s->map()->playersNum(),
         playersNum => scalar @{$s->players()},
@@ -574,8 +574,8 @@ sub _load_token_badges_from_state {
     for (@{$data->{visibleTokenBadges}}) {
         assert(ref($_) eq 'HASH', 'badVisibleTokenBadges',
                notHash => $_);
-        my ($race, $power) = ($_->{raceName},
-                              $_->{specialPowerName});
+        my ($race, $power) = (lcfirst($_->{raceName}),
+                              lcfirst($_->{specialPowerName}));
 
         assert(defined $race &&
                ($race ~~ races_with_debug()),
@@ -607,7 +607,7 @@ sub _load_regions_from_state {
         assert(!defined $_->{owner} || $_->{owner} ~~ @pl_id,
                'badRegions', 'badOwner' => $_->{owner},
                'gamePlayers' => [@pl_id]);
-        $self->map()->get_region($i++)->load_state($_);
+        $self->map()->regions()->[$i++]->load_state($_);
     }
 }
 
@@ -616,36 +616,33 @@ sub _load_regions_from_state {
 sub _load_attacks_history_from_state {
     my ($self, $data) = @_;
     my $err = 'badAttacksHistory';
-    my $h = $data->{attacksHistory};
-    assert(ref($h) eq 'ARRAY', $err, descr => 'notArray');
+    my $hist = $data->{attacksHistory};
+    assert(ref($hist) eq 'ARRAY', $err, descr => 'notArray');
     my @res;
-    for my $hist_item (@{$h}) {
-        assert(ref($hist_item) eq 'HASH', $err,
-               notHash => $hist_item);
+    for my $h_item (@{$hist}) {
+        assert(ref($h_item) eq 'HASH', $err,
+               notHash => $h_item);
         my $num = sub { defined $_[0] && $_[0] =~ /^\d+$/ };
-        my $r = $hist_item->{region};
+        my $r = $h_item->{region};
 
         assert( $num->($r) &&
                 0 <= $r && $r <= @{$self->map()->regions()},
                 $err, badRegion => $r );
-        assert( $num->($hist_item->{tokensNum}), $err,
-                badTokensNum => $hist_item->{tokensNum} );
+        assert( $num->($h_item->{tokensNum}), $err,
+                badTokensNum => $h_item->{tokensNum} );
         my $is_who = sub {
             my ($player) = @_;
-            assert(defined $data->{whom}, $err,
-                   badWhom => $hist_item->{whom});
-            $player->id() eq $hist_item->{whom}
-
+            $player->id() eq $h_item->{whom}
         };
-        my $p = $data->{whom};
-        if (defined $data->{whom}) {
+        my $p = $h_item->{whom};
+        if (defined $h_item->{whom}) {
             ($p) = grep { $is_who->($_) } @{$self->players()};
             assert($p, $err, badDefender => $data->{whom});
         }
         push @res, {
           region => $self->map()->get_region($r),
-          tokensNum => $hist_item->{tokensNum},
-          whom => $p ? $p->id() : undef
+          tokensNum => $h_item->{tokensNum},
+          whom => $p
         }
     }
 
@@ -655,11 +652,17 @@ sub _load_attacks_history_from_state {
 sub load_state {
     my ($self, $data) = @_;
 
-    die 'bad map id' if $data->{mapId} ne $self->map()->id();
+    die 'bad map id' if $data->{mapId} ne $self->map()->prev_id();
 
     my @st = qw(conquer redeployed defend declined);
     assert(($data->{state} ~~ @st), 'badState');
     $self->state($data->{state});
+    assert((defined $data->{turn} && $data->{turn} =~ /\d+/ &&
+            $data->{turn} <= $self->map()->turnsNum()),
+           'badTurn', turn => $data->{turn});
+    $self->turn($data->{turn});
+    eval{ $self->raceSelected($data->{raceSelected}) };
+    assert( !$@, 'badRaceSelected' );
 
     $self->_load_players_from_state($data);
     $self->_load_regions_from_state($data);

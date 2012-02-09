@@ -30,9 +30,7 @@ sub _construct_new_game {
 
     my $map = db_search_one({ id => $data->{mapId} },
                             { CLASS => 'Game::Model::Map' });
-    unless ($map) {
-        early_response_json({result => 'badMapId'});
-    }
+    assert($map, 'badMapId', descr => 'mapNotFound');
 
     my $map_clone = dclone($map);
     $map_clone->id(undef);
@@ -178,12 +176,12 @@ sub loadGame {
     my $game = _construct_new_game({
                    gameName => $data->{gameName},
                    gameDescr => $data->{gameDescr},
-                   mapId => $data->{gameState}->{mapId} });
+                   mapId => $data->{gameState}{mapId} });
 
     $game->load_state($data->{gameState});
     db()->store_nonroot($game);
 
-    response_json({result => 'ok'})
+    response_json({result => 'ok', gameId => $game->gameId()})
 }
 
 sub setReadinessStatus {
@@ -207,16 +205,5 @@ sub setReadinessStatus {
     response_json({result => 'ok'})
 }
 
-# TODO:
-# getGameState
-
-# TODO:
-# getMapState
-
-# TODO:
-# saveGame
-
-# TODO:
-# loadGame
 
 1

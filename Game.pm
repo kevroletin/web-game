@@ -34,7 +34,7 @@ sub setup_environment {
     Game::Environment::init();
     environment($env);
 
-    config()->{features}{log_requests} = 1;
+    config()->{features}{log_requests} = 0;
 
     if ($ENV{compability} && $ENV{compability} eq 'true') {
         $_ = config()->{features};
