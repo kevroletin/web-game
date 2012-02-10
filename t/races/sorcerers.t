@@ -91,6 +91,17 @@ test('enchant before select race',
     },
     $user2 );
 
+test('check enchanted',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { enchanted => false }
+    },
+    $user1 );
+
 test('select race',
     {
       action => "selectGivenRace",
@@ -113,6 +124,17 @@ test('enchant not adjacent',
       result => "badRegion"
     },
     $user2 );
+
+test('check enchanted',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { enchanted => false }
+    },
+    $user1 );
 
 test('conquer',
     {
@@ -146,6 +168,17 @@ test('enchant',
       result => "ok"
     },
     $user2 );
+
+test('check enchanted',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { enchanted => true }
+    },
+    $user1 );
 
 test('redeploy',
     {
@@ -181,6 +214,17 @@ test('finish turn',
       result => "ok"
     },
     $user2 );
+
+test('check enchanted',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { enchanted => false }
+    },
+    $user1 );
 
 test('enchant region with 2 tokens',
     {
@@ -232,6 +276,17 @@ test('finish turn',
     {
       coins => 2,
       result => "ok"
+    },
+    $user1 );
+
+test('check enchanted',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { enchanted => false }
     },
     $user1 );
 

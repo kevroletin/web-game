@@ -22,6 +22,17 @@ test('dragonattack without selected power',
     },
     $user1 );
 
+test('check dragon attacked',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { dragonAttacked => false }
+    },
+    $user1 );
+
 test('select power',
     {
       action => "selectGivenRace",
@@ -68,6 +79,17 @@ test('dragonattack',
     },
     {
       result => "ok"
+    },
+    $user1 );
+
+test('check dragon attacked',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { dragonAttacked => true }
     },
     $user1 );
 
@@ -119,6 +141,17 @@ test('select power',
       result => "ok"
     },
     $user2 );
+
+test('check dragon attacked',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { dragonAttacked => false }
+    },
+    $user1 );
 
 test('conquer',
     {

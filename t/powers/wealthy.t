@@ -76,6 +76,17 @@ test('finish turn',
     },
     $user1 );
 
+test('check got wealthy',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { gotWealthy => true }
+    },
+    $user1 );
+
 test('select power',
     {
       action => "selectGivenRace",

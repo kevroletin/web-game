@@ -14,9 +14,18 @@ sub power_name { 'wealthy' }
 
 sub _power_tokens_cnt { 4 }
 
+after 'firstTurnFinished' => sub {
+    my ($self, $value) = @_;
+    global_game()->raceStateStorage()->{gotWealthy} =
+        bool($self->{firstTurnFinished})
+};
+
 override 'compute_coins' => sub {
     my ($self, $regs, $stat) = @_;
     return super() if $self->firstTurnFinished();
+
+    global_game()->raceStateStorage()->{gotWealthy} = bool(1);
+
     $self->firstTurnFinished(1);
     db()->update($self);
     $stat->{power} = 7;

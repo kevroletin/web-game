@@ -14,6 +14,11 @@ sub power_name { 'stout' }
 
 sub _power_tokens_cnt { 4 }
 
+after 'declineRequested' => sub {
+    my ($self, $value) = @_;
+    global_game()->raceStateStorage()->{declineRequested} = bool($value)
+};
+
 override 'decline' => sub {
     my ($self) = @_;
     if (global_game()->state() ne 'redeployed') {

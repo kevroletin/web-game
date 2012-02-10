@@ -120,6 +120,18 @@ test('selectfriend',
     },
     $user1 );
 
+test('check friend info',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { friendInfo => { diplomatId => $user1->{data}{userId},
+                                     friendId   => $user2->{data}{userId}} }
+    },
+    $user1 );
+
 test('finish turn',
     {
       action => "finishTurn",

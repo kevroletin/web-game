@@ -197,6 +197,14 @@ sub number_of_user {
     undef
 }
 
+sub get_player_by_id {
+    my ($self, $user_id) = @_;
+    for (@{$self->players()}) {
+        return $_ if $_->id() eq $user_id
+    }
+    undef
+}
+
 sub ready {
     my ($self) = @_;
     return 0 unless @{$self->players()} > 1;
@@ -261,6 +269,11 @@ sub _copy_races_state_storage {
     $st->{dragonAttacked} = bool(0);
     $st->{enchanted} = bool(0);
     $st->{gotWealthy} = bool(0);
+    $st->{friendInfo} = undef;
+    #$st->{stoutStatistcs} = undef;
+    $st->{declineRequested} = bool(0);
+    $st->{berserkDice} = undef;
+    $st->{holesPlaced} = 0;
 
     for (keys %{$self->raceStateStorage()}) {
         $st->{$_} = $self->raceStateStorage()->{$_}
@@ -373,10 +386,13 @@ sub extract_state_clear {
     $res->{raceSelected} = bool($s->raceSelected());
     $res->{state} = $s->state();
     $res->{turn} = $s->turn();
+    $res->{lastDiceValue} = $_ if defined ($_ = $s->lastDiceValue());
 
     $res->{players} = $s->_extract_players_state_clear();
     $res->{regions} = $s->map()->extract_state_clear();
     $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
+
+    $res->{features} = $s->features() if $s->features();
 
     $s->_copy_races_state_storage($res);
     $res
@@ -649,6 +665,34 @@ sub _load_attacks_history_from_state {
     $self->history(\@res)
 }
 
+# should be loaded: $self->map
+#                   $self->players
+sub _load_race_state_storage_from_state{
+    my ($s, $data) = @_;
+    my $res = {};
+    $res->{dragonAttacked} = bool($data->{dragonAttacked});
+    $res->{enchanted} = bool($data->{enchanted});
+    $res->{gotWealthy} = bool($data->{gotWealthy});
+    $res->{declineRequested} = bool($data->{declineRequested});
+    # TODO:
+    # $res->{stoutStatistcs} = $data->{stoutStatistcs};
+    {
+        no warnings;
+        $res->{berserkDice} = defined ($_ = $data->{berserkDice}) ?
+                                  int $_ : undef;
+        $res->{holesPlaced} = defined ($_ = $data->{holesPlaced}) ?
+                                  int $_ : undef;
+    }
+
+    if (($_ = $data->{friendInfo})) {
+        my $players_ids = [ map { $_->id() } @{$s->players()} ];
+        assert($_->{diplomatId} ~~ $players_ids, 'badDiplomatId');
+        assert($_->{friendId} ~~ $players_ids, 'badFriendId');
+        $res->{friendInfo} = $data->{friendInfo}
+    }
+    $s->raceStateStorage($res)
+}
+
 sub load_state {
     my ($self, $data) = @_;
 
@@ -664,10 +708,17 @@ sub load_state {
     eval{ $self->raceSelected($data->{raceSelected}) };
     assert( !$@, 'badRaceSelected' );
 
+    eval{ $self->features($data->{features}) if $data->{features} };
+    assert( !$@, 'badFeatures' );
+
+    eval{ $self->lastDiceValue($_) if ($_ = $data->{lastDiceValue}) };
+    assert( !$@, 'badLasDiceValue' );
+
     $self->_load_players_from_state($data);
     $self->_load_regions_from_state($data);
     $self->_load_token_badges_from_state($data);
     $self->_load_attacks_history_from_state($data);
+    $self->_load_race_state_storage_from_state($data);
 
     assert(defined $data->{activePlayerNum} &&
            $data->{activePlayerNum} =~ /^\d+$/,

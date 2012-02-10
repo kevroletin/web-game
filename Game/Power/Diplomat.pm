@@ -9,12 +9,23 @@ with( 'Game::Roles::Power' );
 has 'friendId' => ( isa => 'Maybe[Str]',
                     is => 'rw' );
 
+after 'friendId' => sub {
+    my ($self, $value) = @_;
+    $_ = global_game()->raceStateStorage();
+    unless (defined $value) {
+        delete $_->{friendInfo}
+    } else {
+        $_->{friendInfo} = { diplomatId => global_user()->id(),
+                             friendId   => $value }
+    };
+};
+
 after 'load_state' => sub {
     my ($self, $state, $owner_user) = @_;
     return unless defined $self->friendId();
-    global_game()->raceStateStorage()->{friends} = {
-        diplomat => $owner_user->id(),
-        friend => $self->friendId()
+    global_game()->raceStateStorage()->{friendInfo} = {
+        diplomatId => $owner_user->id(),
+        friendId => $self->friendId()
     };
 };
 
@@ -22,14 +33,9 @@ sub power_name { 'diplomat' }
 
 sub _power_tokens_cnt { 5 }
 
-sub __clear_game_state_storage {
-    delete global_game()->raceStateStorage()->{friends}
-}
-
 after 'conquer' => sub {
     my ($self) = @_;
     if ($self->friendId()) {
-        $self->__clear_game_state_storage();
         $self->friendId(undef);
         db()->update($self)
     }
@@ -52,16 +58,15 @@ sub selectFriend {
                descr => 'attacked');
     }
     $self->friendId($friend->id());
-    my $public_state = { diplomat => global_user()->id(),
-                         friend => $friend->id() };
-    global_game()->raceStateStorage()->{friends} = $public_state;
+    my $public_state = { diplomatId => global_user()->id(),
+                         friendId => $friend->id() };
     db()->update($self, global_game())
 }
 
 after 'inDecline' => sub {
     my ($self, $val) = @_;
     if ($val && $val == 1) {
-        $self->__clear_game_state_storage();
+        $self->friendId(undef);
     }
 };
 

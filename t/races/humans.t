@@ -9,6 +9,8 @@ my ($user1, $user2) = Tester::State::square_map_two_users(
    ['border', 'farmland'], ['border', 'farmland'],   ['border', 'hill'], ['border', 'hill']
 );
 
+tests_context()->{use_text_diff} = 1;
+
 test('select race',
     {
       action => "selectGivenRace",

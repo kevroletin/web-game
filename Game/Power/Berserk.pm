@@ -13,6 +13,11 @@ sub power_name { 'berserk' }
 
 sub _power_tokens_cnt { 4 }
 
+after 'lastDiceValue' => sub {
+    my ($self, $value) = @_;
+    global_game()->raceStateStorage()->{berserkDice} = $value
+};
+
 sub throwDice {
     my ($self, $dice) = @_;
     assert(!defined $self->lastDiceValue(), 'badStage',

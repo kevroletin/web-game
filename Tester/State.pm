@@ -299,7 +299,7 @@ sub __square_map_two_users_debug_state {
     my ($user1, $user2);
 
     my $check_game_loading = sub {
-        $_ = actions->get_game_state($user1);
+        $_ = actions->save_game($user1);
         my $state = $_->{resp};
 
         tests_context()->{show_only_errors} = 1;
@@ -319,12 +319,13 @@ sub __square_map_two_users_debug_state {
               result => 'ok'
              },
              $user1);
+        $user2->{data}{gameId} = $user1->{data}{gameId};
 
         tests_context()->{show_only_errors} = 0;
 
         my ($res, $c) = test('check new state',
              {
-              action => 'getGameState',
+              action => 'saveGame',
               sid => undef
              },
              $state,

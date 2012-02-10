@@ -446,6 +446,8 @@ sub check_magic_last_event {
 
 sub compatibility_game_state_format {
     my ($self, $params) = @_;
+    $_ = $context->{before_request_hook};
+    delete $context->{before_request_hook};
     send_test({
            action => 'setGameFeatures',
            gameId => undef,
@@ -458,11 +460,20 @@ sub compatibility_game_state_format {
           },
           {},
           $params);
+    $context->{before_request_hook} = $_;
 }
 
 sub get_game_state {
     my ($self, $params) = @_;
     my $res = send_test({ action => 'getGameState',
+                          gameId => $params->{data}{gameId} },
+                        { result => 'ok' });
+    $res
+}
+
+sub save_game {
+    my ($self, $params) = @_;
+    my $res = send_test({ action => 'saveGame',
                           gameId => $params->{data}{gameId} },
                         { result => 'ok' });
     $res

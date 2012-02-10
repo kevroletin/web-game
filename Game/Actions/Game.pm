@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Game::Actions;
-use Game::Environment qw(:db :response);
+use Game::Environment qw(:config :db :response);
 use Game::Model::Game;
 use Game::Model::AiUser;
 use Storable q(dclone);
@@ -13,6 +13,7 @@ use Exporter::Easy ( OK => [qw(aiJoin
                                leaveGame
                                getGameInfo
                                getGameState
+                               saveGame
                                getGameList
                                leaveGame
                                loadGame
@@ -107,13 +108,36 @@ sub getGameState {
     my $game;
 
     if (defined $data->{gameId}) {
-        $game = get_game_by_id($data->{gameId})
+        $game = get_game_by_id($data->{gameId});
+        apply_game_features($game);
     } elsif (defined $data->{sid}) {
         init_user_by_sid($data->{sid});
         $game = global_game()
     } else {
         assert(0, 'badJson')
     }
+
+    my $state = $game->extract_state();
+    response_json({result => 'ok', gameState => $state})
+}
+
+sub saveGame {
+    my ($data) = @_;
+    my $game;
+
+    if (defined $data->{gameId}) {
+        $game = get_game_by_id($data->{gameId});
+        apply_game_features($game);
+    } elsif (defined $data->{sid}) {
+        init_user_by_sid($data->{sid});
+        $game = global_game()
+    } else {
+        assert(0, 'badJson')
+    }
+
+    $_ = config()->{features};
+    $_->{compatibility} = 0;
+    $_->{durty_gameState} = 0;
 
     my $state = $game->extract_state();
     response_json({result => 'ok', gameState => $state})

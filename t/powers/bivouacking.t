@@ -10,11 +10,11 @@ sub check_encampment {
     actions->check_reg($reg_num,
                        {
                         currentRegionState => {
-                                               encampment => sub {
-                                                   !defined $_[0] && $cnt == 0 ||
-                                                   defined $_[0] && $cnt == $_[0]
-                                               }
-                                              }
+                          encampment => sub {
+                            !defined $_[0] && $cnt == 0 ||
+                            defined $_[0] && $cnt == $_[0]
+                          }
+                        }
                        },
                        $params, 3);
 }

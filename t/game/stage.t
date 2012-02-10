@@ -5,6 +5,7 @@ use lib '..';
 use Tester::State;
 use Tester::New;
 
+delete $ENV{debug_loading};
 
 #record();
 

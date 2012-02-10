@@ -15,6 +15,19 @@ sub race_name { 'halflings' }
 
 sub tokens_cnt { 6 }
 
+after 'holes_cnt' => sub {
+    my ($self, $cnt) = @_;
+    global_game()->raceStateStorage()->{holesPlaced} = $cnt
+};
+
+sub __write_to_game_state_storage {
+    my ($self) = @_;
+}
+
+sub __clear_game_state_storage {
+    
+}
+
 override '_check_land_reachability' => sub {
     return 1 unless global_user()->have_owned_regions();
     super()

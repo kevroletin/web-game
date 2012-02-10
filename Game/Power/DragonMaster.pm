@@ -13,6 +13,11 @@ sub power_name { 'dragonMaster' }
 
 sub _power_tokens_cnt { 5 }
 
+after 'dragonUsed' => sub {
+    my ($self, $value) = @_;
+    global_game()->raceStateStorage()->{dragonAttacked} = bool($value)
+};
+
 after 'redeploy' => sub {
     my ($self) = @_;
     $self->dragonUsed(0);

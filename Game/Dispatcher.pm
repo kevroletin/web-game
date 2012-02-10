@@ -21,6 +21,7 @@ use Game::Actions::Game qw(aiJoin
                            getGameList
                            leaveGame
                            loadGame
+                           saveGame
                            setReadinessStatus);
 use Game::Actions::Gameplay qw(conquer
                                decline
@@ -61,6 +62,7 @@ sub _is_action_without_sid {
                  getMapInfo
                  getServerFeatures
                  getGameFeatures
+                 saveGame
                  setGameFeatures)]
 }
 

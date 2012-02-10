@@ -23,6 +23,17 @@ test('select power',
 
 actions->check_tokens_cnt(4, $user1);
 
+test('check berserk dice',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { berserkDice => undef }
+    },
+    $user1 );
+
 test('throwdice',
     {
       action => "throwDice",
@@ -32,6 +43,17 @@ test('throwdice',
     {
       dice => 2,
       result => "ok"
+    },
+    $user1 );
+
+test('check berserk dice',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { berserkDice => 2 }
     },
     $user1 );
 
@@ -45,6 +67,17 @@ test('throwdice twice',
     },
     $user1 );
 
+test('check berserk dice',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { berserkDice => 2 }
+    },
+    $user1 );
+
 actions->check_tokens_cnt(4, $user1);
 
 test('conquer',
@@ -55,6 +88,17 @@ test('conquer',
     },
     {
       result => "ok"
+    },
+    $user1 );
+
+test('check berserk dice',
+    {
+      action => "getGameState",
+      gameId => undef
+    },
+    {
+      result => 'ok',
+      gameState => { berserkDice => undef }
     },
     $user1 );
 

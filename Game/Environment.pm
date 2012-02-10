@@ -24,7 +24,7 @@ use Exporter::Easy (
          std => [qw(assert from_bool bool num config feature
                      is_debug global_game global_user)],
          db => [qw(db db_search db_search_one db_scope inc_counter)],
-         config => [qw(environment request stack_trace)],
+         config => [qw(apply_game_features environment request stack_trace)],
          response => [qw(response response_json
                          early_response early_response_json
                          response_raw)]

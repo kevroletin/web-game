@@ -7,6 +7,8 @@ use lib '../..';
 use Tester::State;
 use Tester::New;
 
+delete $ENV{debug_loading};
+
 my ($user1, $user2) = Tester::State::square_map_two_users(
   ['border', 'farmland'], ['border', 'farmland'],
   ['border', 'sea'], ['border', 'hill'],
