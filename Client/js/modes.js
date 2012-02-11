@@ -437,6 +437,8 @@ minor_modes.storage.conquer = {
       game.direct_request_game_state();
       if (!resp.result == 'ok') {
         alert(resp.result);
+      } else if (!is_null(resp.dice)) {
+        alert('dice: ' + resp.dice);
       }
     };
 

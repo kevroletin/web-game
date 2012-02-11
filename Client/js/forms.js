@@ -10,7 +10,6 @@ Ui_Forms._gen_simple_form = function(form_name) {
   var obj = this[form_name];
   var f = make('form')
 
-
   f.attr('id', obj.id).
     attr('onSubmit', 'ui_forms.' + form_name +
          '.checker(this); return false');
@@ -272,8 +271,9 @@ Ui_Elements.game_info = function(gameInfo, d) {
   log.d.trace('Ui_Elements.game_info');
 
   d.append('h1').text(gameInfo.gameName);
-  d.append('div').text('game state: ' + gameInfo.state)
-                 .attr('id', 'game_state_field');
+  d.append('div').attr('id', 'state_fields');
+  this._update_state_fields(gameInfo);
+
   var data = d.append('div').attr('id', 'players')
     .selectAll('div')
     .data(gameInfo.players);
@@ -366,15 +366,34 @@ Ui_Elements._update_token_badges = function(game_state, div) {
   });
 }
 
+Ui_Elements._update_state_fields = function(game_state) {
+  // TODO: beautify
+  var d = [['game state',        game_state.state],
+           ['last dice value',   game_state.lastDiceValue],
+           ['enchant used ',     game_state.enchanted],
+           ['dragon used',       game_state.dragonAttacked],
+           ['bersert dice',      game_state.berserkDice],
+           ['decline requested', game_state.declineRequested]];
+
+  var fill = function(elem) {
+    elem.text(function(d) { return d[0] + ': ' + d[1] });
+  };
+
+  var data = d3.select('div#state_fields').selectAll('div').data(d);
+  fill( data );
+  fill( data.enter().append('div') );
+
+};
+
 Ui_Elements.update_game_info = function() {
   log.d.trace('Ui_Elements.update_game_info');
 
   var game_state = state.get('net.getGameState.gameState',
                              'net.getGameInfo.gameInfo');
-  d3.select('div#game_state_field').text('game state: ' + game_state.state)
 
-  this._update_players_info();
-  this._update_token_badges();
+  this._update_state_fields(game_state);
+  this._update_players_info(game_state);
+  this._update_token_badges(game_state);
 };
 
 function playfield_type() {}

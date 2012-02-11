@@ -56,12 +56,12 @@ Game.init = function() {
   events.reg_h('game.ui_initialized', 'start main loop',
                game.request_game_state );
 
-  if (1) {
+  if (0) {
     events.reg_h('ui.refresh_menu', 'ui_create_menu',
                  ui.create_menu);
     major_modes.change('login');
   } else {
-    var i = 1
+    var i = 2
     ;
     state.store('sid', i);
     state.store('gameId', i)

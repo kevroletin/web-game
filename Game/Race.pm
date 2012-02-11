@@ -144,14 +144,12 @@ sub conquer {
     $units_cnt = 1 if $units_cnt <= 0;
 
     # FIXME: move db()-> update in Actions/Gameplay.pm
-    if (global_user()->tokensInHand() >= $units_cnt) {
-        $dice ||= 0;
-    } else {
+    if (global_user()->tokensInHand() < $units_cnt) {
         $dice = global_game->random_dice();
         global_game()->lastDiceValue($dice);
         db()->update(global_game());
     }
-    $units_cnt -= $dice;
+    $units_cnt -= $dice if defined $dice;
     $units_cnt = 1 if $units_cnt <= 0;
     if (global_user()->tokensInHand() < $units_cnt) {
         early_response_json({result => 'badTokensNum', dice => $dice});
@@ -165,7 +163,7 @@ sub conquer {
     $reg->tokensNum($units_cnt);
     $reg->inDecline(0);
 
-    $defender
+    ($defender, $dice)
 }
 
 sub compute_coins {
