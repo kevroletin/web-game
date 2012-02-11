@@ -660,37 +660,69 @@ minor_modes.storage.redeployed = {
     not_minor_m: ['conquer', 'redeploy', 'waiting']
   },
   init : function() {
-    var on_resp = function(resp) {
+    var on_resp_finish = function(resp) {
       if (resp.result == 'ok')  {
         game.direct_request_game_state();
-//        minor_modes.force('waiting');
       } else {
         alert(resp.result);
       }
     };
-
-    if (1) {
-      net.send({action: 'finishTurn'}, on_resp, 1)
-      return 0;
-    }
-    // This button is needed to some races which can do additional
-    // actions before finishTurn
-
-    var h = function() {
-      d3.event.preventDefault();
-      net.send({action: 'finishTurn'}, on_resp, 1)
+    var h_finish = function() {
+      net.send({action: 'finishTurn'}, on_resp_finish, 1)
     };
+
+    if (game.active_player().activePower !== 'diplomat') {
+      h_finish();
+      return 0;
+    };
+
     d3.select('div#actions')
       .append('form')
       .attr('id', 'finish_turn')
-      .on('submit', h)
+      .attr('onsubmit', 'return false;')
+      .on('submit', h_finish)
       .append('input')
       .attr('type', 'submit')
       .attr('value', 'finish_turn');
+
+    var on_resp_select = function(resp) {
+      if (resp.result == 'ok') {
+        h_finish();
+      } else {
+        alert(resp.result);
+      }
+    };
+    var h_select = function() {
+      var friend_id = this.elements['friend_id'].value;
+      net.send({action: 'selectFriend', userId: friend_id}, on_resp_select, 1)
+    };
+    var friend_form = d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_friends')
+      .attr('onsubmit', 'return false;')
+      .on('submit', h_select);
+    var players = state.get('net.getGameInfo.gameInfo.players');
+    log.d.pretty(players);
+    friend_form
+      .append('select')
+      .attr('id', 'select_friend')
+      .attr('name', 'friend_id')
+      .selectAll('option')
+      .data(players)
+        .enter()
+        .append('option')
+        .attr('value', function(d) { return d.id })
+        .text(function(d) { return d.name });
+    friend_form
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'select_friend');
+
     return 0;
   },
   uninit: function() {
     d3.select('form#finish_turn').remove();
+    d3.select('form#form_friends').remove();
   }
 };
 
