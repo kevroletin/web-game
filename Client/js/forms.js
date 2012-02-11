@@ -550,8 +550,8 @@ Playfield.apply_game_state = function(game_state) {
       data.enter().append('svg:image');
       d3.select(this).selectAll('image').data(r)
         .attr('x', function(d, i) { return ( -100 + i*2) })
-        .attr('y', function(d, i) { 
-          return ( 30 + player_i*70 - i*2 ) 
+        .attr('y', function(d, i) {
+          return ( 30 + player_i*70 - i*2 )
         })
         .attr('width', '50px')
         .attr('height', '50px')

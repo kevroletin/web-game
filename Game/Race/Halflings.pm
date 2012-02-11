@@ -20,14 +20,6 @@ after 'holes_cnt' => sub {
     global_game()->raceStateStorage()->{holesPlaced} = $cnt
 };
 
-sub __write_to_game_state_storage {
-    my ($self) = @_;
-}
-
-sub __clear_game_state_storage {
-    
-}
-
 override '_check_land_reachability' => sub {
     return 1 unless global_user()->have_owned_regions();
     super()

@@ -867,6 +867,69 @@ minor_modes.storage.waiting = {
   }
 };
 
+minor_modes.storage.enchant = {
+  available_if: {
+    minor_m: ['conquer']
+  },
+  _store_old_events: function() {
+    minor_modes.storage.enchant.__old_events___ =
+      events.storage.game.region.click;
+    delete events.storage.game.region.click;
+  },
+  _restore_old_events: function() {
+    events.del_h('game.region.click',
+                 'minor_modes.enchant->game.region.click');
+
+    var ench_mod = minor_modes.storage.enchant;
+    if (!is_null(ench_mod.__old_events___)) {
+      for (var i in ench_mod.__old_events___) {
+        events.storage.game.region.click.push(ench_mod.__old_events___[i]);
+      }
+    }
+  },
+  _prepare_ui: function() {
+    var on_resp = function(resp) {
+      if (resp.result == 'ok') {
+        minor_modes.storage.enchant._restore_old_events();
+        minor_modes.disable('enchant');
+        game.direct_request_game_state();
+      } else {
+        alert(resp.result);
+      }
+    };
+    var h_onclick = function(reg_i) {
+      net.send({"action":"enchant","regionId": reg_i + 1},
+               on_resp);
+    };
+    var h = function() {
+      if (!this.checked) {
+        minor_modes.storage.enchant._restore_old_events();
+      } else {
+        minor_modes.storage.enchant._store_old_events();
+        events.reg_h('game.region.click',
+                     'minor_modes.enchant->game.region.click',
+                     h_onclick);
+      }
+    };
+
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_enchant')
+      .append('label').text('enchant')
+      .append('input')
+      .attr('type', 'checkbox')
+      .attr('value', 'redeploy')
+      .on('click', h);
+  },
+  init : function() {
+    this._prepare_ui();
+    return 0;
+  },
+  uninit: function() {
+    d3.select('form#form_enchant').remove();
+  }
+};
+
 Minor_Modes.have = function(mode) {
   return in_arr(mode, curr_modes.minor);
 };
