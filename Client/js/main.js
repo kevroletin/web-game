@@ -112,6 +112,7 @@ Game.fix_minor_mode_from_game_state = function() {
   }
 
   var new_modes = {
+    berserk: 0,
     conquer: 0,
     defend: 0,
     dragon: 0,
@@ -145,6 +146,11 @@ Game.fix_minor_mode_from_game_state = function() {
             !game_state.dragonAttacked)
         {
           new_modes['dragon'] = 1;
+        }
+        if (game.active_player().activePower == 'berserk' &&
+            is_null(game_state.berserkDice))
+        {
+          new_modes['berserk'] = 1;
         }
 
         new_modes['conquer'] = 1;

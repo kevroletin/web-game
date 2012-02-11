@@ -996,7 +996,7 @@ minor_modes.storage.dragon = {
         alert(resp.result);
       }
     };
-     var h_onclick = function(reg_i) {
+    var h_onclick = function(reg_i) {
       net.send({"action":"dragonAttack","regionId": reg_i + 1},
                on_resp);
     };
@@ -1025,6 +1025,40 @@ minor_modes.storage.dragon = {
   },
   uninit: function() {
     d3.select('form#form_dragon').remove();
+  }
+};
+
+minor_modes.storage.berserk = {
+  available_if: {
+    minor_m: ['conquer']
+  },
+  _prepare_ui: function() {
+    var on_resp = function(resp) {
+      if (resp.result == 'ok') {
+        alert('dice: ' + resp.dice)
+        game.direct_request_game_state();
+      } else {
+        alert(resp.result);
+      }
+    };
+    var h = function() {
+      net.send({action: 'throwDice'}, on_resp);
+    };
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_throw_dice')
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'throw dice')
+      .attr('onclick', 'return false;')
+      .on('click', h);
+  },
+  init : function() {
+    this._prepare_ui();
+    return 0;
+  },
+  uninit: function() {
+    d3.select('form#form_throw_dice').remove();
   }
 };
 
