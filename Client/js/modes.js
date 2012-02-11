@@ -918,7 +918,6 @@ minor_modes.storage.enchant = {
       .append('label').text('enchant')
       .append('input')
       .attr('type', 'checkbox')
-      .attr('value', 'redeploy')
       .on('click', h);
   },
   init : function() {
@@ -927,6 +926,71 @@ minor_modes.storage.enchant = {
   },
   uninit: function() {
     d3.select('form#form_enchant').remove();
+  }
+};
+
+minor_modes.storage.dragon = {
+  available_if: {
+    minor_m: ['conquer']
+  },
+  // FIXME: copypaste from minor_modes.storage.enchant
+  _store_old_events: function() {
+    minor_modes.storage.dragon.__old_events___ =
+      events.storage.game.region.click;
+    delete events.storage.game.region.click;
+  },
+  _restore_old_events: function() {
+    log.d.trace('minor_modes.storage.dragon._restore_old_events');
+
+    events.del_h('game.region.click',
+                 'minor_modes.dragon->game.region.click');
+
+    var dragon_mod = minor_modes.storage.dragon;
+    if (!is_null(dragon_mod.__old_events___)) {
+      for (var i in dragon_mod.__old_events___) {
+        events.storage.game.region.click.push(dragon_mod.__old_events___[i]);
+      }
+    }
+  },
+  _prepare_ui: function() {
+    var on_resp = function(resp) {
+      if (resp.result == 'ok') {
+        minor_modes.storage.dragon._restore_old_events();
+        minor_modes.disable('dragon');
+        game.direct_request_game_state();
+      } else {
+        alert(resp.result);
+      }
+    };
+     var h_onclick = function(reg_i) {
+      net.send({"action":"dragonAttack","regionId": reg_i + 1},
+               on_resp);
+    };
+    var h = function() {
+      if (!this.checked) {
+        minor_modes.storage.dragon._restore_old_events();
+      } else {
+        minor_modes.storage.dragon._store_old_events();
+        events.reg_h('game.region.click',
+                     'minor_modes.dragon->game.region.click',
+                     h_onclick);
+      }
+    };
+
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_dragon')
+      .append('label').text('use dragon')
+      .append('input')
+      .attr('type', 'checkbox')
+      .on('click', h);
+  },
+  init : function() {
+    this._prepare_ui();
+    return 0;
+  },
+  uninit: function() {
+    d3.select('form#form_dragon').remove();
   }
 };
 

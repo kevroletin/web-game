@@ -114,6 +114,7 @@ Game.fix_minor_mode_from_game_state = function() {
   var new_modes = {
     conquer: 0,
     defend: 0,
+    dragon: 0,
     enchant: 0,
     redeploy: 0,
     redeployed: 0,
@@ -140,6 +141,12 @@ Game.fix_minor_mode_from_game_state = function() {
         {
           new_modes['enchant'] = 1;
         }
+        if (game.active_player().activePower == 'dragonMaster' &&
+            !game_state.dragonAttacked)
+        {
+          new_modes['dragon'] = 1;
+        }
+
         new_modes['conquer'] = 1;
         minor_modes.force('conquer');
       },
