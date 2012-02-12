@@ -658,10 +658,10 @@ minor_modes.storage.redeploy = {
 
 minor_modes.storage.redeployed = {
   available_if: {
-    minor_m: ['in_game'],
+    major_m: ['play_game'],
     not_minor_m: ['conquer', 'redeploy', 'waiting']
   },
-  init : function() {
+  _finish_turn: function() {
     var on_resp_finish = function(resp) {
       if (resp.result == 'ok')  {
         game.direct_request_game_state();
@@ -669,27 +669,22 @@ minor_modes.storage.redeployed = {
         alert(resp.result);
       }
     };
-    var h_finish = function() {
-      net.send({action: 'finishTurn'}, on_resp_finish, 1)
-    };
-
-    if (game.active_player().activePower !== 'diplomat') {
-      h_finish();
-      return 0;
-    };
-
+    net.send({action: 'finishTurn'}, on_resp_finish, 1)
+  },
+  _ui_form_finish_turn: function() {
     d3.select('div#actions')
       .append('form')
       .attr('id', 'finish_turn')
       .attr('onsubmit', 'return false;')
-      .on('submit', h_finish)
+      .on('submit', minor_modes.storage.redeployed._finish_turn)
       .append('input')
       .attr('type', 'submit')
       .attr('value', 'finish_turn');
-
+  },
+  _ui_for_diplomat: function() {
     var on_resp_select = function(resp) {
       if (resp.result == 'ok') {
-        h_finish();
+        minor_modes.storage.redeployed._finish_turn();
       } else {
         alert(resp.result);
       }
@@ -719,12 +714,46 @@ minor_modes.storage.redeployed = {
       .append('input')
       .attr('type', 'submit')
       .attr('value', 'select_friend');
+  },
+  _ui_for_stout: function() {
+    var on_resp = function(resp) {
+      if (resp.result == 'ok') {
+        minor_modes.storage.redeployed._finish_turn();
+      } else {
+        alert(resp.result)
+      }
+    };
+    var h = function() {
+      net.send({action: 'decline'}, on_resp)
+    };
+
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_stout')
+      .attr('onsubmit', 'return false;')
+      .on('submit', h)
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'decline');
+  },
+  init : function() {
+
+    if (game.active_player().activePower == 'diplomat') {
+      this._ui_form_finish_turn();
+      this._ui_for_diplomat();
+    } else if (game.active_player().activePower == 'stout') {
+      this._ui_form_finish_turn();
+      this._ui_for_stout();
+    } else {
+      this._finish_turn();
+    }
 
     return 0;
   },
   uninit: function() {
     d3.select('form#finish_turn').remove();
     d3.select('form#form_friends').remove();
+    d3.select('form#form_stout').remove();
   }
 };
 

@@ -368,13 +368,13 @@ Ui_Elements._update_token_badges = function(game_state, div) {
 
 Ui_Elements._update_state_fields = function(game_state) {
   // TODO: beautify
-  var d = [['game state',        game_state.state],
-           ['last dice value',   game_state.lastDiceValue],
-           ['enchant used ',     game_state.enchanted],
-           ['dragon used',       game_state.dragonAttacked],
-           ['bersert dice',      game_state.berserkDice],
-           ['decline requested', game_state.declineRequested]];
-
+  var tmp = [['game state',        game_state.state],
+            ['last dice value',   game_state.lastDiceValue],
+            ['enchant used ',     game_state.enchanted],
+            ['dragon used',       game_state.dragonAttacked],
+            ['bersert dice',      game_state.berserkDice],
+            ['decline requested', game_state.declineRequested]];
+  var d = tmp.filter(function(d) { return !is_null(d[1]) && d[1] !== false });
   var fill = function(elem) {
     elem.text(function(d) { return d[0] + ': ' + d[1] });
   };
