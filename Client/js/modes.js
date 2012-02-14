@@ -156,8 +156,12 @@ major_modes.storage.register = {
   descr: 'Register',
   in_menu: true,
   init: function(content) {
+    var form = ui_forms.register.gen_form();
     d3.select(content).text('').node().
-      appendChild(ui_forms.register.gen_form());
+      appendChild(form);
+    if (config.autologin == 1) {
+      form.elements['autologin'].checked = true;
+    }
   },
   uninit: function() {
   }
@@ -176,6 +180,10 @@ major_modes.storage.games_list = {
 };
 
 major_modes.storage.games_new = {
+  available_if: {
+    minor_m: ['logined'],
+    not_minor_m: ['in_game']
+  },
   descr: 'New game',
   in_menu: true,
   init: function(content) {
@@ -186,10 +194,13 @@ major_modes.storage.games_new = {
       .attr('onSubmit', 'return false;');
     f.on('submit', function(d) {
       var h = function(resp) {
-
+        if (errors.descr_resp(resp) == 'ok') {
+          game.direct_request_game_state();
+          major_modes.change('play_game');
+        }
       };
       var q = { action: 'createGame',
-                gameDescr: f.node()['gameDescr'].value,
+                gameDescr: f.node()['gameD3escr'].value,
                 gameName: f.node()['gameName'].value,
                 mapId: f.node()['mapId'].value };
       net.send(q, h, 1);
@@ -400,7 +411,8 @@ minor_modes.storage.in_game = {
 
 minor_modes.storage.game_started = {
   available_if: {
-    minor_m: ['in_game']
+    major_m: ['play_game'],
+    minor_m: ['in_game'],
   },
   _create_ui: function() {
     log.d.trace('minor_modes.storage.game_started._create_ui');
@@ -429,15 +441,14 @@ minor_modes.storage.game_started = {
 
 minor_modes.storage.conquer = {
   available_if: {
+    major_m: ['play_game'],
     minor_m: ['in_game'],
     not_minor_m: ['redeploy', 'defend', 'waiting']
   },
   _watch_map_onclick: function() {
     var on_resp = function(resp) {
       game.direct_request_game_state();
-      if (!resp.result == 'ok') {
-        alert(resp.result);
-      } else if (!is_null(resp.dice)) {
+      if (errors.descr_resp(resp) == 'ok' && !is_null(resp.dice)) {
         alert('dice: ' + resp.dice);
       }
     };
@@ -481,15 +492,13 @@ minor_modes.storage.conquer = {
 
 minor_modes.storage.select_race = {
   available_if: {
+    major_m: ['play_game'],
     minor_m: ['conquer'],
   },
   init : function() {
     var on_resp = function(resp) {
-      // TODO:
       game.direct_request_game_state();
-      if (resp.result !== 'ok') {
-        alert(resp.result);
-      }
+      errors.descr_resp(resp);
     };
     var h = function(d, i) {
       net.send({"position": d.position,
@@ -1139,6 +1148,10 @@ Minor_Modes._enable = function(mode, force, params) {
   ui.create_menu();
 
   return 1;
+};
+
+Minor_Modes.is_enabled = function(mode) {
+  return in_arr(mode, curr_modes.minor);
 };
 
 Minor_Modes.enable = function(mode, params) {

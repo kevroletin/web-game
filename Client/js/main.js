@@ -6,7 +6,8 @@ var features = {
 };
 
 var config = {
-  log_all_requests: 0
+  log_all_requests: 0,
+  autologin: 1
 };
 
 var ui = {
@@ -61,7 +62,7 @@ Game.init = function() {
                  ui.create_menu);
     major_modes.change('login');
   } else {
-    var i = 2
+    var i = 1
     ;
     state.store('sid', i);
     state.store('gameId', i)
@@ -80,6 +81,7 @@ Game.get_current_user_info = function() {
   if (features.getUserInfo) {
     var q = { action: "getUserInfo" };
     var h = function(resp) {
+      if (errors.descr_resp(resp) !== 'ok') { return }
       state.store('net.getUserInfo', resp);
       state.store('gameId', resp.activeGame);
       state.store('userId', resp.userId);
@@ -89,6 +91,7 @@ Game.get_current_user_info = function() {
   } else {
     var q = { action: "getGameState" };
     var h = function(resp) {
+      if (errors.descr_resp(resp) !== 'ok') { return }
       state.store('net.getGameState', resp);
       state.store('gameId', resp.gameState.gameId);
       events.exec('user_info.success');
@@ -102,12 +105,12 @@ Game.fix_minor_mode_from_game_state = function() {
 
 //  log.d.info("===fix minor mode===");
 
-  var game_state = state.get('net.getGameState.gameState',
-                               'net.getGameInfo.gameInfo');
+  var game_state = Game.last_game_state();
   state_field = game_state.state;
 
   if (state_field == 'notStarted') {
     minor_modes.disable('game_started');
+    minor_modes.enable('waiting');
     return;
   }
 
@@ -126,14 +129,16 @@ Game.fix_minor_mode_from_game_state = function() {
   minor_modes.enable('game_started');
   if (game.active_player_id() != state.get('userId')) {
     minor_modes.force('waiting');
-//    new_modes['waiting'] = 1
+    //    new_modes['waiting'] = 1
   } else {
     var a = {
       conquer: function() {
         if (game_state.attacksHistory.length == 0) {
           if (is_null(game.active_player().activeRace)) {
             new_modes['select_race'] = 1
-          } else if(!game_state.raceSelected) {
+          } else if(!game_state.raceSelected &&
+                    game_state.attacksHistory.length == 0)
+          {
             new_modes['decline'] = 1
           }
         }
@@ -174,7 +179,7 @@ Game.fix_minor_mode_from_game_state = function() {
     }
   }
 
-//  log.d.info("=== finished ===");
+  //  log.d.info("=== finished ===");
 };
 
 Game.direct_request_game_state = function() {
@@ -220,7 +225,7 @@ Game.state_monitor = {};
 
 Game.state_monitor.start = function() {
   log.d.trace('Game.state_monitor.start');
-  clearInterval(game._timer);
+  this.stop();
 
   game.request_game_state();
   game._timer = setInterval(game.request_game_state, 2000);
@@ -230,12 +235,14 @@ Game.state_monitor.stop = function() {
   log.d.trace('Game.state_monitor.stop');
 
   clearInterval(game._timer);
+  delete(game._timer);
 };
 
 Game.active_player_id = function() {
   log.d.trace('Game.active_player_id');
 
-  var game_state = state.get('net.getGameState.gameState');
+  var game_state = game.last_game_state();
+
   if (is_null(game_state)) return null;
 
   var is_defend = game_state.state == 'defend';
@@ -271,3 +278,9 @@ Game.active_player = function() {
 Game.apply_game_state = function() {
   ui_elements.apply_game_state();
 }
+
+Game.last_game_state = function() {
+  var game_state = state.get('net.getGameState.gameState',
+                             'net.getGameInfo.gameInfo');
+  return game_state;
+};

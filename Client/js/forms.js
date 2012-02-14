@@ -60,7 +60,7 @@ Ui_Forms.login = {
     log.ui.error(field + ': ' + err);
   },
   _on_resp: function (resp) {
-    d3.select('p#msg_box').text(resp.result);
+    d3.select('p#msg_box').text(Errors.translate_resp(resp));
     if (resp.result == 'ok') {
       state.store('sid', resp.sid);
       state.store('userId', resp.userId);
@@ -73,14 +73,16 @@ Ui_Forms.login = {
 Ui_Forms.register = {
   id: "register",
   descr: "Register",
-  fields: [{name: "username", descr: "Username"},
-           {name: "password", descr: "Password", type: "password"},
-           {name: "password2", descr: "Password2", type: "password"}],
+  fields: [{name: "username",  descr: "Username"},
+           {name: "password",  descr: "Password", type: "password"},
+           {name: "autologin", descr: "Login",    type: "checkbox"}
+//           {name: "password2", descr: "Password2", type: "password"}
+          ],
   gen_form: function() { return Ui_Forms._gen_simple_form('register'); },
   checker: function(f) {
     var name = f['username'].value;
     var pasw = f['password'].value;
-    var pasw2 = f['password2'].value;
+//    var pasw2 = f['password2'].value;
 
     var q = { action: "register",
               username: name,
@@ -93,7 +95,16 @@ Ui_Forms.register = {
     log.ui.error(field + ': ' + err);
   },
   _on_resp: function (resp) {
-    d3.select('p#msg_box').text(resp.result);
+    d3.select('p#msg_box').text(errors.translate_resp(resp));
+    if (resp.result == 'ok') {
+      var f = d3.select('form#register').node();
+      if (f['autologin'].checked) {
+        var q = { action: "login",
+                  username: f['username'].value,
+                  password: f['password'].value };
+        net.send(q, Ui_Forms.login._on_resp);
+      }
+    }
   }
 };
 
@@ -102,7 +113,7 @@ Ui_Forms.game_list = {
 
     var t = make('table');
     t.append('tr').selectAll('th')
-      .data(['Название', 'Описание', 'Состояние', 'Игроков'])
+      .data(['Название', 'Описание', 'Состояние', 'Игроков', ''])
       .enter()
       .append('th')
       .text(String);
@@ -124,6 +135,30 @@ Ui_Forms.game_list = {
           .enter()
           .append('td')
           .text(String);
+
+        var td = tr.append('td');
+        if (minor_modes.is_enabled('logined') &&
+            !minor_modes.is_enabled('in_game') &&
+            d.state == 'notStarted')
+        {
+          var on_resp = function(resp) {
+            if (errors.descr_resp(resp) !== 'ok') { return }
+            minor_modes.enable('in_game');
+            major_modes.change('play_game');
+          };
+          var h = function() {
+            d3.event.preventDefault();
+            net.send({ action: 'joinGame', gameId: d.gameId },
+                     on_resp);
+          };
+
+          td.append('form')
+//            .attr('onsubmit', 'return false')
+            .on('submit', h)
+            .append('input')
+            .attr('type', 'submit')
+            .attr('value', 'join');
+        }
       });
 
     return t.node();
@@ -209,14 +244,9 @@ Ui_Elements._append_player_info = function(gameInfo, data_enter) {
           var q = {action: 'setReadinessStatus',
                    isReady: val};
           var h = function(resp) {
-            if (resp.result == 'ok') {
-              t.attr('value', a[val])
-            } else {
-              var e = 'Problem with setting readiness status';
-              alert(e);
-              log.d.error(e);
-              log.d.dump(q, 'query');
-              log.d.dump(resp, 'response');
+            if (errors.descr_resp(resp) == 'ok') {
+              t.attr('value', a[val]);
+              game.direct_request_game_state();
             }
           };
           net.send(q, h);
@@ -324,8 +354,7 @@ Ui_Elements._update_token_badges = function(game_state, div) {
   log.d.trace('Ui_Elements._update_token_badges');
 
   if (is_null(game_state)) {
-    game_state = state.get('net.getGameState.gameState',
-                           'net.getGameInfo.gameInfo');
+    game_state = game.last_game_state();
   }
   if (is_null(div)) {
     div = d3.select('div#tokens_packs')
@@ -336,18 +365,10 @@ Ui_Elements._update_token_badges = function(game_state, div) {
   var data = div.selectAll('div.tokens_pack')
     .data(tok);
 
+  data.exit().remove();
+
   data
     .enter()
-    .append('div')
-    .each(function(d, i) {
-      var t = d3.select(this)
-        .attr('class', 'tokens_pack');
-      t.append('div').text(d.raceName);
-      t.append('div').text(d.specialPowerName);
-      t.append('div').text(d.bonusMoney);
-    });
-
-  data.enter()
     .append('div')
     .each(function(d, i) {
       var t = d3.select(this)

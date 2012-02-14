@@ -160,7 +160,15 @@ function delete_obj_field(obj, field_name) {
 
 function determine_race(gameState, reg) {
   if (is_null(reg.owner)) return null;
-  var p = gameState.players[reg.owner - 1];
+  var p;
+  for (var i in gameState.players) {
+    if (gameState.players[i].id == reg.owner) {
+      p = gameState.players[i]
+    };
+  }
+  if (is_null(p)) {
+      return null
+  }
 
   if (reg.inDecline == 1) {
     if (is_null(p.declineRace)) return null;
