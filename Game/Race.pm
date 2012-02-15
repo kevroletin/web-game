@@ -186,9 +186,11 @@ sub _clear_left_region {
 
 sub _clear_region_before_redeploy {
     my ($self, $reg) = @_;
-    $reg->owner(undef);
-    $reg->tokensNum(0);
-    $reg->inDecline(0);
+    unless ($reg->inDecline()) {
+        $reg->owner(undef);
+        $reg->tokensNum(0);
+        $reg->inDecline(0);
+    }
 }
 
 sub _clear_declined_region {
