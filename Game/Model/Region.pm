@@ -152,9 +152,9 @@ sub load_state {
         assert($self->owner, $err, 'badOwner' => $data->{owner});
     }
 
-    assert($data->{inDecline} ~~ [0, 1], $err,
+    assert(int($data->{inDecline}) ~~ [0, 1], $err,
            badInDecline => $data->{inDecline});
-    $self->inDecline(from_bool($data->{inDecline}));
+    $self->inDecline(int $data->{inDecline});
 
     my $ok = find_type_constraint(
                  'Game::Model::Region::ExtraItems'

@@ -1,6 +1,7 @@
 package Game;
 use strict;
 use warnings;
+use v5.10;
 
 use Devel::StackTrace;
 use JSON;
@@ -34,7 +35,8 @@ sub setup_environment {
     Game::Environment::init();
     environment($env);
 
-    config()->{features}{log_requests} = 0;
+    config()->{features}{log_requests} = 1;
+    config()->{features}{record_test} = 'auto.t';
 
     if ($ENV{compability} && $ENV{compability} eq 'true') {
         $_ = config()->{features};
@@ -54,6 +56,20 @@ sub setup_environment {
     request(Plack::Request->new($env));
     # TODO: Process errors
     Game::Model::connect_db();
+}
+
+sub record_test {
+    my ($data) = @_;
+    $_ = response()->body();
+    my $resp = from_json( ref($_) eq 'ARRAY' ? join '', @$_ : $_ );
+    my $info_actions = [qw(getGameState getGameInfo getGameList getUserInfo
+                           getMapInfo getMapList)];
+    return if $data->{action} ~~ $info_actions || $resp->{result} ne 'ok';
+
+    open my $test, '>>', feature('record_test');
+    printf $test "test('%s',\n%s,\n%s);\n\n", $data->{action},
+        map { join "\n", map { "    $_" } split "\n", Dumper $_ } $data, $resp;
+    close $test;
 }
 
 sub parse_request {
@@ -84,6 +100,7 @@ sub parse_request {
             response()->body();
         print "\n"
     }
+    record_test($data) if feature('record_test');
 
     response()->finalize();
 };

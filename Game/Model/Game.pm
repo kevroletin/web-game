@@ -545,6 +545,7 @@ sub short_info_clear {
         playersNum => scalar @{$s->players()},
         turn => $s->turn(),
         turnsNum => $s->map()->turnsNum(),
+        state => $s->state()
     }
 }
 
@@ -705,7 +706,7 @@ sub load_state {
             $data->{turn} <= $self->map()->turnsNum()),
            'badTurn', turn => $data->{turn});
     $self->turn($data->{turn});
-    eval{ $self->raceSelected($data->{raceSelected}) };
+    eval{ $self->raceSelected(int $data->{raceSelected}) };
     assert( !$@, 'badRaceSelected' );
 
     eval{ $self->features($data->{features}) if $data->{features} };

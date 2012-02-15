@@ -280,6 +280,8 @@ package Tester::New::ProtocolActions;
 use warnings;
 use strict;
 
+use Tester::Dumper;
+use JSON;
 use Tester::New;
 
 sub new {
@@ -483,5 +485,22 @@ sub reset_server {
     test('reset server', {action => 'resetServer'}, {result => 'ok'});
 }
 
+sub game_state_to_test {
+    my ($self, $params) = @_;
+    my $req = { action => 'saveGame',
+                gameId => $params->{gameId} || $params->{data}{gameId}  };
+    my $resp = send_test($req, { result => 'ok' });
+    my $state = $resp->{resp};
+
+    printf "test('%s',\n%s,\n%s)\n",
+           'load state',
+           map { join "\n", map { "    $_" } split "\n", Dumper($_) }
+                      { action    => 'loadGame',
+                        sid       => $params->{sid} || $params->{sid},
+                        gameName  => 'loadedGame',
+                        gameState => $state->{gameState} },
+                      { result => 'ok' };
+}
 
 1;
+

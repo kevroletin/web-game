@@ -70,6 +70,7 @@ sub init {
                features => {
                             error_description => 1,
                             log_requests => 0,
+                            record_test  => undef,
 
                             compatibility => 0,
                             redeploy_all_tokens => 0,

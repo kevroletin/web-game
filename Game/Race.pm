@@ -145,7 +145,9 @@ sub conquer {
 
     # FIXME: move db()-> update in Actions/Gameplay.pm
     if (global_user()->tokensInHand() < $units_cnt) {
-        $dice = global_game->random_dice();
+        if (!is_debug() || !defined $dice) {
+            $dice ||= global_game->random_dice()
+        }
         global_game()->lastDiceValue($dice);
         db()->update(global_game());
     }

@@ -57,7 +57,7 @@ Game.init = function() {
   events.reg_h('game.ui_initialized', 'start main loop',
                game.request_game_state );
 
-  if (0) {
+  if (1) {
     events.reg_h('ui.refresh_menu', 'ui_create_menu',
                  ui.create_menu);
     major_modes.change('login');

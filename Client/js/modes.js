@@ -200,7 +200,7 @@ major_modes.storage.games_new = {
         }
       };
       var q = { action: 'createGame',
-                gameDescr: f.node()['gameD3escr'].value,
+                gameDescr: f.node()['gameDescr'].value,
                 gameName: f.node()['gameName'].value,
                 mapId: f.node()['mapId'].value };
       net.send(q, h, 1);
@@ -629,12 +629,11 @@ minor_modes.storage.redeploy = {
       }
     };
     events.reg_h('game.region.click',
-                 'minor_modes.conquer->game.region.click',
+                 'minor_modes.redeploy->game.region.click',
                  plus);
     var minus = function(reg_i) {
       var regions = state.get('net.getGameState.gameState.regions');
       var player = game.active_player();
-
 
       if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
         return;
@@ -649,7 +648,7 @@ minor_modes.storage.redeploy = {
       }
     };
     events.reg_h('game.region.image.click',
-                 'minor_modes.conquer->game.region.image.click',
+                 'minor_modes.redeploy->game.region.image.click',
                  minus);
   },
   init : function() {
@@ -659,7 +658,10 @@ minor_modes.storage.redeploy = {
   },
   uninit: function() {
     events.del_h('game.region.click',
-                 'minor_modes.conquer->game.region.click');
+                 'minor_modes.redeploy->game.region.click');
+    events.del_h('game.region.image.click',
+                 'minor_modes.redeploy->game.region.image.click');
+
     d3.select('form#finish_redeploy').remove();
     d3.select('form#undo_redeploy').remove();
   }
