@@ -63,5 +63,8 @@ Errors.table = {
   badStage                       : 'Bad game stage',
   badRegion                      : 'Bad region',
   notEnoughTokensForRedeployment : 'Not enough tokens for redeployment',
-  badTokensNum                   : 'Bad tokens num'
+  badTokensNum                   : 'Bad tokens num',
+  badRegion                      : 'Bad region',
+  tooManyFortifiedsInRegion      : 'Too many fortifieds in region',
+  canNotAttackFriend             : 'Can not attack friend'
 };

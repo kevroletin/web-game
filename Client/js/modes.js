@@ -563,29 +563,50 @@ minor_modes.storage.redeploy = {
   },
   _prepare_redeploy_data: function() {
     var regions = state.get('net.getGameState.gameState.regions');
-    var res = [];
+    var res = { regions: [] };
+    var pow_cont = {heroic: 'heroes', bivouacking: 'encampments', fortified: '' };
+    (function(a) { if (a) { res[a] = [] }})( pow_cont[game.active_power()] );
+
+    // power specific
+    if (game.active_power() == 'fortified' &&
+        minor_modes.storage.redeploy.__new_fort__) {
+      res.fortified = { regionId: Number(minor_modes.storage.redeploy.__new_fort__) + 1};
+    }
+    var a = {};
+    a.heroic = function(ei, i) { if (ei.hero) { res.heroes.push(i) } };
+    a.bivouacking = function(ei, i) {
+      if (ei.encampment) {
+        res.encampments.push({ encampmentsNum: ei.encampment,
+                               regionId: i });
+      }
+    };
+    var power_spec = a[game.active_player().activePower];
+
     for (var i in regions) {
       var r = regions[i];
       if (r.owner == state.get('userId') && r.tokensNum > 0 &&
           !r.inDecline)
       {
-        res.push({tokensNum: r.tokensNum,
-                  regionId: Number(i) + 1 });
+        res.regions.push({ tokensNum: r.tokensNum,
+                           regionId: Number(i) + 1 });
+        if (power_spec) {
+          power_spec(r.extraItems, Number(i) + 1);
+        }
       }
     }
     return res;
   },
   _send_redeploy: function() {
-    var data = this._prepare_redeploy_data();
+    var req = this._prepare_redeploy_data();
+    req.action = "redeploy";
     var h = function(resp) {
-      if (resp.result !== 'ok') {
+      if (errors.descr_resp(resp) !== 'ok') {
         minor_modes.force('redeploy');
-        alert(resp.result);
       } else {
         minor_modes.force('redeployed');
       }
     };
-    net.send({"regions": data, action: "redeploy"}, h, 1);
+    net.send(req, h, 1);
   },
   _prepare_ui: function() {
     var submit_h = function() {
@@ -610,13 +631,43 @@ minor_modes.storage.redeploy = {
       .append('input')
       .attr('type', 'submit')
       .attr('value', 'undo');
+    if (in_arr(game.active_power(), ['heroic', 'fortified', 'bivouacking'])) {
+      act.append('form')
+      .attr('id', 'form_redeploy_power')
+      .append('label').text('Add power item')
+      .append('input')
+        .attr('id', 'input_redeploy_power')
+        .attr('name', 'use_power')
+        .attr('type', 'checkbox');
+    };
   },
   _prepare_map_actions: function() {
-    var plus = function(reg_i) {
-      var regions = state.get('net.getGameState.gameState.regions');
-      var player = game.active_player();
+    var regions = state.get('net.getGameState.gameState.regions');
+    var player = game.active_player();
 
+    var plus = function(reg_i) {
       if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
+
+      if (d3.select('input#input_redeploy_power').node() &&
+          d3.select('input#input_redeploy_power').node().checked)
+      {
+        var a = {};
+        var ei = regions[reg_i].extraItems;
+        a.heroic = function() { ei.hero = true  };
+        a.bivouacking = function() { ei.encampment++ };
+        a.fortified = function() {
+          var last_reg = minor_modes.storage.redeploy.__new_fort__;
+          if (last_reg) {
+            delete regions[last_reg].extraItems.fortified;
+          }
+          minor_modes.storage.redeploy.__new_fort__ = reg_i;
+          regions[reg_i].extraItems.fortified = true;
+        };
+
+        a[player.activePower]()
+        events.exec('net.getGameState');
         return;
       }
 
@@ -632,9 +683,6 @@ minor_modes.storage.redeploy = {
                  'minor_modes.redeploy->game.region.click',
                  plus);
     var minus = function(reg_i) {
-      var regions = state.get('net.getGameState.gameState.regions');
-      var player = game.active_player();
-
       if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
         return;
       }
@@ -647,9 +695,33 @@ minor_modes.storage.redeploy = {
         events.exec('net.getGameState');
       }
     };
-    events.reg_h('game.region.image.click',
-                 'minor_modes.redeploy->game.region.image.click',
+    events.reg_h('game.region.image.race.click',
+                 'minor_modes.redeploy->game.region.image.race.click',
                  minus);
+    var minus_power = function(reg_i) {
+      if (regions[reg_i].owner !== player.id || regions[reg_i].inDecline) {
+        return;
+      }
+      var ok = false;
+      ['dragon', 'encampment', 'hero'].forEach(function(extra_item) {
+        if (regions[reg_i].extraItems[extra_item]) {
+          --regions[reg_i].extraItems[extra_item];
+          ok = true;
+        }
+      });
+      if (regions[reg_i].extraItems['fortified']) {
+          if (reg_i !== minor_modes.storage.redeploy.__new_fort__) {
+            alert('Can remove only fort which was set during current redeploy');
+          } else {
+            delete regions[reg_i].extraItems['fortified'];
+            ok = true;
+          }
+      };
+      if (ok) { events.exec('net.getGameState') }
+    };
+    events.reg_h('game.region.image.power.click',
+                 'minor_modes.redeploy->game.region.image.power.click',
+                 minus_power);
   },
   init : function() {
     this._prepare_ui();
@@ -659,11 +731,12 @@ minor_modes.storage.redeploy = {
   uninit: function() {
     events.del_h('game.region.click',
                  'minor_modes.redeploy->game.region.click');
-    events.del_h('game.region.image.click',
-                 'minor_modes.redeploy->game.region.image.click');
+    events.del_h('game.region.image.race.click',
+                 'minor_modes.redeploy->game.region.image.race.click');
 
     d3.select('form#finish_redeploy').remove();
     d3.select('form#undo_redeploy').remove();
+    d3.select('form#form_redeploy_power').remove();
   }
 };
 
@@ -905,8 +978,8 @@ minor_modes.storage.defend = {
         events.exec('net.getGameState');
       }
     };
-    events.reg_h('game.region.image.click',
-                 'minor_modes.conquer->game.region.image.click',
+    events.reg_h('game.region.image.race.click',
+                 'minor_modes.conquer->game.region.image.race.click',
                  minus);
   },
   init : function() {

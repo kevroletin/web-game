@@ -106,6 +106,13 @@ Game.fix_minor_mode_from_game_state = function() {
 //  log.d.info("===fix minor mode===");
 
   var game_state = Game.last_game_state();
+
+  if (!is_null(game_state)) {
+    minor_modes.enable('in_game');
+  } else {
+    minor_modes.disable('in_game');
+  }
+
   state_field = game_state.state;
 
   if (state_field == 'notStarted') {
@@ -136,8 +143,7 @@ Game.fix_minor_mode_from_game_state = function() {
         if (game_state.attacksHistory.length == 0) {
           if (is_null(game.active_player().activeRace)) {
             new_modes['select_race'] = 1
-          } else if(!game_state.raceSelected &&
-                    game_state.attacksHistory.length == 0)
+          } else if(!game_state.raceSelected)
           {
             new_modes['decline'] = 1
           }
@@ -273,6 +279,11 @@ Game.active_player = function() {
     }
   }
   return null;
+};
+
+Game.active_power = function () {
+  var a = game.active_player();
+  return (a ? a.activePower : null)
 };
 
 Game.apply_game_state = function() {

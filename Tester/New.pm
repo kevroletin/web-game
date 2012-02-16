@@ -486,11 +486,13 @@ sub reset_server {
 }
 
 sub game_state_to_test {
+    init();
     my ($self, $params) = @_;
     my $req = { action => 'saveGame',
                 gameId => $params->{gameId} || $params->{data}{gameId}  };
     my $resp = send_test($req, { result => 'ok' });
     my $state = $resp->{resp};
+    die "game state is null" unless defined $state && $state->{result} eq 'ok';
 
     printf "test('%s',\n%s,\n%s)\n",
            'load state',

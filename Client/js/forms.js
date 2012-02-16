@@ -466,13 +466,13 @@ Playfield.create = function(svg, map) {
     .enter();
   tks_g
     .append('g')
-    .classed('tok', 1)
-    .attr('id', function(d, i) { return 'tok_' + i })
+    .classed('pow', 1)
+    .attr('id', function(d, i) { return 'pow_' + i })
     .each(function(d, i) { this.constState = d });
   tks_g
     .append('g')
-    .classed('pow', 1)
-    .attr('id', function(d, i) { return 'pow_' + i })
+    .classed('tok', 1)
+    .attr('id', function(d, i) { return 'tok_' + i })
     .each(function(d, i) { this.constState = d });
 
   var reg_g = reg.selectAll('path')
@@ -567,7 +567,7 @@ Playfield.apply_game_state = function(game_state) {
         .attr('height', '50px')
         .attr('xlink:href', rsc('img.rc.s')(race) )
         .on('click',
-            function(d) { events.exec('game.region.image.click', i)});;
+            function(d) { events.exec('game.region.image.race.click', i)});
     });
 
   tks.selectAll('g.pow')
@@ -577,13 +577,12 @@ Playfield.apply_game_state = function(game_state) {
       var reg = d3.select(this);
       var ok = false;
 
-      ['dragon', 'encampment', 'fortress', 'hero'].forEach(function(extra_item) {
+      ['dragon', 'encampment', 'fortified', 'hero'].forEach(function(extra_item) {
         var cnt = d.extraItems[extra_item];
         if (is_null(cnt) || !cnt) { return }
         ok = true;
 
-        var data = reg.selectAll('image')
-                      .data(d3.range(0, cnt));
+        var data = reg.selectAll('image').data(d3.range(0, cnt));
         data.enter().append('svg:image');
         data.exit().remove();
 
@@ -592,8 +591,10 @@ Playfield.apply_game_state = function(game_state) {
             .attr('xlink:href', function(d) { return rsc('img.ex')(extra_item) })
             .attr('width', 50)
             .attr('height', 50)
-            .attr('x', cs.powerCoords[0])
-            .attr('y', cs.powerCoords[1]);
+            .attr('x', function(d, i) { return cs.powerCoords[0] + 4*d })
+            .attr('y', function(d, i) { return cs.powerCoords[1] - 4*d })
+            .on('click',
+                function(d) { events.exec('game.region.image.power.click', i)});
         });
       });
       if (!ok) {
