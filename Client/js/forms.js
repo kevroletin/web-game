@@ -257,9 +257,8 @@ Ui_Elements._append_player_info = function(gameInfo, data_enter) {
 
   function u_inf_game_started(d, t) {
     t.append('div')
-      .classed('in_decline', 1)
-      .text('in decline: ' +
-            choose(d.inDecline, ['no', 'yes']));
+      .classed('coins', 1)
+      .text('coins: ' + d.coins);
     t.append('div')
       .classed('tokens_in_hand', 1)
       .text('tokens in hand: ' + zero_if_null(d.tokensInHand));
@@ -343,8 +342,8 @@ Ui_Elements._update_players_info = function(game_state, div) {
         .text('active race: ' + no_if_null(d.activeRace));
       t.select('div.active_power', 1)
         .text('active power: ' + no_if_null(d.activePower));
-      t.select('div.decline_race', 1)
-        .text('decline race: ' + no_if_null(d.declineRace));
+      t.select('div.coins', 1)
+        .text('coins: ' + d.coins);
       t.select('div.decline_power', 1)
         .text('decline power: ' + no_if_null(d.declinePower));
     });
@@ -462,12 +461,19 @@ Playfield.create = function(svg, map) {
 
   var line = d3.svg.line();
 
-  tks.selectAll('g')
+  var tks_g = tks.selectAll('g')
     .data(map.regions)
-  .enter()
+    .enter();
+  tks_g
     .append('g')
+    .classed('tok', 1)
     .attr('id', function(d, i) { return 'tok_' + i })
-    .each(function(d, i) { this.constState = d })
+    .each(function(d, i) { this.constState = d });
+  tks_g
+    .append('g')
+    .classed('pow', 1)
+    .attr('id', function(d, i) { return 'pow_' + i })
+    .each(function(d, i) { this.constState = d });
 
   var reg_g = reg.selectAll('path')
     .data(map.regions)
@@ -519,7 +525,6 @@ Playfield.create = function(svg, map) {
 
     ['magic', 'mine', 'cavern'].forEach(function(extra_item) {
       var field = extra_item + 'Coords';
-      log.d.info(field);
 
       if (!is_null(d[field])) {
         g.append('svg:image')
@@ -531,17 +536,6 @@ Playfield.create = function(svg, map) {
       }
     })
   });
-
-
-/*
-  extra.selectAll('img')
-    .data(map.regions)
-  .enter()
-    .append('g')
-    .attr('id', function(d, i) { return "etok_" + i })
-  });
-*/
-
 
   return svg.node();
 };
@@ -556,7 +550,7 @@ Playfield.apply_game_state = function(game_state) {
   }
 
   var tks = d3.select('g#tokens');
-  tks.selectAll('g')
+  tks.selectAll('g.tok')
     .data(game_state.regions)
     .each(function(d, i) {
 
@@ -574,6 +568,37 @@ Playfield.apply_game_state = function(game_state) {
         .attr('xlink:href', rsc('img.rc.s')(race) )
         .on('click',
             function(d) { events.exec('game.region.image.click', i)});;
+    });
+
+  tks.selectAll('g.pow')
+    .data(game_state.regions)
+    .each(function(d, i) {
+      var cs = this.constState;
+      var reg = d3.select(this);
+      var ok = false;
+
+      ['dragon', 'encampment', 'fortress', 'hero'].forEach(function(extra_item) {
+        var cnt = d.extraItems[extra_item];
+        if (is_null(cnt) || !cnt) { return }
+        ok = true;
+
+        var data = reg.selectAll('image')
+                      .data(d3.range(0, cnt));
+        data.enter().append('svg:image');
+        data.exit().remove();
+
+        data.each(function(d) {
+          d3.select(this)
+            .attr('xlink:href', function(d) { return rsc('img.ex')(extra_item) })
+            .attr('width', 50)
+            .attr('height', 50)
+            .attr('x', cs.powerCoords[0])
+            .attr('y', cs.powerCoords[1]);
+        });
+      });
+      if (!ok) {
+        reg.selectAll('image').remove()
+      }
     });
 
   var free_tks = d3.select('g#free_tokens');
