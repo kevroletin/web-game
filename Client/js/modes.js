@@ -68,8 +68,8 @@ function _check_if_mod_available(m_obj, only_dependencies) {
 /* Major modes */
 
 Major_Modes.change = function(new_m, params) {
-  log.d.info("|new major mode| -> " + new_m);
-  log.d.dump(params, 'params');
+  log.modes.info("|new major mode| -> " + new_m);
+  log.modes.dump(params, 'params');
 
   curr_modes.major = new_m;
 
@@ -84,7 +84,7 @@ Major_Modes.change = function(new_m, params) {
           !is_null(mi.available_if.not_major_m) &&
           in_arr(new_m, mi.available_if.not_major_m))
       {
-        log.d.info('conflicting mode disabled: ' + mi_name);
+        log.modes.info('conflicting mode disabled: ' + mi_name);
         minor_modes.disable(mi_name);
         i = 0;
         len = curr_modes.minor.length;
@@ -297,7 +297,6 @@ major_modes.storage.explore_map = {
   init: function(content, mapId) {
     var c = d3.select(content).text('');
     var draw_map = function (map) {
-      log.d.pretty(map);
       c.append('h2').text(map.mapName);
       var svg = c.append('div').append('svg:svg');
       content.appendChild(playfield.create(svg, map));
@@ -463,32 +462,13 @@ minor_modes.storage.conquer = {
                  'minor_modes.conquer->game.region.click',
                  h);
   },
-  _prepare_ui: function() {
-    var h = function() {
-      d3.event.preventDefault();
-      minor_modes.force('redeploy');
-    };
-    d3.select('div#actions')
-      .append('form')
-      .attr('id', 'begin_redeploy')
-      .on('submit', h)
-      .append('input')
-      .attr('type', 'submit')
-      .attr('value', 'redeploy');
-  },
   init : function() {
     this._watch_map_onclick();
-    this._prepare_ui();
-
     return 0;
   },
   uninit: function() {
     events.del_h('game.region.click',
                  'minor_modes.conquer->game.region.click');
-    d3.select('form#begin_redeploy').remove();
-
-    minor_modes.disable('select_race');
-    minor_modes.disable('decline');
   }
 };
 
@@ -658,6 +638,7 @@ minor_modes.storage.redeploy = {
         a.heroic = function() { ei.hero = true  };
         a.bivouacking = function() { ei.encampment++ };
         a.fortified = function() {
+          if (regions[reg_i].extraItems.fortified) { return }
           var last_reg = minor_modes.storage.redeploy.__new_fort__;
           if (last_reg) {
             delete regions[last_reg].extraItems.fortified;
@@ -729,6 +710,8 @@ minor_modes.storage.redeploy = {
     return 0;
   },
   uninit: function() {
+    delete minor_modes.storage.redeploy.__new_fort__;
+
     events.del_h('game.region.click',
                  'minor_modes.redeploy->game.region.click');
     events.del_h('game.region.image.race.click',
@@ -779,7 +762,6 @@ minor_modes.storage.redeployed = {
       .attr('onsubmit', 'return false;')
       .on('submit', h_select);
     var players = state.get('net.getGameInfo.gameInfo.players');
-    log.d.pretty(players);
     friend_form
       .append('select')
       .attr('id', 'select_friend')
@@ -1195,28 +1177,54 @@ minor_modes.storage.finished = {
   }
 };
 
+minor_modes.storage.can_do_redeploy = {
+  available_if: {
+    minor_m: ['conquer']
+  },
+  _prepare_ui: function() {
+    var h = function() {
+      d3.event.preventDefault();
+      minor_modes.force('redeploy');
+    };
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'begin_redeploy')
+      .on('submit', h)
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'redeploy');
+  },
+  init : function() {
+    this._prepare_ui();
+    return 0;
+  },
+  uninit: function() {
+    d3.select('form#begin_redeploy').remove();
+  }
+};
+
 Minor_Modes.have = function(mode) {
   return in_arr(mode, curr_modes.minor);
 };
 
 Minor_Modes._enable = function(mode, force, params) {
   if (in_arr(mode, curr_modes.minor)) {
-    log.d.warn('mode ' + mode + ' already enabled');
+    log.modes.warn('mode ' + mode + ' already enabled');
     return 0;
   }
 
   var m_obj = this.storage[mode];
   if (is_null(m_obj)) {
-    log.d.error('bad mode: ' + mode );
+    log.modes.error('bad mode: ' + mode );
   }
 
   if (!_check_if_mod_available(m_obj, force)) {
-    log.d.warn('mode is not avaible');
+    log.modes.warn('mode is not avaible');
     return 0;
   }
 
-  log.d.info("|minor mode| -> " + mode);
-  log.d.dump(params, 'params');
+  log.modes.info("|minor mode| -> " + mode);
+  log.modes.dump(params, 'params');
   curr_modes.minor.push(mode);
 
   if (force) {
@@ -1260,11 +1268,11 @@ Minor_Modes.force = function(mode, params) {
 Minor_Modes.disable = function(mode) {
 
   if (!(in_arr(mode, curr_modes.minor))) {
-    log.d.warn('mode ' + mode + ' is not active');
+    log.modes.warn('mode ' + mode + ' is not active');
     return 0;
   }
 
-  log.d.info("|minor mode| -- " + mode);
+  log.modes.info("|minor mode| -- " + mode);
 
   var len = curr_modes.minor.length;
   for (var i = 0; i < len; ++i) {
@@ -1284,7 +1292,7 @@ Minor_Modes.disable = function(mode) {
         !is_null(mi.available_if.minor_m))
     {
       if (in_arr(mode, mi.available_if.minor_m)) {
-        log.d.info('depended mode disabled: ' + mi_name);
+        log.modes.info('depended mode disabled: ' + mi_name);
         minor_modes.disable(mi_name);
         i = 0;
         len = curr_modes.minor.length;

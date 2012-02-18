@@ -6,7 +6,7 @@ var Events = events_type.prototype;
 
 Events.exec = function(ev_full_name, data) {
   log.d.events('event exec: ' + ev_full_name);
-  if (!is_null(data)) log.d.dump(data, 'params');
+  if (!is_null(data)) log.events.dump(data, 'params');
   var ev = get_obj_field(this.storage, ev_full_name);
   if (is_null(ev)) {
     var msg = 'attempt to execute undefined event: ' +

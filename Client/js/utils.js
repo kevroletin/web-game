@@ -23,13 +23,13 @@ Net.send = function(msg, on_resp, to_log) {
   }
   var h = function(text) {
     var parsed = text ? JSON.parse(text) : null
-    if (to_log) {
+    if (log_config.requests && to_log) {
       log.ui.info('--response--\n' + text);
     }
     on_resp(parsed);
   };
   var req = JSON.stringify(msg);
-  if (to_log || config.log_all_requests) {
+  if (log_config.requests && to_log) {
     log.ui.info('--request--\n' + req);
   }
   this._send_raw(req,

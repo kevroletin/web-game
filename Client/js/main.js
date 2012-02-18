@@ -1,16 +1,4 @@
 
-var features = {
-  getUserInfo: 1,
-  getMapInfo: 1,
-  getGameInfo: 1
-};
-
-var config = {
-  log_all_requests: 0,
-  autologin: 1,
-  predefined_user: { sid: 1, gameId: 1 }
-};
-
 var ui = {};
 
 ui.create_menu = function() {
@@ -122,7 +110,9 @@ Game.fix_minor_mode_from_game_state = function() {
 
   var new_modes = {
     berserk: 0,
+    can_do_redeploy: 0,
     conquer: 0,
+    decline: 0,
     defend: 0,
     dragon: 0,
     enchant: 0,
@@ -142,8 +132,7 @@ Game.fix_minor_mode_from_game_state = function() {
         if (game_state.attacksHistory.length == 0) {
           if (is_null(game.active_player().activeRace)) {
             new_modes['select_race'] = 1
-          } else if(!game_state.raceSelected)
-          {
+          } else if(!game_state.raceSelected) {
             new_modes['decline'] = 1
           }
         }
@@ -162,6 +151,8 @@ Game.fix_minor_mode_from_game_state = function() {
         {
           new_modes['berserk'] = 1;
         }
+
+        new_modes['can_do_redeploy'] = !new_modes['select_race'];
 
         new_modes['conquer'] = 1;
         minor_modes.force('conquer');
