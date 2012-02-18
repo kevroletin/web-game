@@ -7,29 +7,21 @@ var features = {
 
 var config = {
   log_all_requests: 0,
-  autologin: 1
+  autologin: 1,
+  predefined_user: { sid: 1, gameId: 1 }
 };
 
-var ui = {
-  console: undefined,
-  map: undefined,
-  toolbar: undefined,
-  gameinfo: undefined,
+var ui = {};
 
-  create_menu: function() {
-    var modes_list =
-      major_modes.available_modes();
-    var m = ui_elements.menu(modes_list);
-    d3.select('div#menu').text('').node().appendChild(m);
-  }
-
+ui.create_menu = function() {
+  var modes_list =
+    major_modes.available_modes();
+  var m = ui_elements.menu(modes_list);
+  d3.select('div#menu').text('').node().appendChild(m);
 };
-
-var protocol = {};
 
 function game_type() {}
 var Game = game_type.prototype;
-
 var game = new game_type();
 
 Game.init = function() {
@@ -57,19 +49,20 @@ Game.init = function() {
   events.reg_h('game.ui_initialized', 'start main loop',
                game.request_game_state );
 
-  if (1) {
+  if (is_null(config.predefined_user)) {
     events.reg_h('ui.refresh_menu', 'ui_create_menu',
                  ui.create_menu);
     major_modes.change('login');
   } else {
-    var i = 1
-    ;
-    state.store('sid', i);
-    state.store('gameId', i)
+    state.store('sid', config.predefined_user.sid);
     minor_modes.enable('logined');
-    game.get_current_user_info()
-    minor_modes.enable('in_game');
-    major_modes.change('play_game');
+    if (!is_null(config.predefined_user.gameId)) {
+      state.store('gameId', config.predefined_user.gameId)
+
+      game.get_current_user_info()
+      minor_modes.enable('in_game');
+      major_modes.change('play_game');
+    }
   }
 
   log.d.info('Game core initialized');
@@ -121,12 +114,19 @@ Game.fix_minor_mode_from_game_state = function() {
     return;
   }
 
+  if (state_field == 'finished') {
+    var show_msg = minor_modes.is_enabled('game_started');
+    minor_modes.force('finished', show_msg);
+    return;
+  }
+
   var new_modes = {
     berserk: 0,
     conquer: 0,
     defend: 0,
     dragon: 0,
     enchant: 0,
+    finished: 0,
     redeploy: 0,
     redeployed: 0,
     select_race: 0,
@@ -136,7 +136,6 @@ Game.fix_minor_mode_from_game_state = function() {
   minor_modes.enable('game_started');
   if (game.active_player_id() != state.get('userId')) {
     minor_modes.force('waiting');
-    //    new_modes['waiting'] = 1
   } else {
     var a = {
       conquer: function() {
@@ -253,7 +252,8 @@ Game.active_player_id = function() {
 
   var is_defend = game_state.state == 'defend';
   if (!is_defend) {
-    return game_state.players[game_state.activePlayerNum].id;
+    var p = game_state.players[game_state.activePlayerNum];
+    return is_null(p) ? null : p.id;
   }
 
   var h = game_state.attacksHistory;

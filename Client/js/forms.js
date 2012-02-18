@@ -143,6 +143,8 @@ Ui_Forms.game_list = {
         {
           var on_resp = function(resp) {
             if (errors.descr_resp(resp) !== 'ok') { return }
+            delete state.storage.net.getGameState;
+            delete state.storage.net.getGameInfo;
             minor_modes.enable('in_game');
             major_modes.change('play_game');
           };
@@ -221,7 +223,6 @@ Ui_Elements.menu = function(modes_list) {
 
 Ui_Elements._append_player_info = function(gameInfo, data_enter) {
   log.d.trace('Ui_Elements._append_player_info');
-
 
   function u_inf_game_not_started(d, t) {
     t.append('div')
@@ -360,6 +361,7 @@ Ui_Elements._update_token_badges = function(game_state, div) {
   }
 
   var tok = game_state.visibleTokenBadges;
+  if (is_null(tok)) { tok = [] }
 
   var data = div.selectAll('div.tokens_pack')
     .data(tok);
@@ -389,11 +391,12 @@ Ui_Elements._update_token_badges = function(game_state, div) {
 Ui_Elements._update_state_fields = function(game_state) {
   // TODO: beautify
   var tmp = [['game state',        game_state.state],
-            ['last dice value',   game_state.lastDiceValue],
-            ['enchant used ',     game_state.enchanted],
-            ['dragon used',       game_state.dragonAttacked],
-            ['bersert dice',      game_state.berserkDice],
-            ['decline requested', game_state.declineRequested]];
+             ['turn',              game_state.turn],
+             ['last dice value',   game_state.lastDiceValue],
+             ['enchant used ',     game_state.enchanted],
+             ['dragon used',       game_state.dragonAttacked],
+             ['bersert dice',      game_state.berserkDice],
+             ['decline requested', game_state.declineRequested]];
   var d = tmp.filter(function(d) { return !is_null(d[1]) && d[1] !== false });
   var fill = function(elem) {
     elem.text(function(d) { return d[0] + ': ' + d[1] });
@@ -410,6 +413,10 @@ Ui_Elements.update_game_info = function() {
 
   var game_state = state.get('net.getGameState.gameState',
                              'net.getGameInfo.gameInfo');
+
+  if (is_null(game_state)) {
+      return
+  }
 
   this._update_state_fields(game_state);
   this._update_players_info(game_state);

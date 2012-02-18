@@ -163,6 +163,7 @@ sub _create_tokens_pack {
 
 sub remove_player {
     my ($self, $user) = @_;
+    assert($self->state() ~~ ['notStarted', 'finished'], 'badStage');
     my $nu = [ grep { $_ ne $user } @{$self->players()} ];
     $self->players($nu);
 }
@@ -346,8 +347,6 @@ sub extract_state_durty {
     $res->{activePlayerId} = $s->activePlayer() ?
                                  $s->activePlayer()->id() : undef;
     $res->{currentPlayersNum} = @{$s->players()};
-    $res->{activePlayerId} = $s->activePlayer() ?
-        $s->activePlayer()->userId() : undef;
     $res->{currentTurn} = $s->turn();
     $res->{gameDescription} = $s->gameDescr();
     $res->{gameDescr} = $s->gameDescr();
@@ -390,7 +389,9 @@ sub extract_state_clear {
 
     $res->{players} = $s->_extract_players_state_clear();
     $res->{regions} = $s->map()->extract_state_clear();
-    $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
+    if ($s->state() ne 'finished') {
+        $res->{visibleTokenBadges} = $s->_extract_visible_tokens();
+    }
 
     $res->{features} = $s->features() if $s->features();
 
@@ -535,7 +536,7 @@ sub short_info_durty {
 sub short_info_clear {
     my ($s) = @_;
     {
-        activePlayerId => $s->activePlayer()->id(),
+        activePlayerId => ( $_ = $s->activePlayer() ) ? $_->id() : $_,
         gameId => $s->gameId(),
         gameName => $s->gameName(),
         gameDescr => $s->gameDescr(),
@@ -699,7 +700,7 @@ sub load_state {
 
     die 'bad map id' if $data->{mapId} ne $self->map()->prev_id();
 
-    my @st = qw(conquer redeployed defend declined);
+    my @st = qw(conquer redeployed defend declined finished);
     assert(($data->{state} ~~ @st), 'badState');
     $self->state($data->{state});
     assert((defined $data->{turn} && $data->{turn} =~ /\d+/ &&

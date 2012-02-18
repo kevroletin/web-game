@@ -329,7 +329,11 @@ sub finishTurn {
         }
     }
     $game->activePlayer()->tokensInHand($tok_cnt);
-    $game->state('conquer');
+    if ($game->turn() <= $game->map()->turnsNum()) {
+        $game->state('conquer')
+    } else {
+        $game->state('finished')
+    }
 
     db()->update($game, global_user(), $game->activePlayer(), @reg);
 

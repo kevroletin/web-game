@@ -195,7 +195,6 @@ major_modes.storage.games_new = {
     f.on('submit', function(d) {
       var h = function(resp) {
         if (errors.descr_resp(resp) == 'ok') {
-          game.direct_request_game_state();
           major_modes.change('play_game');
         }
       };
@@ -343,6 +342,7 @@ major_modes.storage.play_game = {
     var hg = function(resp) {
       state.store('net.getGameInfo', resp);
       state.store('net.getGameState', resp.gameInfo);
+      if (is_null(resp) || resp.result != 'ok') { return }
 
       ui_elements.game_info(resp.gameInfo, div_game_info);
       if (++ans_cnt == 2) {
@@ -356,6 +356,8 @@ major_modes.storage.play_game = {
 
     var hm = function(resp) {
       state.store('net.getMapInfo', resp);
+      if (is_null(resp) || resp.result != 'ok') { return }
+
       svg = div_playfield.append('svg:svg');
       playfield.create(svg, resp.mapInfo);
 
@@ -528,11 +530,9 @@ minor_modes.storage.decline = {
   },
   init : function() {
     var on_resp = function(resp) {
-      // TODO:
-      if (resp.result !== 'ok') {
-        alert(resp.result);
+      if (errors.descr_resp(resp) == 'ok') {
+        game.direct_request_game_state();
       }
-      game.direct_request_game_state();
     };
 
     var h = function() {
@@ -747,10 +747,8 @@ minor_modes.storage.redeployed = {
   },
   _finish_turn: function() {
     var on_resp_finish = function(resp) {
-      if (resp.result == 'ok')  {
+      if (errors.descr_resp(resp) == 'ok')  {
         game.direct_request_game_state();
-      } else {
-        alert(resp.result);
       }
     };
     net.send({action: 'finishTurn'}, on_resp_finish, 1)
@@ -767,10 +765,8 @@ minor_modes.storage.redeployed = {
   },
   _ui_for_diplomat: function() {
     var on_resp_select = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         minor_modes.storage.redeployed._finish_turn();
-      } else {
-        alert(resp.result);
       }
     };
     var h_select = function() {
@@ -801,10 +797,8 @@ minor_modes.storage.redeployed = {
   },
   _ui_for_stout: function() {
     var on_resp = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         minor_modes.storage.redeployed._finish_turn();
-      } else {
-        alert(resp.result)
       }
     };
     var h = function() {
@@ -848,32 +842,12 @@ minor_modes.storage.declined = {
   },
   init : function() {
     var on_resp = function(resp) {
-      if (resp.result == 'ok')  {
+      if (errors.descr_resp(resp) == 'ok')  {
         game.direct_request_game_state();
-//        minor_modes.force('waiting');
-      } else {
-        alert(resp.result);
       }
     };
 
-    if (1) {
-      net.send({action: 'finishTurn'}, on_resp, 1)
-      return 0;
-    }
-    // This button is needed to some races which can do additional
-    // actions before finishTurn
-
-    var h = function() {
-      d3.event.preventDefault();
-      net.send({action: 'finishTurn'}, on_resp, 1)
-    };
-    d3.select('div#actions')
-      .append('form')
-      .attr('id', 'finish_turn')
-      .on('submit', h)
-      .append('input')
-      .attr('type', 'submit')
-      .attr('value', 'finish_turn');
+    net.send({action: 'finishTurn'}, on_resp, 1)
     return 0;
   },
   uninit: function() {
@@ -906,11 +880,10 @@ minor_modes.storage.defend = {
   _send_defend: function() {
     var data = this._prepare_defend_data();
     var h = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         minor_modes.force('waiting');
       } else {
         minor_modes.force('defend');
-        alert(resp.result);
       }
     };
     net.send({"regions": data, action: "defend"}, h, 1);
@@ -957,7 +930,7 @@ minor_modes.storage.defend = {
       }
     };
     events.reg_h('game.region.click',
-                 'minor_modes.conquer->game.region.click',
+                 'minor_modes.defend->game.region.click',
                  plus);
     var minus = function(reg_i) {
       var regions = state.get('net.getGameState.gameState.regions');
@@ -979,7 +952,7 @@ minor_modes.storage.defend = {
       }
     };
     events.reg_h('game.region.image.race.click',
-                 'minor_modes.conquer->game.region.image.race.click',
+                 'minor_modes.defend->game.region.image.race.click',
                  minus);
   },
   init : function() {
@@ -992,7 +965,9 @@ minor_modes.storage.defend = {
   },
   uninit: function() {
     events.del_h('game.region.click',
-                 'minor_modes.conquer->game.region.click');
+                 'minor_modes.defend->game.region.click');
+    events.del_h('game.region.image.race.click',
+                 'minor_modes.defend->game.region.image.race.click');
     d3.select('form#finish_defend').remove();
     d3.select('form#undo_defend').remove();
   }
@@ -1036,12 +1011,10 @@ minor_modes.storage.enchant = {
   },
   _prepare_ui: function() {
     var on_resp = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         minor_modes.storage.enchant._restore_old_events();
         minor_modes.disable('enchant');
         game.direct_request_game_state();
-      } else {
-        alert(resp.result);
       }
     };
     var h_onclick = function(reg_i) {
@@ -1101,12 +1074,10 @@ minor_modes.storage.dragon = {
   },
   _prepare_ui: function() {
     var on_resp = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         minor_modes.storage.dragon._restore_old_events();
         minor_modes.disable('dragon');
         game.direct_request_game_state();
-      } else {
-        alert(resp.result);
       }
     };
     var h_onclick = function(reg_i) {
@@ -1147,11 +1118,9 @@ minor_modes.storage.berserk = {
   },
   _prepare_ui: function() {
     var on_resp = function(resp) {
-      if (resp.result == 'ok') {
+      if (errors.descr_resp(resp) == 'ok') {
         alert('dice: ' + resp.dice)
         game.direct_request_game_state();
-      } else {
-        alert(resp.result);
       }
     };
     var h = function() {
@@ -1172,6 +1141,57 @@ minor_modes.storage.berserk = {
   },
   uninit: function() {
     d3.select('form#form_throw_dice').remove();
+  }
+};
+
+minor_modes.storage.finished = {
+  available_if: {
+    major_mode: ['play_game'],
+    not_minor_m: ['conquer',  'decline',  'redeploy', 'game_started',
+                  'redeployed', 'declined', 'defend', 'waiting']
+  },
+  _prepare_ui: function() {
+    var on_resp = function(resp) {
+      if (errors.descr_resp(resp) == 'ok') {
+        minor_modes.disable('in_game');
+        major_modes.change('games_list');
+      }
+    };
+    var h = function() {
+      net.send({action: 'leaveGame', gameId: state.get('gameId')}, on_resp);
+    };
+    d3.select('div#actions')
+      .append('form')
+      .attr('id', 'form_leave_game')
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'leave game')
+      .attr('onclick', 'return false;')
+      .on('click', h);
+  },
+  _show_game_result: function() {
+    var players = state.get('net.getGameInfo.gameInfo.players');
+    var max_player = players[0];
+    for (var i = 1; i < players.length; ++i) {
+      if (players[i].coins > max_player.coins) {
+        max_player = players[i];
+      }
+    }
+    if (max_player.id == state.get('userId')) {
+      alert('You are win!');
+    } else {
+      alert(max_player.name + ' won');
+    }
+  },
+  init : function(show_msg) {
+    if (show_msg) {
+      this._show_game_result();
+    }
+    this._prepare_ui();
+    return 0;
+  },
+  uninit: function() {
+    d3.select('form#form_leave_game').remove();
   }
 };
 

@@ -39,7 +39,7 @@ Errors.translate = function (msg) {
   if (!is_null(Errors.table[msg])) {
     return Errors.table[msg];
   } else {
-    return msg
+    return _beautify_err_code(msg)
   }
 };
 
@@ -50,21 +50,20 @@ Errors.funct.badUserSid = function(resp) {
 
 // TODO: write descriptions
 Errors.table = {
-  /* Login */
-  badUsernameOrPassword          : 'Bad username or password',
-  badUsername                    : 'Bad username',
-  badPassword                    : 'Bad password',
-  /* Register */
-  usernameTaken                  : 'Username taken',
-  /* New Game */
-  badGameName                    : 'Bad game name',
-  badGameDescription             : 'Bad game description',
   /* Play Game */
   badStage                       : 'Bad game stage',
-  badRegion                      : 'Bad region',
-  notEnoughTokensForRedeployment : 'Not enough tokens for redeployment',
-  badTokensNum                   : 'Bad tokens num',
-  badRegion                      : 'Bad region',
-  tooManyFortifiedsInRegion      : 'Too many fortifieds in region',
-  canNotAttackFriend             : 'Can not attack friend'
+  nothingToEnchant               : 'There is no tockens on resion to enchant'
 };
+
+function _beautify_err_code(err) {
+  var up_case = /[A-Z]/;
+  var j = 1;
+  var result = err.charAt(0).toUpperCase();
+  for (var i = 1; i <= err.length; ++i) {
+    if (up_case.test(err.charAt(i)) || i == err.length) {
+      result = result + err.substring(j, i).toLowerCase() + ' ';
+      j = i;
+    }
+  }
+  return result.substr(0, result.length - 1);
+}
