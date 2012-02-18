@@ -111,9 +111,9 @@ Ui_Forms.register = {
 Ui_Forms.game_list = {
   gen_form: function(game_list) {
 
-    var t = make('table');
+    var t = make('table').classed('list', 1);
     t.append('tr').selectAll('th')
-      .data(['Название', 'Описание', 'Состояние', 'Игроков', ''])
+      .data(['Название', 'Описание', 'Состояние', 'Игроков', '+'])
       .enter()
       .append('th')
       .text(String);
@@ -124,9 +124,11 @@ Ui_Forms.game_list = {
         var tr = d3.select(this);
         var on_txt = 'major_modes.change(\'explore_game\', ' +
           d.gameId + '); return false;'
-        tr.append('a')
-          .attr('onclick', on_txt)
-          .attr('href', '#')
+        tr.append('td')
+// TODO: implement watching started game
+//          .append('a')
+//          .attr('onclick', on_txt)
+//          .attr('href', '#')
           .text(d.gameName);
 
         tr.selectAll(null).data(
@@ -170,7 +172,7 @@ Ui_Forms.game_list = {
 Ui_Forms.maps_list = {
   gen_form: function(maps_list) {
 
-    var t = make('table');
+    var t = make('table').classed('list', 1);
     t.append('tr').selectAll('th')
       .data(['Название', 'Игроков', 'Размер', 'Ходов'])
       .enter()
@@ -183,7 +185,7 @@ Ui_Forms.maps_list = {
         var tr = d3.select(this);
         var on_txt = 'major_modes.change(\'explore_map\', ' +
           d.mapId + '); return false;'
-        tr.append('a')
+        tr.append('td').append('a')
           .attr('onclick', on_txt)
           .attr('href', '#')
           .text(d.mapName);
@@ -258,23 +260,29 @@ Ui_Elements._append_player_info = function(gameInfo, data_enter) {
 
   function u_inf_game_started(d, t) {
     t.append('div')
+      .classed('active_race', 1)
+      .append('img')
+        .attr('src', rsc('img.rc')(d.activeRace));
+    t.append('div')
+      .classed('active_power', 1)
+      .append('img')
+        .attr('src', rsc('img.pw')(d.activePower));
+    t.append('div')
+      .classed('decline_race', 1)
+      .append('img')
+        .attr('src', rsc('img.rc')(d.declineRace, 1));
+    t.append('div')
+      .classed('decline_power', 1)
+      .append('img')
+        .attr('src', rsc('img.pw')(d.declinePower, 1));
+
+    t.append('div')
       .classed('coins', 1)
       .text('coins: ' + d.coins);
     t.append('div')
       .classed('tokens_in_hand', 1)
       .text('tokens in hand: ' + zero_if_null(d.tokensInHand));
-    t.append('div')
-      .classed('active_race', 1)
-      .text('active race: ' + no_if_null(d.activeRace));
-    t.append('div')
-      .classed('active_power', 1)
-      .text('active power: ' + no_if_null(d.activePower));
-      t.append('div')
-      .classed('decline_race', 1)
-      .text('decline race: ' + no_if_null(d.declineRace));
-    t.append('div')
-      .classed('decline_power', 1)
-      .text('decline power: ' + no_if_null(d.declinePower));
+
   }
 
   data_enter
@@ -300,7 +308,6 @@ Ui_Elements._append_player_info = function(gameInfo, data_enter) {
 Ui_Elements.game_info = function(gameInfo, d) {
   log.d.trace('Ui_Elements.game_info');
 
-  d.append('h1').text(gameInfo.gameName);
   d.append('div').attr('id', 'state_fields');
   this._update_state_fields(gameInfo);
 
@@ -308,10 +315,6 @@ Ui_Elements.game_info = function(gameInfo, d) {
     .selectAll('div')
     .data(gameInfo.players);
   this._append_player_info(gameInfo, data.enter());
-
-  div_game_info
-    .append('div')
-    .attr('id', 'tokens_packs');
 
   return d.node();
 };
@@ -333,20 +336,20 @@ Ui_Elements._update_players_info = function(game_state, div) {
              function(d, i) { return i == game_state.activePlayerNum; })
     .each(function(d) {
       var t = d3.select(this);
-      t.select('div.in_decline')
-        .text('in decline: ' +
-              choose(d.inDecline, ['no', 'yes']));
       t.select('div.tokens_in_hand')
         .text('tokens in hand: ' +
               zero_if_null(d.tokensInHand));
-      t.select('div.active_race')
-        .text('active race: ' + no_if_null(d.activeRace));
-      t.select('div.active_power', 1)
-        .text('active power: ' + no_if_null(d.activePower));
-      t.select('div.coins', 1)
+      t.select('div.coins')
         .text('coins: ' + d.coins);
-      t.select('div.decline_power', 1)
-        .text('decline power: ' + no_if_null(d.declinePower));
+
+      t.select('div.active_race').select('img')
+        .attr('src', rsc('img.rc')(d.activeRace));
+      t.select('div.active_power').select('img')
+        .attr('src', rsc('img.pw')(d.activePower));
+      t.select('div.decline_race').select('img')
+        .attr('src', rsc('img.rc')(d.declineRace, 1));
+      t.select('div.decline_power').select('img')
+        .attr('src', rsc('img.pw')(d.declinePower), 1);
     });
 }
 
@@ -374,17 +377,24 @@ Ui_Elements._update_token_badges = function(game_state, div) {
     .each(function(d, i) {
       var t = d3.select(this)
         .attr('class', 'tokens_pack');
-      t.append('div').text(d.raceName);
-      t.append('div').text(d.specialPowerName);
-      t.append('div').text(d.bonusMoney);
+
+      t.append('div').classed('coins_cnt', 1).text(d.bonusMoney);
+
+      t.append('img')
+        .classed('race', 1)
+        .attr('src', rsc('img.rc')(d.raceName));
+      t.append('br');
+      t.append('img')
+        .classed('power', 1)
+        .attr('src', rsc('img.pw')(d.specialPowerName));
     });
 
   data.each(function(d, i) {
     d.position = i;
-    d3.select(this).selectAll('div')
-      .data([d.raceName, d.specialPowerName,
-             d.bonusMoney])
-      .text(String);
+    d3.select(this).select('div').text(d.bonusMoney);
+    d3.select(this).selectAll('img')
+      .data([rsc('img.rc')(d.raceName), rsc('img.pw')(d.specialPowerName)])
+      .attr('src', String)
   });
 }
 

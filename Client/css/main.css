@@ -1,8 +1,31 @@
 
+a {
+    color: black;
+}
+
+a:hover {
+    color: orange;
+}
+
+h2 {
+    margin: 0;
+}
+
+body {
+    background-color: black;
+    background-image: url("/img/body.jpg");
+}
+
+div#container {
+/*    background-color: rgba(255, 255, 255, 0.95); */
+    background-color: white;
+    border-radius: 5px;
+    width: 1200px;
+    margin: 0 auto;
+}
+
 div#header {
-    border-bottom: 1px black solid;
     height: 0px;
-/*    position: fixed; */
     top: 0;
     left: 0;
     width: 100%;
@@ -10,24 +33,39 @@ div#header {
 
 div#content {
     margin: 0px 0 0 160px;
-    padding:1em 1em 5em; /* bottom padding for footer */
+    padding: 20px 0;
 }
 
 div#panel {
-    border-right: 1px black solid;
-    rigth: 0;
-    position: fixed;
-    top: 0px;
+    background-color: white;
+    border: 1px gray solid;
+    border-top-left-radius: 5px;
+    margin: 5px;
+    padding: 20px 0;
+    float: left;
     width: 150px;
 }
 
+div#panel ul {
+    padding: 0 20px;
+    margin: 0;
+    list-style: none;
+}
+
+div#panel h2 {
+    padding: 5px 20px;
+}
+
 div#panel li:hover {
-    background-color: gray;
+    color: orange;
 }
 
 div#footer {
     margin: 20px 0 0 0;
-    border-top: 1px black solid;
+    height: 50px;
+    width: 100%;
+    float: none;
+    clear: both;
 }
 
 table#gamesList {
@@ -44,21 +82,111 @@ table#gamesList td {
 }
 
 div#game_info {
+    margin: 0 30px 0 0;
     float: left;
+    width: 210px;
 }
 
 div.player {
+    background-color: Tan;
     border: 1px solid black;
+    border-radius: 5px;
     margin: 2px;
     padding: 2px;
 }
 
 div.active_player {
-    background-color: gray;
+    background-color: Chocolate;
+}
+
+form#login {
+    width: 300px;
+}
+
+form#register {
+    width: 300px;
+}
+
+table.list {
+    border: 1px gray solid;
+    border-collapse: collapse;
+}
+
+table.list td {
+    padding: 3px;
+    border: 1px gray solid;
+}
+
+table.list th {
+    padding: 5px;
+    border: 1px gray solid;
+}
+
+p#msg_box {
+    margin: 0;
+    padding: 0;
+    color: black;
+    font-weight: 600;
+}
+
+/* Play game */
+
+h1#game_name {
+    margin: 20px;
+    text-align: center;
+}
+
+div#actions {
+    margin: 0 0 0 230px;
+    height: 30px;
+    width: 100%;
+}
+
+div#actions form {
+    float: left;
+}
+
+div.username {
+    font-weight: 600;
+}
+
+div.active_race {
+    float: left;
+}
+
+div.decline_race {
+    float: left;
+}
+
+div.active_power {
+}
+
+div#tokens_packs {
+    clear: both;
+    margin: 0 0 0 250px;
 }
 
 div.tokens_pack {
-    border: 1px solid black;
-    margin: 2px;
-    padding: 2px;
+    float: left;
+}
+
+div#tokens_packs img.race {
+    float: none;
+}
+
+div#tokens_packs img.power {
+    float: none;
+}
+
+div#tokens_packs div.coins_cnt {
+    color: black;
+    margin:  0 0 0 0;
+    padding: 0 0 0 5px;
+    border-radius: 10px;
+    width: 15px;
+    height: 20px;
+    background-color: white;
+    position: relative;
+    left: 5px;
+    top: 25px;
 }

@@ -329,19 +329,25 @@ major_modes.storage.play_game = {
   },
   _create_ui: function() {
     var c = d3.select('div#content').text('');
+    c.append('h1').attr('id', 'game_name');
     div_game_info = c.append('div')
       .attr('id', 'game_info');
     c.append('div')
       .attr('id', 'actions');
+
     var div_playfield = c.append('div')
       .attr('id', 'playfield_container')
     ans_cnt = 0,
     svg = null;
 
+    c.append('div')
+      .attr('id', 'tokens_packs');
+
     var hg = function(resp) {
       state.store('net.getGameInfo', resp);
       state.store('net.getGameState', resp.gameInfo);
       if (is_null(resp) || resp.result != 'ok') { return }
+      d3.select("h1#game_name").text(resp.gameInfo.gameName);
 
       ui_elements.game_info(resp.gameInfo, div_game_info);
       if (++ans_cnt == 2) {

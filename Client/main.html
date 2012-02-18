@@ -31,37 +31,40 @@
 <!-- INIT -->
   <script>
     window.onload = function(){
-    
+
     // for debug with moz repl
       $ = function(tag) {
         return d3.selectAll(tag)[0];
       };
 
       game.init();
-      livereload.run();
+      if (config.livereload) {
+        livereload.run();
+      }
     };
   </script>
 
-  
 </head>
 <body>
-  
-  <div id="header">
-  </div>
 
-  <div id="panel">
-    <h2>Select action</h2>
-    <div id="menu">
+  <div id="container">
+
+    <div id="header">
     </div>
+
+    <div id="panel">
+      <h2>Menu</h2>
+      <div id="menu">
+      </div>
+    </div>
+
+    <div id="content">
+    </div>
+
+    <div id="footer">
+    </div>
+
   </div>
 
-  <div id="content">
-    
-  </div>
-
-  <!-- div id="footer">
-    [Footer]
-  </div -->
-  
 </body>
 </html>
