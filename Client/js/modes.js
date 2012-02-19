@@ -201,7 +201,8 @@ major_modes.storage.games_new = {
       var q = { action: 'createGame',
                 gameDescr: f.node()['gameDescr'].value,
                 gameName: f.node()['gameName'].value,
-                mapId: f.node()['mapId'].value };
+                mapId: f.node()['mapId'].value,
+                ai: f.node()['ai'].value };
       net.send(q, h, 1);
       return false;
     });
@@ -233,6 +234,12 @@ major_modes.storage.games_new = {
            });
          };
          net.send({action: 'getMapList'}, h);
+       }],
+      ['Number of AI',
+       function(f) {
+         f.append('input')
+           .attr('type', 'textfield')
+           .attr('name', 'ai');
        }],
       ['Description',
        function(f) {
@@ -287,6 +294,46 @@ major_modes.storage.maps_list = {
         .appendChild(ui_forms.maps_list.gen_form(resp.maps));
     }
     net.send({action: 'getMapList'}, h );
+  }
+
+};
+
+major_modes.storage.maps_new = {
+  available_if: {
+    minor_m: ['logined']
+  },
+  descr: 'Upload map',
+  in_menu: true,
+
+  init: function(content) {
+    var c = d3.select(content);
+    c.text('');
+    c.append('h2').text('Upload map');
+    var f = c.append('form')
+      .attr('onSubmit', 'return false;');
+
+    var on_resp = function (resp) {
+      if (errors.descr_resp(resp) == 'ok') {
+        major_modes.change('maps_list');
+      }
+    };
+    var h = function () {
+      var map = JSON.parse( f.node()['map'].value );
+      if (typeof(map) !== 'object') {
+        alert('Should be hash')
+      } else {
+        map.action = 'uploadMap';
+        net.send(map, on_resp );
+      };
+    };
+
+    f.on('submit', h);
+    f.append('textarea')
+      .attr('name', 'map');
+    f.append('br');
+    f.append('input')
+      .attr('type', 'submit')
+      .attr('value', 'upload');
   }
 
 };
