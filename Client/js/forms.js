@@ -349,7 +349,7 @@ Ui_Elements._update_players_info = function(game_state, div) {
       t.select('div.decline_race').select('img')
         .attr('src', rsc('img.rc')(d.declineRace, 1));
       t.select('div.decline_power').select('img')
-        .attr('src', rsc('img.pw')(d.declinePower), 1);
+        .attr('src', rsc('img.pw')(d.declinePower, 1));
     });
 }
 
@@ -594,7 +594,7 @@ Playfield.apply_game_state = function(game_state) {
       var reg = d3.select(this);
       var ok = false;
 
-      ['dragon', 'encampment', 'fortified', 'hero'].forEach(function(extra_item) {
+      ['dragon', 'encampment', 'fortified', 'hero', 'hole'].forEach(function(extra_item) {
         var cnt = d.extraItems[extra_item];
         if (is_null(cnt) || !cnt) { return }
         ok = true;

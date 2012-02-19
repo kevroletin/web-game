@@ -83,7 +83,8 @@ sub aiJoin {
     db()->insert($ai_user);
     db()->update( $game );
     response_json({result => 'ok', sid => $ai_user->sid(),
-                   id => int(@{$game->players()})});
+#                  id => int(@{$game->players()})});
+                   id => $ai_user->id()});
 }
 
 sub getGameInfo {

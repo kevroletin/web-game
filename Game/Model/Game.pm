@@ -537,6 +537,7 @@ sub short_info_clear {
     my ($s) = @_;
     {
         activePlayerId => ( $_ = $s->activePlayer() ) ? $_->id() : $_,
+        aiRequiredNum => $s->ai() - $s->aiJoined(),
         gameId => $s->gameId(),
         gameName => $s->gameName(),
         gameDescr => $s->gameDescr(),
@@ -557,6 +558,7 @@ sub full_info {
     for my $k (keys %{$s_i}) {
         $state->{$k} = $s_i->{$k}
     }
+    $state->{aiRequiredNum} = $s->ai() - $s->aiJoined();
     for my $i (0 .. $#{$s->players()}) {
         $state->{players}->[$i]->{name} =
             $s->players()->[$i]->{username}
