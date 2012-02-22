@@ -20,13 +20,7 @@ sub createDefaultMaps {
             my $n_map = db_search_one({ name => $map->{name} },
                                       { CLASS => 'Game::Model::Map'});
             db()->delete($n_map) if defined $n_map;
-            my $create_reg = sub {
-                my $r = shift;
-                Game::Model::Region->new(%$r);
-            };
-            my @new_reg = map { $create_reg->($_) } @{$map->{regions}};
-            $map->{regions} = \@new_reg;
-            $n_map = Game::Model::Map->new(%{$map});
+            $n_map = Game::Model::Map->construct_from_state($map);
             db()->insert_nonroot($n_map);
             ++$i;
         }

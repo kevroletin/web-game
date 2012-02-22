@@ -24,7 +24,8 @@ use Exporter::Easy (
          std => [qw(assert from_bool bool num config feature
                      is_debug global_game global_user)],
          db => [qw(db db_search db_search_one db_scope inc_counter)],
-         config => [qw(apply_game_features environment request stack_trace)],
+         config => [qw(apply_game_features environment request stack_trace
+                       db_lazy_replace db_lazy_execute)],
          response => [qw(response response_json
                          early_response early_response_json
                          response_raw)]
@@ -33,6 +34,8 @@ use Exporter::Easy (
               assert
               bool
               config
+              db_lazy_replace
+              db_lazy_execute
               feature
               from_bool
               db
@@ -126,6 +129,14 @@ sub feature {
 sub db {
     if (@_) { $db = $_[0] }
     $db
+}
+
+sub db_lazy_replace {
+    Game::DatabaseLazy->replace($db)
+}
+
+sub db_lazy_execute {
+    $db->execute_memorized()
 }
 
 sub db_search {
@@ -256,7 +267,56 @@ sub stack_trace {
     $stack_trace
 }
 
-1
+1;
+
+package Game::DatabaseLazy;
+use warnings;
+use strict;
+
+sub new {
+    my $s = {};
+    for (qw(delete insert insert_nonroot store store_nonroot update)) {
+        $s->{$_} = [];
+    }
+    bless $s, shift
+}
+
+sub replace {
+    my $self = ref($_ = shift) ? $_ : $_->new();
+    $self->{old_db} = $_[0];
+    $self->{old_db_p} = $_[0];
+    $_[0] = $self;
+}
+
+sub _push_lazy_arr {
+    my ($s, $arr) = (shift, shift);
+    push @{$s->{$arr}}, $_ for @_;
+}
+
+sub delete { shift->_push_lazy_arr('delete', @_) }
+
+sub insert { shift->_push_lazy_arr('insert', @_) }
+
+sub insert_nonroot { shift->_push_lazy_arr('insert_nonroot', @_) }
+
+sub store { shift->_push_lazy_arr('store', @_) }
+
+sub store_nonroot { shift->_push_lazy_arr('store_nonroot', @_) }
+
+sub update { shift->_push_lazy_arr('update', @_) }
+
+sub search { shift->{old_db}->search(@_) }
+
+sub execute_memorized {
+    my ($self) = @_;
+    for (qw(delete insert insert_nonroot store store_nonroot update)) {
+        my $arr = $self->{$_};
+        $self->{old_db}->$_(@$arr) if @$arr
+    }
+    ${$self->{old_dbp}} = $self->{old_db}
+}
+
+1;
 
 __END__
 

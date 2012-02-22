@@ -160,5 +160,17 @@ sub full_info {
     $r
 }
 
+# --- load state ---
+
+sub construct_from_state {
+    my ($class, $data) = @_;
+    my $create_reg = sub {
+        my $r = shift;
+        Game::Model::Region->new(%$r);
+    };
+    my @new_reg = map { $create_reg->($_) } @{$data->{regions}};
+    $data->{regions} = \@new_reg;
+    $class->new(%$data)
+}
 
 __PACKAGE__->meta->make_immutable;

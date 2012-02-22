@@ -7,6 +7,7 @@ use Test::Harness;
              't/game/stage.t'
 #             "game_creation.t", #TODO: fix default maps
 #             "gameplay.t",
+             );
 }
 
 1;

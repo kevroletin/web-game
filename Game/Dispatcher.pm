@@ -89,7 +89,9 @@ sub process_request {
     }
 
     eval {
-        $action_handler->($data)
+        db_lazy_replace();
+        $action_handler->($data);
+        db()->execute_memorized();
     };
     return unless $@;
 
