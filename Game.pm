@@ -12,7 +12,6 @@ use Game::Constants;
 use Game::Dispatcher;
 use Game::Model;
 use Game::Environment qw(:std :config :response);
-use Data::Dumper::Concise;
 
 
 sub _dier {
@@ -58,33 +57,20 @@ sub setup_environment {
     Game::Model::connect_db();
 }
 
-sub record_test {
-    my ($data) = @_;
-    $_ = response()->body();
-    my $resp = from_json( ref($_) eq 'ARRAY' ? join '', @$_ : $_ );
-    my $info_actions = [qw(getGameState getGameInfo getGameList getUserInfo
-                           getMapInfo getMapList)];
-    return if $data->{action} ~~ $info_actions || $resp->{result} ne 'ok';
-
-    open my $test, '>>', feature('record_test');
-    printf $test "test('%s',\n%s,\n%s);\n\n", $data->{action},
-        map { join "\n", map { "    $_" } split "\n", Dumper $_ } $data, $resp;
-    close $test;
-}
-
 sub parse_request {
     my ($env) = @_;
 
     setup_environment($env);
+    my $log = Game::RequestLogger->new();
 
     my $json = request()->raw_body();
-
-    print $json, "\n" if feature('log_requests');
-
     my $data = '';
     eval {
         $data = from_json($json)
     };
+
+    $log->log_request($json, $data);
+
     if ($@ || !$data->{action}) {
         response_json({
             result => 'badJson'
@@ -94,18 +80,64 @@ sub parse_request {
         Game::Dispatcher::process_request($data, $env);
     }
 
-    if (feature('log_requests')) {
-        print ref response()->body() eq 'ARRAY' ?
-            join "\n", @{response()->body()} :
-            response()->body();
-        print "\n"
-    }
-    record_test($data) if feature('record_test');
+    $log->log_response($data);
+    $log->record_test($data);
 
     response()->finalize();
 };
 
-1
+1;
+
+package Game::RequestLogger;
+use warnings;
+use strict;
+
+use JSON;
+use Game::Environment qw(:std :response);
+use Data::Dumper::Concise;
+
+my $info_actions = [qw(getGameState getGameInfo getGameList getUserInfo
+                       getMapInfo getMapList)];
+
+sub new { bless { enabled => 1 }, shift }
+
+sub log_request {
+    my ($self, $json, $data) = @_;
+
+    if (!feature('log_requests')) {
+        $self->{enabled} = 0
+    }
+
+    return unless $self->{enabled};
+
+    print $json, "\n";
+}
+
+sub log_response {
+    my ($self) = @_;
+    return unless $self->{enabled};
+
+    print ref response()->body() eq 'ARRAY' ?
+        join "\n", @{response()->body()} :
+        response()->body();
+    print "\n"
+}
+
+sub record_test {
+    my ($self, $data) = @_;
+    return unless feature('record_test');
+
+    $_ = response()->body();
+    my $resp = from_json( ref($_) eq 'ARRAY' ? join '', @$_ : $_ );
+    return if $data->{action} ~~ $info_actions || $resp->{result} ne 'ok';
+
+    open my $test, '>>', feature('record_test');
+    printf $test "test('%s',\n%s,\n%s);\n\n", $data->{action},
+        map { join "\n", map { "    $_" } split "\n", Dumper $_ } $data, $resp;
+    close $test;
+}
+
+1;
 
 __END__
 

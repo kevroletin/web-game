@@ -137,7 +137,7 @@ sub extract_const_descr {
 
 # should be already checked: $data->{regions}->[$i]->{owner}
 sub load_state {
-    my ($self, $data) = @_;
+    my ($self, $data, $game) = @_;
     my $err = 'badRegions';
 
     assert(defined $data->{tokensNum} &&
@@ -146,10 +146,19 @@ sub load_state {
     $self->tokensNum($data->{tokensNum});
 
     if (defined $data->{owner}) {
-        my $u = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $data->{owner} });
-        $self->owner($u);
-        assert($self->owner, $err, 'badOwner' => $data->{owner});
+        if (defined $game) {
+            for (@{$game->players()}) {
+                if ($_->id() eq $data->{owner}) {
+                    $self->owner($_);
+                    last;
+                }
+            }
+        } else {
+            my $u = db_search_one({ CLASS => 'Game::Model::User' },
+                                  { id => $data->{owner} });
+            $self->owner($u);
+        }
+        assert($self->owner, $err, 'badOwner' => $data->{owner})
     }
 
     assert(int($data->{inDecline}) ~~ [0, 1], $err,

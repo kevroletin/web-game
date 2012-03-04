@@ -55,6 +55,7 @@ use strict;
 use LWP;
 use LWP::ConnCache;
 use JSON;
+use Data::Dumper::Concise;
 
 use base 'Game::AI::Log';
 
@@ -86,7 +87,10 @@ sub send_cmd {
     my $req = HTTP::Request->new(POST => $s->{url});
     $req->content($cmd);
     my $res = $s->{ua}->request($req);
-    $_ = from_json($res->content());
+    $_ = eval{ from_json($res->content()) };
+    if ($@) {
+        die $@ . Dumper($res->content())
+    }
     $s->{resp_cache}{$act} = $_ if $act;
     $s->log_net($_);
     $_;
@@ -114,7 +118,22 @@ sub cmd_get_game_state {
 }
 
 sub last_game_state {
-    shift->{resp_cache}{getGameState}{gameState};
+    my $s = shift;
+    $s->{resp_cache}{getGameState} //=
+        $s->send_cmd(action => 'getGameState', gameId => $s->{data}{gameId});
+    $s->{resp_cache}{getGameState}{gameState}
+}
+
+sub cmd_conquer {
+    my ($s, $reg_id) = @_;
+    $s->send_cmd(action   => 'conquer',
+                 regionId => $reg_id);
+}
+
+sub cmd_select_race {
+    my ($s, $pos) = @_;
+    $s->send_cmd(action   => 'selectRace',
+                 position => $pos);
 }
 
 1;
@@ -130,9 +149,18 @@ sub last_map_regions {
     shift->{resp_cache}{getGameState}{gameState}{regions};
 }
 
+sub cmd_get_map_info {
+    my ($s, $map_id) = @_;
+    $map_id //= $s->last_game_state()->{mapId};
+    $s->send_cmd(action => 'getMapInfo', mapId => $map_id);
+}
+
 sub check_you_turn_by_state {
     my ($s, $state) = @_;
     given ($state->{state}) {
+        when ('notStarted') {
+            return 0
+        }
         when ('finished') {
             return 1
         }
@@ -250,7 +278,14 @@ sub join_game {
     $s->{data}{id}     = $r->{id};
     # should we do this ?
     $s->_send_ready();
+    $s->join_game_hook();
     1
+}
+
+sub continue_game {
+    my ($s, $game_id) = @_;
+    $s->{data}{gameId} = $game_id;
+    $s->join_game_hook();
 }
 
 sub find_and_join_game {
@@ -307,23 +342,39 @@ sub dispatch_action {
     $state ||= $s->last_game_state();
 
     my $act = $s->determine_action_by_state($state);
+    $s->execute_action($act)
+}
 
+sub execute_action {
+    my ($s, $act) = @_;
     if ($act ~~['select_race', 'decline_or_conquer']) {
         $s->before_turn_hook()
     }
 
     $s->info('execute action: ' . $act);
+    $s->before_act_hook($act);
     $_ = 'act_' . $act;
-    $s->$_();
+    my $res = $s->$_();
+    $s->after_act_hook($act);
 
     if ($act ~~ ['finish_turn']) {
         $s->after_turn_hook();
     }
+
+    $res
 }
+
+sub join_game_hook { }
+
+sub leave_game_hook { }
 
 sub before_turn_hook { }
 
 sub after_turn_hook { }
+
+sub before_act_hook { }
+
+sub after_act_hook { }
 
 sub act_select_race { ... }
 
@@ -341,6 +392,7 @@ sub act_finish_turn { ... }
 
 sub act_leave_game {
     my ($s) = @_;
+    $s->leave_game_hook();
     $_ = $s->send_cmd(action => 'leaveGame');
     if ($_->{result} ~~ ['ok', 'notInGame']) {
         delete $s->{data}{gameId};

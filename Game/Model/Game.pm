@@ -123,6 +123,10 @@ has 'features' => ( isa => 'HashRef',
 sub BUILD {
     my ($self) = @_;
     assert($self->ai() <= $self->map()->playersNum, 'badAiNum');
+}
+
+sub init_id {
+    my ($self) = @_;
     $self->{gameId} = inc_counter('Game::Model::Game::gameId');
 }
 
@@ -573,8 +577,18 @@ sub _load_players_from_state {
     assert(ref($data->{players}) eq 'ARRAY', 'badPlayers');
     my $load_user = sub {
         my ($id) = @_;
-        my $p = db_search_one({ CLASS => 'Game::Model::User' },
-                              { id => $id });
+        # FIXME: provide more explicit sollution
+        # if !defined $self->id() => we construct game object from AI
+        # not for storing in db
+        my $p;
+        if (defined $self->gameId()) {
+            $p = db_search_one({ CLASS => 'Game::Model::User' },
+                               { id => $id })
+        } else {
+            $p = Game::Model::User->new(username => 'loaded-user',
+                                        password => 'dummy-password',
+                                        id => $id);
+        }
         assert($p, 'badUserId', userId => $id);
         assert(!$p->activeGame(), 'alreadyInGame', userId => $id);
         $p->activeGame($self);
@@ -627,7 +641,7 @@ sub _load_regions_from_state {
         assert(!defined $_->{owner} || $_->{owner} ~~ @pl_id,
                'badRegions', 'badOwner' => $_->{owner},
                'gamePlayers' => [@pl_id]);
-        $self->map()->regions()->[$i++]->load_state($_);
+        $self->map()->regions()->[$i++]->load_state($_, $self);
     }
 }
 
@@ -700,7 +714,13 @@ sub _load_race_state_storage_from_state{
 sub load_state {
     my ($self, $data) = @_;
 
-    die 'bad map id' if $data->{mapId} ne $self->map()->prev_id();
+    # FIXME: provide more explicit sollution
+    # if !defined $self->id() => we construct game object from AI
+    # not for storing in db
+    my $skip_validations = !defined $self->gameId();
+    if (!$skip_validations) {
+        die 'bad map id' if $data->{mapId} ne $self->map()->prev_id();
+    }
 
     my @st = qw(conquer redeployed defend declined finished);
     assert(($data->{state} ~~ @st), 'badState');

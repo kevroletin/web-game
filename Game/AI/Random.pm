@@ -20,8 +20,7 @@ sub after_turn_hook {
 sub act_select_race {
     my ($s) = @_;
     my $pos = int rand(6);
-    $s->send_cmd(action   => 'selectRace',
-                 position => $pos);
+    $s->cmd_select_race($pos)
 }
 
 sub act_decline_or_conquer {
@@ -43,8 +42,7 @@ sub act_conquer {
     }
 
     $s->debug(sprintf "conquer region %s", $reg_id);
-    $s->send_cmd(action   => 'conquer',
-                 regionId => $reg_id);
+    $s->cmd_conquer($reg_id)
 }
 
 sub act_defend {

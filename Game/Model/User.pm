@@ -76,7 +76,6 @@ sub BUILD {
         my $ok = $self->{username} =~ /^[A-Za-z][A-Za-z0-9\-]{2,15}$/;
         assert($ok, 'badUsername');
     }
-    $self->{id} = inc_counter('Game::Model::User::id');
 }
 
 before 'activeGame' => sub {
@@ -86,6 +85,10 @@ before 'activeGame' => sub {
         $self->coins(5);
     }
 };
+
+sub init_id {
+    shift->{id} = inc_counter('Game::Model::User::id');
+}
 
 sub generate_sid {
     my ($self) = @_;

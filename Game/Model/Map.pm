@@ -75,7 +75,6 @@ sub BUILD {
     }
     assert($population <= 18, 'badRegions', descr => 'tooManyFreeTokens');
 
-    $self->id( inc_counter('Game::Model::Map::id') );
     $self->prev_id( $self->id() );
 }
 
@@ -83,6 +82,10 @@ after 'id' => sub {
     my ($self, $id) = @_;
     $self->prev_id($id) if defined $id
 };
+
+sub init_id {
+    shift->id( inc_counter('Game::Model::Map::id') );
+}
 
 sub get_region {
     my ($s, $i) = @_;

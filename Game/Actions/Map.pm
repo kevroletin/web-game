@@ -21,6 +21,7 @@ sub createDefaultMaps {
                                       { CLASS => 'Game::Model::Map'});
             db()->delete($n_map) if defined $n_map;
             $n_map = Game::Model::Map->construct_from_state($map);
+            $n_map->init_id();
             db()->insert_nonroot($n_map);
             ++$i;
         }
@@ -29,7 +30,8 @@ sub createDefaultMaps {
 }
 
 sub getMapList {
-    my @q = db_search({ CLASS => 'Game::Model::Map' })->all();
+    my @q = grep { defined $_->id() }
+        db_search({ CLASS => 'Game::Model::Map' })->all();
     my @maps = feature('durty_gameList') ?
         map { $_->extract_state_durty() } @q :
         map { $_->short_info()    } @q;
@@ -88,6 +90,7 @@ sub uploadMap {
                params_from_proto('mapName', 'playersNum', 'turnsNum'),
                regions => \@regions
            );
+    $map->init_id();
     db()->insert_nonroot($map);
     response_json({result => 'ok', mapId => $map->id()});
 }

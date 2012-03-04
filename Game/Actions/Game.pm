@@ -41,6 +41,7 @@ sub _construct_new_game {
                    params_from_proto('gameName', 'gameDescr', 'ai'),
                    map => $map_clone
                );
+    $game->init_id();
     $game
 }
 
@@ -74,6 +75,7 @@ sub aiJoin {
     my $name = sprintf("_ai%d.%d", $game->gameId(), $game->aiJoined());
     my $ai_user = Game::Model::User->new({username => $name,
                                           password => $name, isAi => 1});
+    $ai_user->init_id();
 
     $ai_user->activeGame($game);
     $game->add_player($ai_user);

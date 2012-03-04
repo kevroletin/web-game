@@ -84,6 +84,7 @@ sub register {
     }
 
     my $user = Game::Model::User->new(params_from_proto());
+    $user->init_id();
     db()->insert($user);
     response_json({result => 'ok'})
 }
