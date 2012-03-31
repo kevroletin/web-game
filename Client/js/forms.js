@@ -122,13 +122,14 @@ Ui_Forms.game_list = {
       .append('tr')
       .each(function(d) {
         var tr = d3.select(this);
-        var on_txt = 'major_modes.change(\'explore_game\', ' +
-          d.gameId + '); return false;'
+        var on_txt = function() {
+          major_modes.change('explore_game', d.gameId);
+        };
         tr.append('td')
-// TODO: implement watching started game
-//          .append('a')
-//          .attr('onclick', on_txt)
-//          .attr('href', '#')
+          .append('a')
+          .on('click', on_txt)
+          .attr('href', '#')
+          .attr('onclick', 'return false;')
           .text(d.gameName);
 
         tr.selectAll(null).data(

@@ -260,16 +260,18 @@ major_modes.storage.explore_game = {
   descr: 'Explore game',
   in_menu: false,
   init: function(content, gameId) {
-    var c = d3.select(content).text('');
-    log.d.dump('retrive game info for gameId: ' + gameId);
-    var h = function(resp) {
-      var g = resp.gameInfo;
-      c.append('h2')
-        .text(g.gameName);
-      c.append('pre')
-        .text(JSON.stringify(g, null,  "  "));
-    }
-    net.send({action: 'getGameInfo', gameId: gameId}, h );
+    state.store('gameId', gameId);
+    major_modes.storage.play_game._create_ui();
+    this._timer = setInterval(game.request_game_state,
+                              config.servert_push_interval);
+    events.reg_h('net.getGameState',
+                 'major_modes.explore_game->net.getGameState',
+                 game.apply_game_state);
+  },
+  uninit: function() {
+    clearInterval(this._timer);
+    events.del_h('net.getGameState',
+                 'major_modes.explore_game->net.getGameState');
   }
 };
 
@@ -318,13 +320,17 @@ major_modes.storage.maps_new = {
       }
     };
     var h = function () {
-      var map = JSON.parse( f.node()['map'].value );
-      if (typeof(map) !== 'object') {
-        alert('Should be hash')
-      } else {
-        map.action = 'uploadMap';
-        net.send(map, on_resp );
-      };
+      var map;
+      try {
+          map = JSON.parse( f.node()['map'].value );
+      } finally {
+        if (typeof(map) !== 'object') {
+          alert('Should be hash')
+        } else {
+          map.action = 'uploadMap';
+          net.send(map, on_resp );
+        };
+      }
     };
 
     f.on('submit', h);
@@ -391,20 +397,18 @@ major_modes.storage.play_game = {
       .attr('id', 'tokens_packs');
 
     var hg = function(resp) {
+      net.send({action: 'getMapInfo',
+                mapId: resp.gameInfo.mapId}, hm );
+
       state.store('net.getGameInfo', resp);
       state.store('net.getGameState', resp.gameInfo);
       if (is_null(resp) || resp.result != 'ok') { return }
       d3.select("h1#game_name").text(resp.gameInfo.gameName);
 
       ui_elements.game_info(resp.gameInfo, div_game_info);
-      if (++ans_cnt == 2) {
-        playfield.apply_game_state(
-          state.get('net.getGameInfo').gameInfo);
-        events.exec('game.ui_initialized');
-      }
     };
     net.send({action: 'getGameInfo',
-              sid: state.get('sid')}, hg );
+              gameId: state.get('gameId')}, hg );
 
     var hm = function(resp) {
       state.store('net.getMapInfo', resp);
@@ -413,15 +417,9 @@ major_modes.storage.play_game = {
       svg = div_playfield.append('svg:svg');
       playfield.create(svg, resp.mapInfo);
 
-      if (++ans_cnt == 2) {
-        playfield.apply_game_state(
-          state.get('net.getGameInfo').gameInfo);
-        events.exec('game.ui_initialized');
-      }
+      playfield.apply_game_state(state.get('net.getGameInfo').gameInfo);
+      events.exec('game.ui_initialized');
     };
-    net.send({action: 'getMapInfo',
-              sid: state.get('sid')}, hm );
-
   },
   _watch_game_info_updates: function() {
     var h = function() {

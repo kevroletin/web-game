@@ -66,11 +66,11 @@ sub act_redeploy {
     for (@regs) {
         push @{$res->{regions}}, { regionId => $_->[0],
                                    tokensNum => $_->[1]->{tokensNum} }
-
     }
 
-    $i = 0;
-    for (1 .. $s->active_player()->{tokensInHand}) {
+    my $to_redeploy = $s->active_player()->{tokensInHand};
+    $to_redeploy -= 4 if $s->active_player()->{activeRace} eq 'amazons';
+    for (1 .. $to_redeploy) {
         ++$res->{regions}[$i]{tokensNum};
         $i = ($i + 1) % @{$res->{regions}};
     }

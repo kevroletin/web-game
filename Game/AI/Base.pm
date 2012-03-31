@@ -145,6 +145,8 @@ use v5.10;
 
 use base 'Game::AI::StdCmd';
 
+sub translate_state { shift }
+
 sub last_map_regions {
     shift->{resp_cache}{getGameState}{gameState}{regions};
 }
@@ -228,7 +230,9 @@ sub new {
 sub _explore_list {
     my ($s, $list) = @_;
     for (@{$list}) {
-        if ($_->{aiRequiredNum}) {
+        if ($_->{aiRequiredNum} &&
+            $s->translate_state($_->{gameState}) ne 'finished')
+        {
             return $_->{gameId}
         }
     }

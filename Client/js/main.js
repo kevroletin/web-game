@@ -36,10 +36,10 @@ Game.init = function() {
 
   events.reg_h('game.ui_initialized', 'start main loop',
                game.request_game_state );
+  events.reg_h('ui.refresh_menu', 'ui_create_menu',
+               ui.create_menu);
 
   if (is_null(config.predefined_user)) {
-    events.reg_h('ui.refresh_menu', 'ui_create_menu',
-                 ui.create_menu);
     major_modes.change('login');
   } else {
     state.store('sid', config.predefined_user.sid);
@@ -83,8 +83,6 @@ Game.get_current_user_info = function() {
 
 Game.fix_minor_mode_from_game_state = function() {
   log.d.trace('Game.fix_minor_mode_from_game_state');
-
-//  log.d.info("===fix minor mode===");
 
   var game_state = Game.last_game_state();
 
@@ -174,8 +172,6 @@ Game.fix_minor_mode_from_game_state = function() {
       }
     }
   }
-
-  //  log.d.info("=== finished ===");
 };
 
 Game.direct_request_game_state = function() {
@@ -212,7 +208,7 @@ Game.request_game_state = function() {
       events.exec('net.getGameState');
       game.fix_minor_mode_from_game_state();
     };
-    var q = {action: 'getGameInfo'};
+    var q = {action: 'getGameInfo', gameId: state.get('gameId') };
     net.send(q, h);
   }
 };
@@ -224,7 +220,8 @@ Game.state_monitor.start = function() {
   this.stop();
 
   game.request_game_state();
-  game._timer = setInterval(game.request_game_state, 2000);
+  game._timer = setInterval(game.request_game_state,
+                            config.servert_push_interval);
 };
 
 Game.state_monitor.stop = function() {
@@ -278,7 +275,8 @@ Game.active_power = function () {
 };
 
 Game.apply_game_state = function() {
-  ui_elements.apply_game_state();
+  ui_elements.update_game_info();
+  playfield.apply_game_state();
 }
 
 Game.last_game_state = function() {

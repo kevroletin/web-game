@@ -64,10 +64,15 @@ sub act_select_race {
     $s->cmd_select_race($n)
 }
 
-#sub act_decline_or_conquer {
-#    my ($s) = @_;
-#    ...
-#}
+sub act_decline_or_conquer {
+    my ($s) = @_;
+    my $game = global_game();
+    if (rand(400) < ($game->activePlayer()->tokensInHand() - 20)**2) {
+        $s->send_cmd(action => 'decline');
+    } else {
+        $s->act_conquer();
+    }
+}
 
 sub _determine_possible_moves {
     my ($s) = @_;
@@ -109,27 +114,17 @@ sub act_conquer {
     $s->cmd_conquer($reg_id)
 }
 
-sub act_defend {
-    my ($s) = @_;
-    ...
-}
+#sub act_defend {
+#    my ($s) = @_;
+#    ...
+#}
 
-sub act_redeploy {
-    my ($s) = @_;
-    ...
-}
+#sub act_redeploy {
+#    my ($s) = @_;
+#    ...
+#}
 
 sub act_redeployed {
-    my ($s) = @_;
-    ...
-}
-
-sub act_finish_turn {
-    my ($s) = @_;
-    ...
-}
-
-sub act_leave_game {
     my ($s) = @_;
     ...
 }
