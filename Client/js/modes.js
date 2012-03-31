@@ -71,6 +71,10 @@ Major_Modes.change = function(new_m, params) {
   log.modes.info("|new major mode| -> " + new_m);
   log.modes.dump(params, 'params');
 
+  if (!is_null(curr_modes.major) &&
+      !is_null(this.storage[curr_modes.major].uninit)) {
+    this.storage[curr_modes.major].uninit();
+  }
   curr_modes.major = new_m;
 
   /* disable minor mode with can't be used with new major mode */
@@ -95,10 +99,6 @@ Major_Modes.change = function(new_m, params) {
   var menu = document.getElementById("menu");
   var content = document.getElementById("content");
 
-  if (!is_null(curr_modes.major) &&
-      !is_null(this.storage[curr_modes.major].uninit)) {
-    this.storage[curr_modes.major].uninit();
-  }
   this.storage[new_m].init(content, params);
 
   ui.create_menu();
@@ -141,6 +141,9 @@ major_modes.storage.logout = {
   init: function(content) {
     var q = { action: "logout",
               sid: game.sid };
+    state.delete('userId');
+    state.delete('gameId');
+    state.delete('net');
 
     net.send(q, function() {
       state.delete('sid');
@@ -262,14 +265,24 @@ major_modes.storage.explore_game = {
   init: function(content, gameId) {
     state.store('gameId', gameId);
     major_modes.storage.play_game._create_ui();
-    this._timer = setInterval(game.request_game_state,
-                              config.servert_push_interval);
+    major_modes.storage.explore_game._timer =
+      setInterval(game.request_game_state,
+                  config.servert_push_interval);
+
+    log.d.info( "=================== init  =================");
+    log.d.info( major_modes.storage.explore_game._timer);
+
     events.reg_h('net.getGameState',
                  'major_modes.explore_game->net.getGameState',
                  game.apply_game_state);
   },
   uninit: function() {
-    clearInterval(this._timer);
+
+    log.d.info( "=================== clear =================");
+    log.d.info( major_modes.storage.explore_game._timer);
+
+
+    clearInterval(major_modes.storage.explore_game._timer);
     events.del_h('net.getGameState',
                  'major_modes.explore_game->net.getGameState');
   }
@@ -446,10 +459,26 @@ major_modes.storage.play_game = {
 
 minor_modes.storage.logined = {
   init: function() {
+    game.get_current_user_info();
+    var h = function() {
+      var name = state.get('net.getUserInfo.username');
+      name = '<b>' + name + '</b>';
+      var div = d3.select('div#login_info').html(name);
+      div.append('span').text('|');
+      div.append('a')
+        .attr('onclick', 'return false;')
+        .on('click', function() { major_modes.change('logout') })
+        .text('logout');
+    };
+    events.reg_h('user_info.success',
+                 'minor_modes.storage.logined->user_info.success',
+                 h);
     return 1;
   },
   uninit: function() {
-    events.exec('state');
+    events.del_h('user_info.success',
+                 'minor_modes.storage.logined->user_info.success');
+    d3.select('div#login_info').text('');
   }
 };
 

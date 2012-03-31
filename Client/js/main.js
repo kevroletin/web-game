@@ -18,7 +18,6 @@ Game.init = function() {
   events.reg_h('login.success', 'ui_set_logined_mode',
                function() { minor_modes.disable('in_game');
                      minor_modes.enable('logined');
-                     game.get_current_user_info();
                    });
 
   events.reg_h('user_info.success', 'ui_fix_in_game_mode',
@@ -189,7 +188,6 @@ Game.direct_request_game_state = function() {
 Game.request_game_state = function() {
   log.d.trace('Game.request_game_state');
 
-//  log.d.info('---getGameState---');
   if (minor_modes.have('game_started')) {
     var h = function(resp) {
       state.store('net.getGameState', resp);

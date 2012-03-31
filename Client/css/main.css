@@ -36,6 +36,11 @@ div#content {
     padding: 20px 0;
 }
 
+div#login_info {
+    margin: 10px;
+    float: right;
+}
+
 div#panel {
     background-color: white;
     border: 1px gray solid;
@@ -47,6 +52,7 @@ div#panel {
 }
 
 div#panel ul {
+    cursor: pointer;
     padding: 0 20px;
     margin: 0;
     list-style: none;

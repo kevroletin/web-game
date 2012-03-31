@@ -20,7 +20,7 @@ var log_config = {
     dump : 1
   },
   trace: 0,
-  events: 1,
-  modes: 1,
+  events: 0,
+  modes: 0,
   requests: 0
 };

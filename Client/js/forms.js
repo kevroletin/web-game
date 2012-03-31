@@ -60,12 +60,15 @@ Ui_Forms.login = {
     log.ui.error(field + ': ' + err);
   },
   _on_resp: function (resp) {
-    d3.select('p#msg_box').text(Errors.translate_resp(resp));
-    if (resp.result == 'ok') {
-      state.store('sid', resp.sid);
-      state.store('userId', resp.userId);
-      events.exec('state.sid_stored');
-      events.exec('login.success', resp);
+    var msg = Errors.translate_resp(resp);
+    d3.select('p#msg_box').text(msg);
+    if (resp.result !== 'ok') {
+      alert(msg);
+    } else {
+       state.store('sid', resp.sid);
+       state.store('userId', resp.userId);
+       events.exec('state.sid_stored');
+       events.exec('login.success', resp);
     }
   }
 };
@@ -95,8 +98,11 @@ Ui_Forms.register = {
     log.ui.error(field + ': ' + err);
   },
   _on_resp: function (resp) {
-    d3.select('p#msg_box').text(errors.translate_resp(resp));
-    if (resp.result == 'ok') {
+    var msg = Errors.translate_resp(resp);
+    d3.select('p#msg_box').text(msg);
+    if (resp.result !== 'ok') {
+      alert(msg)
+    } else {
       var f = d3.select('form#register').node();
       if (f['autologin'].checked) {
         var q = { action: "login",
