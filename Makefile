@@ -5,10 +5,10 @@ debug :
 	@echo "***Debug environment***"
 	@environment=debug make run_server
 
-compability :
+compatibility :
 	@echo "***Debug environment***"
-	@echo "***Compability mode***"
-	@environment=debug compability=true make run_server
+	@echo "***Compatibility mode***"
+	@environment=debug compatibility=true make run_server
 
 production : run_server
 

@@ -37,7 +37,7 @@ sub setup_environment {
     config()->{features}{log_requests} = 1;
     config()->{features}{record_test} = 'auto.t';
 
-    if ($ENV{compability} && $ENV{compability} eq 'true') {
+    if ($ENV{compatibility} && $ENV{compatibility} eq 'true') {
         $_ = config()->{features};
         $_->{compatibility} = 1;
         $_->{redeploy_all_tokens} = 1;
