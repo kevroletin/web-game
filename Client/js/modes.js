@@ -269,19 +269,11 @@ major_modes.storage.explore_game = {
       setInterval(game.request_game_state,
                   config.servert_push_interval);
 
-    log.d.info( "=================== init  =================");
-    log.d.info( major_modes.storage.explore_game._timer);
-
     events.reg_h('net.getGameState',
                  'major_modes.explore_game->net.getGameState',
                  game.apply_game_state);
   },
   uninit: function() {
-
-    log.d.info( "=================== clear =================");
-    log.d.info( major_modes.storage.explore_game._timer);
-
-
     clearInterval(major_modes.storage.explore_game._timer);
     events.del_h('net.getGameState',
                  'major_modes.explore_game->net.getGameState');
@@ -395,6 +387,19 @@ major_modes.storage.play_game = {
   },
   _create_ui: function() {
     var c = d3.select('div#content').text('');
+    var h_leave_game = function(resp) {
+      if (errors.descr_resp(resp) == 'ok') {
+        major_modes.change('games_list');
+        minor_modes.disable('in_game');
+      }
+    };
+    c.append('form').attr('id', 'form_leave_game')
+      .attr('onSubmit', 'return false;')
+      .on('submit', function() { net.send({action: 'leaveGame'}, h_leave_game) })
+      .append('input')
+        .attr('type', 'submit')
+        .attr('value', 'leave game');
+
     c.append('h1').attr('id', 'game_name');
     div_game_info = c.append('div')
       .attr('id', 'game_info');
