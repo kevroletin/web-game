@@ -5,7 +5,6 @@ use warnings;
 use Game::Actions;
 use Game::Environment qw(:config :db :response);
 use Game::Model::Game;
-use Game::Model::AiUser;
 use Storable q(dclone);
 use Exporter::Easy ( OK => [qw(aiJoin
                                createGame

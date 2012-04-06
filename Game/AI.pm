@@ -3,7 +3,7 @@ use warnings;
 use strict;
 
 use Game::AI::Random;
-use Game::AI::Simple;
+#use Game::AI::Simple;
 
 BEGIN { $| = 1 }
 

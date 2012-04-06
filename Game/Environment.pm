@@ -284,7 +284,7 @@ sub new {
 sub replace {
     my $self = ref($_ = shift) ? $_ : $_->new();
     $self->{old_db} = $_[0];
-    $self->{old_db_p} = $_[0];
+    $self->{old_db_p} = \$_[0];
     $_[0] = $self;
 }
 
@@ -305,15 +305,19 @@ sub store_nonroot { shift->_push_lazy_arr('store_nonroot', @_) }
 
 sub update { shift->_push_lazy_arr('update', @_) }
 
-sub search { shift->{old_db}->search(@_) }
+sub search {
+    my $s = shift;
+    $s->execute_memorized();
+    $s->{old_db}->search(@_)
+}
 
 sub execute_memorized {
     my ($self) = @_;
     for (qw(delete insert insert_nonroot store store_nonroot update)) {
         my $arr = $self->{$_};
-        $self->{old_db}->$_(@$arr) if @$arr
+        $self->{old_db}->$_(@$arr) if @$arr;
+        $self->{$_} = [];
     }
-    ${$self->{old_dbp}} = $self->{old_db}
 }
 
 1;

@@ -65,16 +65,25 @@ Game.get_current_user_info = function() {
       state.store('net.getUserInfo', resp);
       state.store('gameId', resp.activeGame);
       state.store('userId', resp.userId);
+      state.store('username', resp.username);
       events.exec('user_info.success');
     };
     net.send(q, h);
   } else {
-    var q = { action: "getGameState" };
+    var q = { action: "getGameList" };
     var h = function(resp) {
-      if (errors.descr_resp(resp) !== 'ok') { return }
-      state.store('net.getGameState', resp);
-      state.store('gameId', resp.gameState.gameId);
-      events.exec('user_info.success');
+      state.store('net.getGameList', resp);
+      if (errors.descr_resp(resp) == 'ok') {
+        resp.games.forEach(function(game) {
+          game.players.forEach(function(player) {
+            if (player.userId == state.get('userId')) {
+              state.store('gameId', game.gameId);
+              state.store('username', player.username);
+              events.exec('user_info.success');
+            }
+          })
+        });
+      }
     };
     net.send(q, h);
   }
@@ -188,7 +197,9 @@ Game.direct_request_game_state = function() {
 Game.request_game_state = function() {
   log.d.trace('Game.request_game_state');
 
-  if (minor_modes.have('game_started')) {
+  if (minor_modes.have('game_started') ||
+      config.force_game_state_convertion)
+  {
     var h = function(resp) {
       state.store('net.getGameState', resp);
       events.exec('net.getGameState');
@@ -197,7 +208,7 @@ Game.request_game_state = function() {
     var q = {action: 'getGameState'};
     net.send(q, h);
   } else {
-    var h =function(resp) {
+    var h = function(resp) {
       state.store('net.getGameInfo', resp);
       // gameInfo is superset of gameState
       state.store('net.getGameState.gameState', resp.gameInfo);
@@ -282,3 +293,4 @@ Game.last_game_state = function() {
                              'net.getGameInfo.gameInfo');
   return game_state;
 };
+

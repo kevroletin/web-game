@@ -14,17 +14,32 @@ var state = new state_type();
 
 /* State & Net realization */
 
-net.server_url = "http://localhost:5000/engine";
-//net.server_url = "http://server.lena/small_worlds";
-
 Net.send = function(msg, on_resp, to_log) {
   if (is_null(msg.sid)) {
     msg.sid = state.get('sid');
   }
+  if (config.force_game_state_convertion &&
+      !is_null(msg.action) && msg.action == 'getGameInfo')
+  {
+    msg.action = 'getGameState';
+  }
+
   var h = function(text) {
     var parsed = text ? JSON.parse(text) : null
     if (log_config.requests && to_log) {
       log.ui.info('--response--\n' + text);
+    }
+    if (config.force_game_state_convertion) {
+      if (!is_null(parsed.gameState)) {
+        CompMapper.fix_game_state(parsed.gameState);
+        parsed.gameInfo = parsed.gameState;
+        log.d.info('game state fixed');
+      }/* else if (!is_null(parsed.gameInfo)) {
+        CompMapper.fix_game_state(parsed.gameInfo);
+        log.d.info('game info fixed');
+      }*/ else if (!is_null(parsed.games)) {
+        CompMapper.fix_game_list(parsed.games);
+      }
     }
     on_resp(parsed);
   };
@@ -40,7 +55,7 @@ Net.send = function(msg, on_resp, to_log) {
 Net._send_raw = function(msg, mime, callback) {
   var req = new XMLHttpRequest;
   if (mime && req.overrideMimeType) req.overrideMimeType(mime);
-  req.open("POST", this.server_url, true);
+  req.open("POST", config.server_url, true);
   req.onreadystatechange = function() {
     if (req.readyState === 4) callback(req.responseText);
   };

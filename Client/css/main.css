@@ -196,3 +196,8 @@ div#tokens_packs div.coins_cnt {
     left: 5px;
     top: 25px;
 }
+
+form#form_leave_game {
+    float: right;
+    margin: 20px -115px 0 0;
+}

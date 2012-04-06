@@ -38,7 +38,7 @@ sub act_conquer {
 
     unless (defined $reg_id) {
         $s->info('attempts to do conquer finished; do redeploy');
-        return $s->act_redeploy()
+        return $s->execute_action('redeploy');
     }
 
     $s->debug(sprintf "conquer region %s", $reg_id);
@@ -70,6 +70,7 @@ sub act_redeploy {
 
     my $to_redeploy = $s->active_player()->{tokensInHand};
     $to_redeploy -= 4 if $s->active_player()->{activeRace} eq 'amazons';
+    $i = 0;
     for (1 .. $to_redeploy) {
         ++$res->{regions}[$i]{tokensNum};
         $i = ($i + 1) % @{$res->{regions}};

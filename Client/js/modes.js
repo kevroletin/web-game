@@ -466,7 +466,7 @@ minor_modes.storage.logined = {
   init: function() {
     game.get_current_user_info();
     var h = function() {
-      var name = state.get('net.getUserInfo.username');
+      var name = state.get('username');
       name = '<b>' + name + '</b>';
       var div = d3.select('div#login_info').html(name);
       div.append('span').text('|');

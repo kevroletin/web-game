@@ -280,6 +280,8 @@ sub join_game {
     $s->{data}{gameId} = $game_id;
     $s->{data}{sid}    = $r->{sid};
     $s->{data}{id}     = $r->{id};
+    $s->info(sprintf "gameId: %s; sid: %s; id: %s",
+                     @{$s->{data}}{'gameId', 'sid', 'id'});
     # should we do this ?
     $s->_send_ready();
     $s->join_game_hook();
