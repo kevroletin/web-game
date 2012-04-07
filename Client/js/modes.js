@@ -200,7 +200,7 @@ major_modes.storage.games_new = {
     f.on('submit', function(d) {
       var h = function(resp) {
         if (errors.descr_resp(resp) == 'ok') {
-          state.store('gameId', gameId);
+          state.store('gameId', resp.gameId);
           major_modes.change('play_game');
         }
       };

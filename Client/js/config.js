@@ -15,7 +15,7 @@ var config = {
 //  predefined_user: { sid: 1, gameId: 1 }
 //  predefined_user: { sid: 3 }
 
-server_url: "http://localhost:5000/engine"
+  server_url: "http://localhost:5000/engine"
 //  server_url: "http://server.lena/small_worlds"
 };
 
@@ -30,5 +30,5 @@ var log_config = {
   events: 0,
   modes: 0,
   requests: 0,
-  convertions: 1
+  convertions: 0
 };

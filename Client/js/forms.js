@@ -154,6 +154,7 @@ Ui_Forms.game_list = {
             if (errors.descr_resp(resp) !== 'ok') { return }
             delete state.storage.net.getGameState;
             delete state.storage.net.getGameInfo;
+            state.store('gameId', d.gameId);
             minor_modes.enable('in_game');
             major_modes.change('play_game');
           };
