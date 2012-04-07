@@ -24,7 +24,7 @@ sub serve_files {
 
 builder {
 #    enable 'Plack::Middleware::StackTrace';
-    enable 'Plack::Middleware::AccessLog';
+#    enable 'Plack::Middleware::AccessLog';
 
     mount "/engine" => \&Game::parse_request;
     mount "/" => serve_files('./Client/main.html');

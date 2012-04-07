@@ -29,7 +29,8 @@ INSTALLATION
 1) `mkdir tmp`
 
 2) Установить perl.
-Список необходимых модулей смотрите в файле DEPENDENCIES.
+-Список необходимых модулей смотрите в файле DEPENDENCIES-
+`cpan DBI DBD::SQLite Task::Plack Task::Moose Task::KiokuDB Exporter::Easy Data::Dumper::Concise`
 
 
 Для запуска сервера выполнить в корне проекта команду

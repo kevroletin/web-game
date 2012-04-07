@@ -4,8 +4,8 @@ use warnings;
 
 use KiokuDB;
 use KiokuDB::Backend::DBI;
-use KiokuDB::Backend::BDB;
-use KiokuDB::Backend::BDB::GIN;
+#use KiokuDB::Backend::BDB;
+#use KiokuDB::Backend::BDB::GIN;
 use Search::GIN::Extract::Callback;
 
 use Game::Environment qw(:std :db);

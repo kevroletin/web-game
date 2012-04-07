@@ -34,8 +34,8 @@ sub setup_environment {
     Game::Environment::init();
     environment($env);
 
-    config()->{features}{log_requests} = 1;
-    config()->{features}{record_test} = 'auto.t';
+    #config()->{features}{log_requests} = 1;
+    #config()->{features}{record_test} = 'auto.t';
 
     if ($ENV{compatibility} && $ENV{compatibility} eq 'true') {
         $_ = config()->{features};
@@ -70,6 +70,7 @@ sub parse_request {
     };
 
     $log->log_request($json, $data);
+    printf STDERR "\n---%s---\n", $data->{action};
 
     if ($@ || !$data->{action}) {
         response_json({

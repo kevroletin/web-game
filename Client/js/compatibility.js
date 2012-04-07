@@ -109,6 +109,7 @@ CompMapper._fix_map_in_place = function(gs) {
   gs.mapId = gs.map.mapId;
   gs.mapName = gs.map.mapName;
   gs.maxPlayersNum = gs.map.playersNum;
+  gs.playersNum = gs.players.length;
   gs.turnsNum = gs.map.turnsNum;
 
   gs.map.regions.forEach(CompMapper._fix_region_in_place);
@@ -116,10 +117,14 @@ CompMapper._fix_map_in_place = function(gs) {
 };
 
 CompMapper._fix_region_in_place = function(reg) {
-  reg.inDecline = reg.currentRegionState.inDecline;
-  reg.owner = reg.currentRegionState.ownerId;
-  reg.extraItems = reg.currentRegionState;
-  reg.tokensNum = reg.currentRegionState.tokensNum;
+  reg.landDescription = reg.constRegionState;
+
+  if (!is_null(reg.currentRegionState)) {
+    reg.inDecline = reg.currentRegionState.inDecline;
+    reg.owner = reg.currentRegionState.ownerId;
+    reg.extraItems = reg.currentRegionState;
+    reg.tokensNum = reg.currentRegionState.tokensNum;
+  }
 };
 
 /*
@@ -138,6 +143,14 @@ CompMapper._fix_players_in_place = function(st) {
     player.name = player.username;
     player.id   = player.userId;
     player.readinessStatus = player.isReady;
+    if (!is_null(player.currentTokenBadge)) {
+      player.activeRace = player.currentTokenBadge.raceName.toLowerCase();
+      player.activePower = player.currentTokenBadge.specialPowerName.toLowerCase();
+    }
+    if (!is_null(player.declinedTokenBadge)) {
+      player.declineRace = player.declinedTokenBadge.raceName.toLowerCase();
+      player.declinePower = player.declinedTokenBadge.specialPowerName.toLowerCase();
+    }
   });
 };
 
@@ -163,7 +176,6 @@ CompMapper._fix_players_in_place = function(st) {
   "readinessStatus" : 0,
   "coins" : 5
 }
-
 */
 
 CompMapper.state_to_int = {
@@ -183,16 +195,17 @@ CompMapper.int_to_state = {
 };
 
 CompMapper._fix_state_field_in_place = function(game_state) {
-  var res = CompMapper.get_game_state_fields(game_state.stage,
+  var res = CompMapper.get_game_state_fields(game_state.lastEvent,
                                              game_state.state);
   ['state', 'raceSelected', 'attacksHistory'].forEach(function(k) {
     game_state[k] = res[k];
   });
 };
 
+/*
 CompMapper.get_game_state_fields = function(stage, state_int) {
   var state = CompMapper.int_to_state[state_int];
-  var result = { attacksHistory: [] };
+  var result = { attacksHistory: [], raceSelected: false };
 
   if (log_config.convertions) {
     log.d.info('state: ' + state);
@@ -223,6 +236,74 @@ CompMapper.get_game_state_fields = function(stage, state_int) {
     result.attacksHistory = [{}]; // works since
     // only size of attacksHistory is used in client
   } else {
+    //result.state = state;
+    result.state = 'conquer';
+  }
+
+  if (log_config.convertions) {
+    log.d.info('state: ' + result.state);
+    log.d.info('raceSelected: ' + result.raceSelected);
+    log.d.info('attacksHistory: ' + result.attacksHistory);
+  }
+
+  return result;
+};
+*/
+
+CompMapper.int_to_last_event = {
+  1 : 'wait',
+  2 : 'in_game',
+  4 : 'finishTurn',
+  5 : 'selectRace',
+  6 : 'conquer',
+  7 : 'decline',
+  8 : 'redeploy',
+  9 : 'throwDice',
+  12: 'defend',
+  13: 'selectFriend',
+  14: 'failed_conquer'
+};
+
+CompMapper.get_game_state_fields = function(last_event_int, state_int) {
+  var last_event = CompMapper.int_to_last_event[last_event_int];
+  var state = CompMapper.int_to_state[state_int];
+  var result = { attacksHistory: [], raceSelected: false };
+
+  if (log_config.convertions) {
+    log.d.info('last_event: ' + last_event + '(' + last_event_int + ')');
+    log.d.info('state: ' + state + '(' + state_int + ')');
+  }
+
+  if (state == 'wait') {
+    result.state = 'notStarted';
+  } else if (state == 'finish' || state == 'empty') {
+    result.state = 'finished';
+  } else if (last_event == 'finishTurn') {
+    result.state = 'conquer';
+    result.raceSelected = false;
+  } else if (last_event == 'selectRace') {
+    result.state = 'conquer';
+    result.raceSelected = true;
+  } else if (last_event == 'conquer') {
+    result.state = 'conquer';
+    result.raceSelected = true;
+    result.attacksHistory = [{}];
+  } else if (last_event == 'decline') {
+    result.state = 'declined';
+  } else if (last_event == 'redeploy') {
+    result.state = 'redeployed';
+  } else if (last_event == 'throwDice') {
+    result.state = 'conquer';
+  } else if (last_event == 'defend') {
+    result.state = '';
+  } else if (last_event == 'selectFriend') {
+    result.state = '';
+  } else if (last_event == 'failed_conquer') {
+    result.state = '';
+  } else {
+    if (state != 'begin' || !is_null(last_event_int)) {
+      log.d.error('can\'t obtain game state field');
+    }
     result.state = state;
   }
 
@@ -234,6 +315,7 @@ CompMapper.get_game_state_fields = function(stage, state_int) {
 
   return result;
 };
+
 /*** Available game states ***
   notStarted
   conquer

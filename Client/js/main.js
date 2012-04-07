@@ -12,8 +12,19 @@ function game_type() {}
 var Game = game_type.prototype;
 var game = new game_type();
 
+Game.determine_compatibility_mode = function() {
+  var h = function(resp) {
+    var b = (resp.result != 'ok');
+    config.force_game_state_convertion = b;
+    if (b) { log.d.info("---compatibility mode---"); };
+  };
+  net.send({action: 'getServerFeatures'}, h, true);
+};
+
 Game.init = function() {
   log.d.trace('Game.init');
+
+  game.determine_compatibility_mode();
 
   events.reg_h('login.success', 'ui_set_logined_mode',
                function() { minor_modes.disable('in_game');
@@ -205,7 +216,8 @@ Game.request_game_state = function() {
       events.exec('net.getGameState');
       game.fix_minor_mode_from_game_state();
     };
-    var q = {action: 'getGameState'};
+    var q = { action: 'getGameState',
+              gameId: state.get('gameId') };
     net.send(q, h);
   } else {
     var h = function(resp) {
@@ -229,8 +241,10 @@ Game.state_monitor.start = function() {
   this.stop();
 
   game.request_game_state();
-  game._timer = setInterval(game.request_game_state,
-                            config.servert_push_interval);
+  if (config.server_push_interval) {
+    game._timer = setInterval(game.request_game_state,
+                              config.server_push_interval);
+  }
 };
 
 Game.state_monitor.stop = function() {

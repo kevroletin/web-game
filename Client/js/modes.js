@@ -175,8 +175,10 @@ major_modes.storage.games_list = {
   in_menu: true,
   init: function(content) {
     var h = function(resp) {
-      d3.select(content).text('').node()
-        .appendChild(ui_forms.game_list.gen_form(resp.games));
+      var c = d3.select(content).text('');
+      if (errors.descr_resp(resp) == 'ok') {
+        c.node().appendChild(ui_forms.game_list.gen_form(resp.games));
+      }
     };
     net.send({action: 'getGameList'}, h );
   }
@@ -198,14 +200,15 @@ major_modes.storage.games_new = {
     f.on('submit', function(d) {
       var h = function(resp) {
         if (errors.descr_resp(resp) == 'ok') {
+          state.store('gameId', gameId);
           major_modes.change('play_game');
         }
       };
       var q = { action: 'createGame',
                 gameDescr: f.node()['gameDescr'].value,
                 gameName: f.node()['gameName'].value,
-                mapId: f.node()['mapId'].value,
-                ai: f.node()['ai'].value };
+                mapId: Number( f.node()['mapId'].value ),
+                ai: Number( f.node()['ai'].value ) } ;
       net.send(q, h, 1);
       return false;
     });
@@ -265,9 +268,12 @@ major_modes.storage.explore_game = {
   init: function(content, gameId) {
     state.store('gameId', gameId);
     major_modes.storage.play_game._create_ui();
-    major_modes.storage.explore_game._timer =
-      setInterval(game.request_game_state,
-                  config.servert_push_interval);
+    game.request_game_state();
+    if (config.server_push_interval) {
+      major_modes.storage.explore_game._timer =
+        setInterval(game.request_game_state,
+                    config.server_push_interval);
+    }
 
     events.reg_h('net.getGameState',
                  'major_modes.explore_game->net.getGameState',
@@ -297,8 +303,10 @@ major_modes.storage.maps_list = {
   init: function(content) {
     var c = d3.select(content).text('');
     var h = function(resp) {
-      d3.select(content).text('').node()
-        .appendChild(ui_forms.maps_list.gen_form(resp.maps));
+      var c = d3.select(content).text('');
+      if (errors.descr_resp(resp) == 'ok') {
+        c.node().appendChild(ui_forms.maps_list.gen_form(resp.maps));
+      }
     }
     net.send({action: 'getMapList'}, h );
   }
@@ -365,11 +373,15 @@ major_modes.storage.explore_map = {
       var h = function(resp) { draw_map(resp.mapInfo) };
       net.send({action: 'getMapInfo', mapId: mapId}, h );
     } else {
-      log.d.dump('retrive map info from maps list for mapId: ' + mapId);
+      log.d.info('retrive map info from maps list for mapId: ' + mapId);
       var h = function(resp) {
         for (var i in resp.maps) {
           if (resp.maps[i].mapId == mapId) {
-            return draw_map(resp.maps[i])
+            var map = resp.maps[i];
+            //alert('not implemented');
+            map.regions.forEach(CompMapper._fix_region_in_place);
+
+            return draw_map(map);
           }
         }
         log.d.err('attempt to find map description in maps list failed');

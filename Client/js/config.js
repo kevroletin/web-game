@@ -1,21 +1,22 @@
 var features = {
   getUserInfo: 0,
-  getMapInfo: 1,
+  getMapInfo: 0,
   getGameInfo: 0
 };
 
 var config = {
 
-  force_game_state_convertion: 1,
+  force_game_state_convertion: 0,
 
   autologin: 1,
   livereload: 1,
-  servert_push_interval: 2000,
+  server_push_interval: 0,
+
 //  predefined_user: { sid: 1, gameId: 1 }
 //  predefined_user: { sid: 3 }
 
-  server_url = "http://localhost:5000/engine";
-//server_url: "http://server.lena/small_worlds"
+server_url: "http://localhost:5000/engine"
+//  server_url: "http://server.lena/small_worlds"
 };
 
 var log_config = {
