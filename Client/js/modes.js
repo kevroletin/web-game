@@ -1059,12 +1059,25 @@ minor_modes.storage.waiting = {
     not_minor_m: ['conquer', 'redeploy', 'redeployed', 'defend',
                   'declined']
   },
+  _init_ui: function() {
+    d3.select('div#game_info').insert('form', '*').attr('id', 'form_refresh')
+      .attr('onSubmit', 'return false;')
+      .on('submit', function() { game.direct_request_game_state(); })
+      .append('input')
+      .attr('type', 'submit')
+      .attr('value', 'refresh');
+  },
+
   init : function() {
+    if (config.force_game_state_convertion) {
+      this._init_ui();
+    }
     game.state_monitor.start();
     return 0;
   },
   uninit: function() {
     game.state_monitor.stop();
+    d3.select('form#form_refresh').remove();
   }
 };
 
