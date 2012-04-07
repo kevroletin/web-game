@@ -330,5 +330,7 @@ CompMapper.fix_game_list = function(games_list) {
   games_list.forEach(function(game) {
     var res = CompMapper.get_game_state_fields(null, game.state);
     game.state = res.state;
+    if (is_null(game.gameDescr)) { game.gameDescr = ''; }
+    game.playersNum = game.players.length;
   });
 };

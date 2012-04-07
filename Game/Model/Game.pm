@@ -460,9 +460,9 @@ sub magic_last_event {
         enchant    =>  6,  # as conquer
         decline    =>  7,
         redeploy   =>  8,
-        throw_dice =>  9,
+        throwDice =>  9,
         defend     => 12,
-        select_friend  => 13,
+        selectFriend  => 13,
 
         failed_conquer => 14
     );
