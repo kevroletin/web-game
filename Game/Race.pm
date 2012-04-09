@@ -83,7 +83,7 @@ sub _region_is_adjacent_with_our {
 sub _check_land_reachability {
     my ($self, $reg) = @_;
     my $canMove = $self->_region_is_adjacent_with_our($reg);
-    if (!$canMove && !global_user()->have_owned_regions()) {
+    if (!$canMove && !global_user()->have_owned_active_regions()) {
         for (@{$reg->landDescription()}) {
             $canMove ||=  $_ ~~ ['border', 'coast']
         }

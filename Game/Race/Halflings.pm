@@ -21,7 +21,7 @@ after 'holes_cnt' => sub {
 };
 
 override '_check_land_reachability' => sub {
-    return 1 unless global_user()->have_owned_regions();
+    return 1 unless global_user()->have_owned_active_regions();
     super()
 };
 
