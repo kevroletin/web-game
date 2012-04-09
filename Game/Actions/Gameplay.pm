@@ -170,7 +170,8 @@ sub conquer {
     db()->update(grep { defined $_ } global_user(), global_game(),
                             $reg, $defender);
 
-    response_json({result => 'ok', dice => $dice});
+    response_json({result => 'ok',
+                   defined $dice ? (dice => $dice) : () });
 }
 
 sub decline {

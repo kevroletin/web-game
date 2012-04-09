@@ -14,9 +14,15 @@ var game = new game_type();
 
 Game.determine_compatibility_mode = function() {
   var h = function(resp) {
-    var b = (resp.result != 'ok');
-    config.force_game_state_convertion = b;
-    if (b) { log.d.info("---compatibility mode---"); };
+    if (resp.result == 'ok' && !resp.features.compatibility) {
+      config.force_game_state_convertion = false;
+      features.getUserInfo = 1;
+      features.getMapInfo = 1;
+      features.getGameInfo = 1;
+    } else {
+      config.force_game_state_convertion = true;
+      log.d.info("---compatibility mode---");
+    }
   };
   net.send({action: 'getServerFeatures'}, h, true);
 };
@@ -208,9 +214,7 @@ Game.direct_request_game_state = function() {
 Game.request_game_state = function() {
   log.d.trace('Game.request_game_state');
 
-  if (minor_modes.have('game_started') ||
-      config.force_game_state_convertion)
-  {
+  if (minor_modes.have('game_started')) {
     var h = function(resp) {
       state.store('net.getGameState', resp);
       events.exec('net.getGameState');

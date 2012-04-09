@@ -1060,7 +1060,7 @@ minor_modes.storage.waiting = {
                   'declined']
   },
   _init_ui: function() {
-    d3.select('div#game_info').insert('form', '*').attr('id', 'form_refresh')
+    d3.select('div#content').insert('form', '*').attr('id', 'form_refresh')
       .attr('onSubmit', 'return false;')
       .on('submit', function() { game.direct_request_game_state(); })
       .append('input')
@@ -1069,7 +1069,7 @@ minor_modes.storage.waiting = {
   },
 
   init : function() {
-    if (config.force_game_state_convertion) {
+    if (!config.server_push_interval) {
       this._init_ui();
     }
     game.state_monitor.start();

@@ -1,0 +1,58 @@
+
+constants.js,69
+function server_url() {server_url2,1
+function rsc(type) {rsc6,47
+
+events.js,78
+    var i;i26,669
+    var i;i40,1074
+    var len = ev.length;len41,1085
+
+forms.js,867
+      var pasw = f['password'].value;pasw46,1179
+      var pasw = f['password'].value;pasw77,2125
+      var pasw2 = f['password2'].value;pasw278,2163
+ui_elements.menu = function(modes_list) {ui_elements.menu166,4375
+  function u_inf_game_not_started(d, t) {ui_elements._append_player_info.u_inf_game_not_started183,4828
+  function u_inf_game_started(d, t) {ui_elements._append_player_info.u_inf_game_started220,5989
+ui_elements._append_player_info = function(gameInfo, data_enter) {ui_elements._append_player_info181,4760
+ui_elements.game_info = function(d, gameInfo) {ui_elements.game_info262,7236
+ui_elements.update_game_info = function(d, gameState) {ui_elements.update_game_info273,7561
+playfield.create = function(svg, map) {playfield.create284,7828
+playfield.apply_game_state = function(svg, gameState) {playfield.apply_game_state341,9468
+
+log.js,0
+
+main.js,483
+    var m = ui_elements.menu(modes_list);m39,939
+  var h = function(resp) {game.get_current_user_info.h89,2351
+game.get_current_user_info = function() {game.get_current_user_info86,2237
+game._apply_game_state = function(resp) {game._apply_game_state98,2576
+game._apply_game_info = function(resp) {game._apply_game_info102,2623
+game.update_game_state = function() {game.update_game_state113,2938
+game.state_monitor.start = function() {  game.state_monitor.start126,3260
+
+modes.js,414
+        var h = function(resp) {h98,2315
+        var hg = function(resp) {hg164,4024
+        var hm = function(resp) {hm174,4363
+minor_modes.have = function(mode) {minor_modes.have273,6276
+minor_modes.enable = function(mode, params) {minor_modes.enable277,6358
+minor_modes.disable = function(mode) {minor_modes.disable291,6629
+function _check_if_mod_available(m_obj) {_check_if_mod_available329,7547
+
+utils.js,735
+    var h = function(text) {var.h6,114
+    req.onreadystatechange = function() {req.onreadystatechange17,492
+function make(tag) {make37,847
+function is_null(obj) {is_null50,1083
+function no_if_null(obj) {no_if_null54,1160
+function zero_if_null(obj) {zero_if_null58,1226
+function zero_or_one(obj) {zero_or_one62,1291
+function choose(obj, arr) {choose66,1363
+function yes_or_no(obj) {yes_or_no70,1426
+function get_obj_field(obj, field_name) {get_obj_field74,1492
+function set_obj_field(obj, field_name, value) {set_obj_field84,1677
+function delete_obj_field(obj, field_name) {delete_obj_field98,1962
+function in_arr(elem, array) {in_arr110,2223
+function determine_race(gameState, reg) {determine_race119,2355

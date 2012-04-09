@@ -201,3 +201,7 @@ form#form_leave_game {
     float: right;
     margin: 20px -115px 0 0;
 }
+
+form#form_refresh {
+    float: left;
+}
