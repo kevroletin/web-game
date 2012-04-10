@@ -127,6 +127,7 @@ sub extract_state_durty {
              dragon => bool($_->{dragon}),
              encampment => num($_->{encampment}),
              fortified => bool($_->{fortified}),
+             fortress  => int($_->{fortified} // 0), # oh yes, wanna kill them all
              hero => bool($_->{hero}),
              holeInTheGround => bool($_->{hole}),
              inDecline => bool($reg->inDecline() || !$reg->owner()),
