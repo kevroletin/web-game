@@ -70,7 +70,6 @@ sub parse_request {
     };
 
     $log->log_request($json, $data);
-    printf STDERR "\n---%s---\n", $data->{action};
 
     if ($@ || !$data->{action}) {
         response_json({

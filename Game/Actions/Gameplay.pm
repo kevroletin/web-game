@@ -162,7 +162,7 @@ sub conquer {
     my $defender;
     ($defender, $dice) = $race->conquer($reg, $dice);
 
-    if ($defender && $defender->have_owned_regions()) {
+    if ($defender && $defender->have_owned_active_regions()) {
         global_game()->state('defend');
     } else {
         global_game()->state('conquer');
@@ -321,7 +321,7 @@ sub finishTurn {
 
     $game->next_player();
     my $tok_cnt = $game->activePlayer()->tokensInHand();
-    @reg = $game->activePlayer()->owned_regions();
+    @reg = $game->activePlayer()->owned_active_regions();
     for my $reg (@reg) {
         my $d = $reg->tokensNum() - 1;
         if ($d > 0) {

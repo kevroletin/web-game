@@ -220,7 +220,7 @@ sub defend {
 
     my $attacked_reg = global_game()->lastAttack()->{region};
     my $ok = 0;
-    for (global_game()->lastAttack()->{whom}->owned_regions()) {
+    for (global_game()->lastAttack()->{whom}->owned_active_regions()) {
         last if $ok ||= !$self->_regions_are_adjacent($attacked_reg, $_)
     }
     if ($ok) {
@@ -237,7 +237,7 @@ sub defend {
 sub redeploy {
     my ($self, $moves) = @_;
 
-    my @reg = global_user()->owned_regions();
+    my @reg = global_user()->owned_active_regions();
     my $tok_cnt = global_user()->tokensInHand() +
                   sum 0, map { $_->tokensNum() } @reg;
 
@@ -274,7 +274,7 @@ sub _decline_region {
 
 sub decline {
     my ($self) = @_;
-    my @usr_reg = global_user()->owned_regions();
+    my @usr_reg = global_user()->owned_active_regions();
     $_->owner_race()->_decline_region($_) for @usr_reg;
 
     my $decline_race = global_user()->declineRace();

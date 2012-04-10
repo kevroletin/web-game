@@ -125,6 +125,13 @@ sub have_owned_active_regions {
     0
 }
 
+sub owned_active_regions {
+    my ($self) = @_;
+    return undef unless $self->activeGame();
+    grep { !$_->inDecline && $_->owner() && $_->owner() eq $self
+          } @{$self->activeGame()->map()->regions()}
+}
+
 sub owned_regions {
     my ($self) = @_;
     return undef unless $self->activeGame();
