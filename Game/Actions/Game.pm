@@ -77,6 +77,8 @@ sub aiJoin {
     $ai_user->init_id();
 
     $ai_user->activeGame($game);
+    $ai_user->readinessStatus(1);
+    $game->state('conquer') if $game->ready();
     $game->add_player($ai_user);
     $game->aiJoined( $game->aiJoined + 1 );
 
@@ -218,9 +220,7 @@ sub setReadinessStatus {
     assert($game->state() eq 'notStarted', 'badGameState');
 
     global_user()->readinessStatus($data->{isReady});
-    if ($game->ready()) {
-        $game->state('conquer');
-    }
+    $game->state('conquer') if $game->ready();
 
     if (is_debug() && defined $data->{visibleRaces}) {
         $game->racesPack([map { ($_) } @{$data->{visibleRaces}}]);
