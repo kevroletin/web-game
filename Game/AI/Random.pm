@@ -56,7 +56,9 @@ sub act_redeploy {
     my @regs;
     my $i = 1;
     for (@{$s->last_map_regions()}) {
-        push @regs, [$i, $_] if $_->{owner} eq $s->{data}{id};
+        if (!$_->{inDecline} && ($_->{owner} // '') eq $s->{data}{id}) {
+            push @regs, [$i, $_]
+        }
         ++$i;
     }
     my $res = {
