@@ -335,14 +335,15 @@ sub _extract_players_state_durty {
         $st->{currentTokenBadge} = $extract_race->($p->activeRace());
         $st->{declinedTokenBadge} = $extract_race->($p->declineRace());
 
-        my $oa_reg = int $p->owned_active_regions();
+        my ($tok_act, $tok_decl) = (0, 0);
+        for my $reg ($p->owned_regions()) {
+            ($reg->inDecline() ? $tok_decl : $tok_act) += $reg->population();
+        }
         if (defined $st->{currentTokenBadge}) {
-            $_ = $p->tokensInHand() + $oa_reg;
-            $st->{currentTokenBadge}{totalTokensNum} = $_;
+            $st->{currentTokenBadge}{totalTokensNum} = $p->tokensInHand() + $tok_act;
         }
         if (defined $st->{declinedTokenBadge}) {
-            $_ = (int $p->owned_regions()) - $oa_reg;
-            $st->{declinedTokenBadge}{totalTokensNum} = $_;
+            $st->{declinedTokenBadge}{totalTokensNum} = $tok_decl;
         }
 
         push @{$res}, $st
