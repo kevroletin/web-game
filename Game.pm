@@ -44,6 +44,8 @@ sub setup_environment {
         $_->{delete_empty_game} = 1;
         $_->{durty_gameState} = 1;
         $_->{durty_gameList} = 1;
+        $_->{amazons_remove_tokens_after_redeploy} = 1;
+        $_->{create_token_badges_on_game_creation} = 1;
     }
     config()->{debug} = $ENV{environment} &&
                         $ENV{environment} eq 'debug';

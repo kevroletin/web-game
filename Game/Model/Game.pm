@@ -123,6 +123,10 @@ has 'features' => ( isa => 'HashRef',
 sub BUILD {
     my ($self) = @_;
     assert($self->ai() <= $self->map()->playersNum, 'badAiNum');
+
+    if (feature('create_token_badges_on_game_creation')) {
+        $self->_create_tokens_pack()
+    }
 }
 
 sub init_id {
@@ -131,6 +135,8 @@ sub init_id {
 }
 
 before 'state' => sub {
+    return if feature('create_token_badges_on_game_creation');
+
     my ($self, $new_state) = @_;
     if (defined $new_state &&
         $self->state() eq 'notStarted' &&

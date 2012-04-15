@@ -82,7 +82,8 @@ sub init {
                             durty_gameList => 0,
                             join_game_after_creation => 1,
 
-                            amazons_remove_tokens_after_redeploy => 1
+                            create_token_badges_on_game_creation => 0,
+                            amazons_remove_tokens_after_redeploy => 0
                            },
                debug => 0
               };
