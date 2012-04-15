@@ -96,6 +96,7 @@ sub init {
     $context->{use_text_diff} = 0;
     $context->{before_request_hook} = undef;
     $context->{show_only_errors} = 0;
+    $context->{wait_input_before_send} = 0;
     1
 }
 
@@ -133,6 +134,10 @@ sub _panic_server_crash {
 
 sub _safe_request {
     my ($c) = @_;
+    if ($context->{wait_input_before_send}) {
+        print "-hit enter-";
+        <>
+    }
     my $resp = request($c->{in_json});
     if ($resp->code() != 200) {
         _panic_server_crash($c, $resp->message());
