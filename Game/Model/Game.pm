@@ -361,6 +361,26 @@ sub extract_state {
         shift->extract_state_clear(@_)
 }
 
+sub remove_undef_from_hash {
+    given (ref($_[0])) {
+        when ('HASH') {
+            for my $key (keys %{$_[0]}) {
+                if (defined $_[0]->{$key}) {
+                    remove_undef_from_hash($_[0]->{$key})
+                } else {
+                    delete $_[0]->{$key}
+                }
+            }
+        }
+        when ('ARRAY') {
+            for my $i (0 .. $#{$_[0]}) {
+                remove_undef_from_hash($_[0]->[$i])
+            }
+        }
+    }
+    $_[0]
+}
+
 sub extract_state_durty {
     my ($s) = @_;
     my $res = {};
@@ -391,7 +411,7 @@ sub extract_state_durty {
     $res->{lastEvent} = num($s->magic_last_event());
 
     $s->_copy_races_state_storage($res);
-    $res
+    remove_undef_from_hash( $res );
 }
 
 sub extract_state_clear {
