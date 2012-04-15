@@ -155,19 +155,19 @@ sub conquer {
     }
     $units_cnt -= $dice if defined $dice;
     $units_cnt = 1 if $units_cnt <= 0;
+    my ($result, $defender) = (undef, undef);
     if (global_user()->tokensInHand() < $units_cnt) {
-        early_response_json({result => 'badTokensNum', dice => $dice});
+        $result = 'badTokensNum';
+    } else {
+        $result = 'ok';
+        $defender = $self->__kill_region_owner($reg);
+        global_user()->tokensInHand(global_user()->tokensInHand - $units_cnt);
+        $reg->owner(global_user());
+        $reg->tokensNum($units_cnt);
+        $reg->inDecline(0);
     }
 
-    my $defender = $self->__kill_region_owner($reg);
-
-    global_user()->tokensInHand(global_user()->tokensInHand - $units_cnt);
-
-    $reg->owner(global_user());
-    $reg->tokensNum($units_cnt);
-    $reg->inDecline(0);
-
-    ($defender, $dice)
+    ($result, $defender, $dice)
 }
 
 sub compute_coins {

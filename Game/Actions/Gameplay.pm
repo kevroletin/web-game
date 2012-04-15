@@ -158,19 +158,20 @@ sub conquer {
     my $reg = global_game()->map()->region_by_id($data->{regionId});
     my $race = global_user()->activeRace();
     $race->check_is_move_possible($reg);
-    my $dice = $data->{dice};
-    my $defender;
-    ($defender, $dice) = $race->conquer($reg, $dice);
+    my ($result, $defender, $dice) = $race->conquer($reg, $data->{dice});
+    global_game()->lastDiceValue($dice) if defined $dice;
 
-    if ($defender && $defender->have_owned_active_regions()) {
-        global_game()->state('defend');
-    } else {
-        global_game()->state('conquer');
+    if ($result eq 'ok') {
+        if ($defender && $defender->have_owned_active_regions()) {
+            global_game()->state('defend');
+        } else {
+            global_game()->state('conquer');
+        }
     }
     db()->update(grep { defined $_ } global_user(), global_game(),
-                            $reg, $defender);
+                 $reg, $defender);
 
-    response_json({result => 'ok',
+    response_json({result => $result,
                    defined $dice ? (dice => $dice) : () });
 }
 
