@@ -320,6 +320,13 @@ sub finishTurn {
     global_user()->coins(global_user()->coins() + $coins);
 
     $game->next_player();
+    if (defined ($_ = $game->activePlayer()->activeRace())) {
+        my $t = global_user();
+        global_user($game->activePlayer());
+        $_->before_first_attack_hook();
+        global_user($t);
+    }
+
     my $tok_cnt = $game->activePlayer()->tokensInHand();
     @reg = $game->activePlayer()->owned_active_regions();
     for my $reg (@reg) {
@@ -418,6 +425,11 @@ sub selectRace {
     global_game()->raceSelected(1);
 
     $game->state('conquer');
+
+    if (defined ($_ = global_user()->activeRace())) {
+        $_->before_first_attack_hook();
+    }
+
     db()->store_nonroot($pair);
     db()->update($game, global_user());
 

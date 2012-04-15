@@ -80,7 +80,9 @@ sub init {
                             delete_empty_game => 0,
                             durty_gameState => 0,
                             durty_gameList => 0,
-                            join_game_after_creation => 1
+                            join_game_after_creation => 1,
+
+                            amazons_remove_tokens_after_redeploy => 1
                            },
                debug => 0
               };

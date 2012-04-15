@@ -27,6 +27,8 @@ sub extract_state {
     \%h
 }
 
+sub before_first_attack_hook { }
+
 sub load_state {
     my ($self, $state) = @_;
     assert(ref($state) eq 'HASH', 'badRaceState');
