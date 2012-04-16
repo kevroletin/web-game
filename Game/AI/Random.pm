@@ -47,8 +47,28 @@ sub act_conquer {
 
 sub act_defend {
     my ($s) = @_;
+
+    my $state = $s->last_game_state();
+    my $reg_id = $state->{attacksHistory}[0]{region};
+    my $adj_reg_ids = $s->last_map_regions()->[$reg_id - 1]{adjacentRegions};
+
+    my $all_regions = $s->last_map_regions();
+    my $owned_reg_ids =
+        [grep { $a = $all_regions->[$_];
+                !$a->{idDecline} && ($a->{owner} // '') eq $s->{data}{id} }
+         0 .. $#$all_regions];
+
+    my ($reg_adj, $reg_not_adj) = ([], []);
+    for my $i (@$owned_reg_ids) {
+        push @{($i+1) ~~ $adj_reg_ids ? $reg_adj : $reg_not_adj}, $i + 1
+    }
+    $reg_not_adj = $reg_adj unless @$reg_not_adj;
+
+    my @regions = !($_ = $s->defender()->{tokensInHand}) ? () :
+                   ( { regionId => $reg_not_adj->[0],
+                       tokensNum => $_ } );
     $s->send_cmd(action => 'defend',
-                 regions => []);
+                 regions => [ @regions ]);
 }
 
 sub act_redeploy {

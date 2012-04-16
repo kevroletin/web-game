@@ -143,7 +143,21 @@ use warnings;
 use strict;
 use v5.10;
 
-use base 'Game::AI::StdCmd';
+use base 'Game::AI::CompatibilityMapper';
+#use base 'Game::AI::StdCmd';
+
+sub cmd_get_games_list {
+   ...
+}
+
+sub cmd_get_game_state {
+    my $s = shift;
+    my $state = $s->SUPER::cmd_get_game_state();
+    unless (defined $state->{activePlayerNum}) {
+        $s->fix_game_state($state);
+    }
+    $state
+}
 
 sub translate_state { shift }
 
@@ -152,6 +166,7 @@ sub last_map_regions {
 }
 
 sub cmd_get_map_info {
+    ...;
     my ($s, $map_id) = @_;
     $map_id //= $s->last_game_state()->{mapId};
     $s->send_cmd(action => 'getMapInfo', mapId => $map_id);
@@ -182,8 +197,20 @@ sub active_player {
     $state->{players}[ $state->{activePlayerNum} ]
 }
 
+sub defender {
+    my ($s, $state) = @_;
+    $state ||= $s->last_game_state();
+    for (@{$state->{players}}) {
+        if ($_->{userId} eq  $state->{attacksHistory}[-1]{whom}) {
+            return $_
+        }
+    }
+    undef
+}
+
 sub determine_action_by_state {
     my ($s, $state) = @_;
+
     given ($state->{state}) {
         when ('conquer') {
             return 'redeploy' if (defined $s->{lastDiceValue});
@@ -230,8 +257,7 @@ sub new {
 sub _explore_list {
     my ($s, $list) = @_;
     for (@{$list}) {
-        if ($_->{aiRequiredNum} &&
-            $s->translate_state($_->{gameState}) ne 'finished')
+        if ($_->{aiRequiredNum} && $_->{gameState} ne 'finished')
         {
             return $_->{gameId}
         }
