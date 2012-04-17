@@ -71,20 +71,22 @@ sub _regions_are_adjacent {
 }
 
 sub _region_is_adjacent_with_our {
-    my ($self, $reg) = @_;
-    my $ok = 0;
+    my ($self, $reg, $should_be_active) = @_;
+    $should_be_active //= 0;
     my $map = global_game()->map();
     for (@{$reg->adjacent()}) {
-        my $owner = $map->get_region($_)->owner();
-        $ok ||= $owner && $owner eq global_user();
-        last if $ok;
+        my $reg = $map->get_region($_);
+        unless ($should_be_active && $reg->inDecline()) {
+            my $owner = $reg->owner();
+            return 1 if $owner && $owner eq global_user();
+        }
     }
-    $ok
+    0
 }
 
 sub _check_land_reachability {
     my ($self, $reg) = @_;
-    my $canMove = $self->_region_is_adjacent_with_our($reg);
+    my $canMove = $self->_region_is_adjacent_with_our($reg, 'active');
     if (!$canMove && !global_user()->have_owned_active_regions()) {
         for (@{$reg->landDescription()}) {
             $canMove ||=  $_ ~~ ['border', 'coast']
@@ -254,8 +256,9 @@ sub redeploy {
         $self->_clear_left_region($_) unless $_->tokensNum()
     }
 
-    if (feature('redeploy_all_tokens') && global_user()->tokensInHand() != 0) {
-        next unless @{$moves->{units_moves}};
+    if (feature('redeploy_all_tokens') && global_user()->tokensInHand() != 0 &&
+        @{$moves->{units_moves}})
+    {
         my $reg = $moves->{units_moves}[-1][0];
         $reg->tokensNum($reg->tokensNum() + global_user()->tokensInHand());
         global_user()->tokensInHand(0);

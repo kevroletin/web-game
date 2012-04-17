@@ -33,7 +33,7 @@ sub enchant {
     assert(!$reg->inDecline() && $reg->owner() ne global_user(),
            'badAttackedRace');
     assert($reg->tokensNum() == 1 &&
-           $self->_region_is_adjacent_with_our($reg), 'badRegion');
+           $self->_region_is_adjacent_with_our($reg, 'active'), 'badRegion');
 
     $self->_check_land_immune($reg);
 
