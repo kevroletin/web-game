@@ -12,18 +12,20 @@ sub race_name { 'amazons' }
 sub tokens_cnt { 6 }
 
 sub before_first_attack_hook {
-    global_user()->tokensInHand( global_user()->tokensInHand() + 4 );
+    if (feature('amazons_remove_tokens_after_redeploy')) {
+        global_user()->tokensInHand( global_user()->tokensInHand() + 4 )
+    }
 }
 
-#override 'conquer' => sub {
-#    return super() if feature('amazons_remove_tokens_after_redeploy');
+override 'conquer' => sub {
+    return super() if feature('amazons_remove_tokens_after_redeploy');
 
-#    if (@{global_game()->history()}) {
-#        return super()
-#    }
-#    global_user()->tokensInHand(global_user()->tokensInHand() + 4);
-#    super()
-#};
+    if (@{global_game()->history()}) {
+        return super()
+    }
+    global_user()->tokensInHand(global_user()->tokensInHand() + 4);
+    super()
+};
 
 override 'redeploy' => sub {
     return super() if feature('amazons_remove_tokens_after_redeploy');
