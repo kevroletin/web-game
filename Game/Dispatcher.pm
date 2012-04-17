@@ -78,7 +78,11 @@ sub process_request {
     }
 
     if (!$action_handler || $data->{action} =~ /^_.*/) {
-        response_json({result => "badAction"});
+        response_json({result => 'badAction'});
+        return
+    }
+    if (feature('compatibility') && $data->{action} =~ /Info$/) {
+        response_json({result => 'badAction'});
         return
     }
     if (!_is_action_without_sid($data->{action}) &&
