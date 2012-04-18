@@ -21,7 +21,7 @@ test('select race',
     },
     $user1 );
 
-actions->check_tokens_cnt(6, $user1);
+actions->check_tokens_cnt(10, $user1);
 
 test('conquer sea',
     {
@@ -34,7 +34,7 @@ test('conquer sea',
     },
     $user1 );
 
-actions->check_tokens_cnt(6, $user1);
+actions->check_tokens_cnt(10, $user1);
 
 test('conquer',
     {
@@ -105,7 +105,7 @@ test('select race',
     },
     $user2 );
 
-actions->check_tokens_cnt(6, $user2);
+actions->check_tokens_cnt(10, $user2);
 
 test('conquer',
     {

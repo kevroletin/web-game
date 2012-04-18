@@ -424,12 +424,8 @@ sub selectRace {
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
     global_game()->raceSelected(1);
-
     $game->state('conquer');
-
-    if (defined ($_ = global_user()->activeRace())) {
-        $_->before_first_attack_hook();
-    }
+    $pair->before_first_attack_hook();
 
     db()->store_nonroot($pair);
     db()->update($game, global_user());

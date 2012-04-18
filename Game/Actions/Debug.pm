@@ -105,6 +105,7 @@ sub selectGivenRace {
 
     global_user()->activeRace($pair);
     global_user()->tokensInHand($pair->tokens_cnt());
+    $pair->before_first_attack_hook();
 
     $game->state('conquer');
     db()->store_nonroot($pair);
