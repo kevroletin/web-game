@@ -82,6 +82,7 @@ our %int_to_state = (
 
 sub _fix_state_field_in_place {
     my ($s, $game_state) = @_;
+
     my $res = $s->get_game_state_fields($game_state->{lastEvent},
                                         $game_state->{state});
     for ('state', 'raceSelected', 'attacksHistory', 'lastDiceValue') {
@@ -90,7 +91,7 @@ sub _fix_state_field_in_place {
     if ($game_state->{defendingInfo}) {
         my $di = $game_state->{defendingInfo};
         $game_state->{state} = 'defend';
-        $game_state->{attacksHistory} = [{ who    => $game_state->{activePlayerId}, 
+        $game_state->{attacksHistory} = [{ who    => $game_state->{activePlayerId},
                                            whom   => $di->{playerId},
                                            region => $di->{regionId} }];
     }
@@ -112,6 +113,8 @@ our %int_to_last_event = (
 
 sub get_game_state_fields {
     my ($s, $last_event_int, $state_int) = @_;
+    $last_event_int ||= 2;
+
     my $last_event = $int_to_last_event{$last_event_int};
     my $state = $int_to_state{$state_int};
     my $result = { attacksHistory => [], raceSelected => 0 };
@@ -169,6 +172,12 @@ sub fix_game_list {
         $game->{gameDescr} = '' if !defined($game->{gameDescr});
         $game->{playersNum} = int @{$game->{players}};
     }
+}
+
+sub may_be_fix_game_list {
+    my ($s, $games_list) = @_;
+    return unless @{$games_list} && $games_list->[0]{state} =~ /^\d+$/;
+    $s->fix_game_list($games_list);
 }
 
 1

@@ -147,7 +147,10 @@ use base 'Game::AI::CompatibilityMapper';
 #use base 'Game::AI::StdCmd';
 
 sub cmd_get_games_list {
-   ...
+    my $s = shift;
+    my $list = $s->SUPER::cmd_get_games_list(@_);
+    $s->may_be_fix_game_list($list);
+    $list
 }
 
 sub cmd_get_game_state {
@@ -257,8 +260,7 @@ sub new {
 sub _explore_list {
     my ($s, $list) = @_;
     for (@{$list}) {
-        if ($_->{aiRequiredNum} && $_->{gameState} ne 'finished')
-        {
+        if ($_->{aiRequiredNum} && $_->{game} ne 'finished') {
             return $_->{gameId}
         }
     }
