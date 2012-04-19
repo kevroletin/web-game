@@ -381,6 +381,7 @@ sub redeploy {
 sub selectFriend {
     my ($data) = @_;
     _control_state($data);
+    $data->{userId} //= $data->{friendId} if feature('compatibility');
     proto($data, 'userId');
 
     my $friend;

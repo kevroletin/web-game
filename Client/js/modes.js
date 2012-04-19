@@ -646,7 +646,8 @@ minor_modes.storage.redeploy = {
 
     // power specific
     if (game.active_power() == 'fortified' &&
-        minor_modes.storage.redeploy.__new_fort__) {
+        minor_modes.storage.redeploy.__new_fort__)
+    {
       res.fortified = { regionId: Number(minor_modes.storage.redeploy.__new_fort__) + 1};
     }
     var a = {};
@@ -851,7 +852,8 @@ minor_modes.storage.redeployed = {
     };
     var h_select = function() {
       var friend_id = this.elements['friend_id'].value;
-      net.send({action: 'selectFriend', userId: friend_id}, on_resp_select, 1)
+      net.send({ action: 'selectFriend', userId: friend_id,
+                 friendId: friend_id }, on_resp_select, 1)
     };
     var friend_form = d3.select('div#actions')
       .append('form')
