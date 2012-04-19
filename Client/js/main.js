@@ -164,7 +164,8 @@ Game.fix_minor_mode_from_game_state = function() {
         {
           new_modes['enchant'] = 1;
         }
-        if (game.active_player().activePower == 'dragonMaster' &&
+        if (game.active_player().activePower &&
+            game.active_player().activePower.toLowerCase() == 'dragonmaster' &&
             !game_state.dragonAttacked)
         {
           new_modes['dragon'] = 1;
