@@ -41,7 +41,6 @@ test('check if 1nd user inGame in games_list',
      },
      $user1);
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('wait', $user1);
 actions->check_magic_last_event('wait', $user1);
 
@@ -56,7 +55,6 @@ test('join game 2nd user',
     },
     $user2 );
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('wait', $user1);
 actions->check_magic_last_event('wait', $user1);
 
@@ -70,7 +68,6 @@ test('leave game 2nd user',
     },
     $user2 );
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('wait', $user1);
 actions->check_magic_last_event('wait', $user1);
 
@@ -101,7 +98,6 @@ test('check if both users inGame in games_list',
      },
      $user1);
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('wait', $user1);
 actions->check_magic_last_event('wait', $user1);
 
@@ -116,9 +112,8 @@ test('1st user ready',
     },
     $user1 );
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('wait', $user1);
-actions->check_magic_last_event('1', $user1);
+actions->check_magic_last_event('wait', $user1);
 
 test('2nd user ready',
      {
@@ -167,7 +162,6 @@ test('2nd user ready',
      },
      $user2 );
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('begin', $user1);
 actions->check_magic_last_event('begin', $user1);
 
@@ -180,9 +174,8 @@ test('select race 1st user',
      { result => 'ok' },
      $user1);
 
-actions->check_magic_game_stage('conquest', $user1);
 actions->check_magic_game_state('in_game', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('select_race', $user1);
 
 test('conquer',
      {
@@ -193,9 +186,8 @@ test('conquer',
      { result => 'ok' },
      $user1);
 
-actions->check_magic_game_stage('conquest', $user1);
 actions->check_magic_game_state('in_game', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('conquer', $user1);
 
 test('redeploy',
     {
@@ -213,9 +205,8 @@ test('redeploy',
     },
     $user1 );
 
-actions->check_magic_game_stage('beforeFinishTurn', $user1);
 actions->check_magic_game_state('in_game', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('redeploy', $user1);
 
 test('finish turn',
     {
@@ -241,9 +232,8 @@ test('finish turn',
      },
     $user1 );
 
-actions->check_magic_game_stage('selectRace', $user1);
 actions->check_magic_game_state('in_game', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('finish_turn', $user1);
 
 test('select race 2st user',
      {
@@ -254,11 +244,10 @@ test('select race 2st user',
      { result => 'ok' },
      $user2);
 
-actions->check_magic_game_stage('conquest', $user1);
 actions->check_magic_game_state('in_game', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('select_race', $user1);
 
-test('qonquer',
+test('conquer',
      {
       action => 'conquer',
       regionId => 4,
@@ -267,8 +256,8 @@ test('qonquer',
      { result => 'ok' },
      $user2);
 
-actions->check_magic_game_stage('conquest', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_game_state('in_game', $user1);
+actions->check_magic_last_event('conquer', $user1);
 
 test('redeploy',
     {
@@ -286,8 +275,7 @@ test('redeploy',
     },
     $user2 );
 
-actions->check_magic_game_stage('beforeFinishTurn', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('redeploy', $user1);
 
 test('finish turn',
     {
@@ -313,8 +301,7 @@ test('finish turn',
                 },
     $user2 );
 
-actions->check_magic_game_stage('beforeConquest', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('finish_turn', $user1);
 
 test('qonquer',
      {
@@ -325,8 +312,7 @@ test('qonquer',
      { result => 'ok' },
      $user1);
 
-actions->check_magic_game_stage('conquest', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('conquer', $user1);
 
 test('redeploy',
     {
@@ -348,8 +334,7 @@ test('redeploy',
     },
     $user1 );
 
-actions->check_magic_game_stage('beforeFinishTurn', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('redeploy', $user1);
 
 test('finish turn',
     {
@@ -375,8 +360,7 @@ test('finish turn',
      },
     $user1 );
 
-actions->check_magic_game_stage('beforeConquest', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('finish_turn', $user1);
 
 test('decline 2nd',
     {
@@ -388,8 +372,7 @@ test('decline 2nd',
     },
     $user2 );
 
-actions->check_magic_game_stage('finishTurn', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('decline', $user1);
 
 test('finish turn',
     {
@@ -415,8 +398,7 @@ test('finish turn',
 },
     $user2 );
 
-actions->check_magic_game_stage('beforeConquest', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('finish_turn', $user1);
 
 test('decline 1st',
     {
@@ -428,8 +410,7 @@ test('decline 1st',
     },
     $user1 );
 
-actions->check_magic_game_stage('finishTurn', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('decline', $user1);
 
 test('finish turn',
     {
@@ -441,8 +422,7 @@ test('finish turn',
      },
     $user1 );
 
-actions->check_magic_game_stage('selectRace', $user1);
-actions->check_magic_last_event('in_game', $user1);
+actions->check_magic_last_event('finish_turn', $user1);
 
 # TODO: create situation with dice
 

@@ -423,7 +423,7 @@ sub _last_event_vs_num {
              'failed_conquer' => 14,
              14 => 'failed_conquer'
             );
-    defined ($_ = $h{$_[0]}) ?
+    defined ($_ = $h{$_[0] // ''}) ?
         (defined $_ ? $_ : 'undef') :
         $_[0]
 }
@@ -432,6 +432,7 @@ sub check_magic_last_event {
     my ($self, $la, $params, $stack_level) = @_;
     my $checker = sub {
         my ($data, $res) = @_;
+        $data //= '<undef>';
         unless ( $la ~~ /^\d+$/) {
             $la = _last_event_vs_num($la);
         }
@@ -445,7 +446,7 @@ sub check_magic_last_event {
     };
     my $res = test( 'check game stage',
                     {action => 'getGameState', gameId => undef},
-                    {gameState => { state => $checker } },
+                    {gameState => { lastEvent => $checker } },
                     $params,
                     {show_only_errors => 0,
                      stack_level => $stack_level || 2 });
