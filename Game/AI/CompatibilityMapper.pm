@@ -98,6 +98,8 @@ sub _fix_state_field_in_place {
 };
 
 our %int_to_last_event = (
+  0 => 'notStarted',
+
   1 => 'wait',
   2 => 'in_game',
   4 => 'finishTurn',
@@ -107,23 +109,27 @@ our %int_to_last_event = (
   8 => 'redeploy',
   9 => 'throwDice',
   12=> 'defend',
-  13=> 'selectFriend',
+  13=> ' 3 3selectFriend',
   14=> 'failed_conquer'
 );
 
 sub get_game_state_fields {
     my ($s, $last_event_int, $state_int) = @_;
-    $last_event_int ||= 2;
 
+    $last_event_int ||= 1; # wait
     my $last_event = $int_to_last_event{$last_event_int};
     my $state = $int_to_state{$state_int};
     my $result = { attacksHistory => [], raceSelected => 0 };
 
-#   $s->info('last_event: ' . $last_event . '(' . $last_event_int . ')');
-#   $s->info('state: ' . $state . '(' . $state_int . ')');
+   $s->info('last_event: ' . $last_event . '(' . $last_event_int . ')');
+   $s->info('state: ' . $state . '(' . $state_int . ')');
 
     if ($state eq 'wait') {
         $result->{state} = 'notStarted';
+    #}
+    #elsif ($state eq 'begin') {
+    #    $result->{state} = 'conquer';
+    #    $result->{raceSelected} = 0;
     } elsif ($state eq 'finish' || $state eq 'empty') {
         $result->{state} = 'finished';
     } elsif ($last_event eq 'finishTurn') {
@@ -144,6 +150,7 @@ sub get_game_state_fields {
         $result->{state} = 'conquer';
     } elsif ($last_event eq 'defend') {
         $result->{state} = 'conquer';
+        $result->{attacksHistory} = [{}];
     } elsif ($last_event eq 'selectFriend') {
         $result->{state} = 'redeployed';
     } elsif ($last_event eq 'failed_conquer') {
@@ -151,15 +158,12 @@ sub get_game_state_fields {
         $result->{lastDiceValue} = 'used';
         $result->{attacksHistory} = [{}];
     } else {
-        if ($state eq 'begin') {
-            $result->{state} = 'conquer';
-        } else {
-            $s->error('can\'t obtain game state field');
-            $result->{state} = $state;
-        }
+        $s->error('can\'t obtain game state field');
+        #            $result->{state} = $state;
+        $result->{state} = 'conquer';
     }
 
-#    $s->info('result: ' , $result);
+    $s->info('result: ' , $result);
 
     return $result;
 }

@@ -28,7 +28,7 @@ sub act_decline_or_conquer {
     if (rand() < 0.2) {
         $s->send_cmd(action => 'decline');
     } else {
-        $s->act_conquer();
+        $s->execute_action('conquer');
     }
 }
 
@@ -96,6 +96,12 @@ sub act_redeploy {
     for (1 .. $to_redeploy) {
         ++$res->{regions}[$i]{tokensNum};
         $i = ($i + 1) % @{$res->{regions}};
+    }
+    $i = 0;
+    for (1 .. (-$to_redeploy)) {
+        --$res->{regions}[$i]{tokensNum};
+        $i = ($i + 1) % @{$res->{regions}};
+
     }
 
     $s->send_cmd($res);

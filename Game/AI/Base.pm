@@ -51,6 +51,7 @@ sub log_net { }
 package Game::AI::Connection;
 use warnings;
 use strict;
+use v5.10;
 
 use LWP;
 use LWP::ConnCache;
@@ -71,15 +72,35 @@ sub new {
     $s
 }
 
+sub __convert_num_to_num {
+    given (ref($_[0])) {
+        when ('HASH') {
+            for my $key (keys %{$_[0]}) {
+                __convert_num_to_num($_[0]->{$key})
+            }
+        }
+        when ('ARRAY') {
+            for my $i (0 .. $#{$_[0]}) {
+                __convert_num_to_num($_[0]->[$i])
+            }
+        }
+        when ('') {
+            $_[0] += 0 if $_[0] =~ /^\d+$/
+        }
+    }
+    $_[0]
+}
+
 sub send_cmd {
     my ($s) = shift;
     my $act;
     my $cmd = @_ > 1 ? {@_} : $_[0];
     if (ref($cmd) eq 'HASH') {
-        $s->log_net($cmd);
         $act = $cmd->{action};
-        $cmd->{sid} //= $s->{data}{sid};
-        $cmd = to_json($cmd)
+        $cmd->{sid} = $s->{data}{sid} if defined $s->{data}{sid};
+        __convert_num_to_num($cmd);
+        $cmd = to_json($cmd);
+        $s->log_net($cmd);
     } elsif (ref($cmd)) {
         die 'should be HASH or string with json'
     }
@@ -150,6 +171,7 @@ sub cmd_get_games_list {
     my $s = shift;
     my $list = $s->SUPER::cmd_get_games_list(@_);
     $s->may_be_fix_game_list($list);
+
     $list
 }
 
@@ -177,6 +199,7 @@ sub cmd_get_map_info {
 
 sub check_you_turn_by_state {
     my ($s, $state) = @_;
+
     given ($state->{state}) {
         when ('notStarted') {
             return 0
@@ -253,14 +276,14 @@ use base 'Game::AI::CompatibilityLayer';
 
 sub new {
     my $class = shift;
-    my $s = ref($class) ? $class : $class->SUPER::new();
+    my $s = ref($class) ? $class : $class->SUPER::new(@_);
     $s
 }
 
 sub _explore_list {
     my ($s, $list) = @_;
     for (@{$list}) {
-        if ($_->{aiRequiredNum} && $_->{game} ne 'finished') {
+        if ($_->{aiRequiredNum}) {
             return $_->{gameId}
         }
     }
@@ -290,19 +313,19 @@ sub find_game {
 
 sub _send_ready {
     my ($s) = @_;
-    my $ok = 0;
-    while (!$ok) {
+#    my $ok = 0;
+#    while (!$ok) {
         $_ = $s->send_cmd( action => "setReadinessStatus",
                            isReady => 1,
                            sid => $s->{data}{sid} );
-        $ok = $_->{result} eq 'ok'
-    }
+#        $ok = $_->{result} eq 'ok'
+#    }
 }
 
 sub join_game {
     my ($s, $game_id) = @_;
     my $r = $s->send_cmd(action => 'aiJoin',
-                         gameId => $game_id);
+                         gameId => $game_id + 0);
 
     return undef if $r->{result} ne 'ok';
     $s->{data}{gameId} = $game_id;
