@@ -49,6 +49,7 @@ Ui_Forms.login = {
     var name = f['username'].value;
     var pasw = f['password'].value;
 
+    state.store('username', name);
     var q = { action: "login",
               username: name,
               password: pasw };
@@ -60,6 +61,8 @@ Ui_Forms.login = {
     log.ui.error(field + ': ' + err);
   },
   _on_resp: function (resp) {
+    //minor_modes.disable('logined');
+
     var msg = Errors.translate_resp(resp);
     d3.select('p#msg_box').text(msg);
     if (resp.result !== 'ok') {
@@ -105,6 +108,7 @@ Ui_Forms.register = {
     } else {
       var f = d3.select('form#register').node();
       if (f['autologin'].checked) {
+        state.store('username', f['username'].value);
         var q = { action: "login",
                   username: f['username'].value,
                   password: f['password'].value };

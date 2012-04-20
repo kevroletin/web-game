@@ -78,7 +78,7 @@ CompMapper._fix_state_field_in_place = function(game_state) {
   if (game_state.defendingInfo) {
     var di = game_state.defendingInfo;
     game_state.state = 'defend';
-    game_state.attacksHistory = [{ who    : game_state.activePlayerId, 
+    game_state.attacksHistory = [{ who    : game_state.activePlayerId,
                                    whom   : di.playerId,
                                    region : di.regionId }];
   }

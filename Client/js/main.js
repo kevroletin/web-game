@@ -96,11 +96,11 @@ Game.get_current_user_info = function() {
             if (player.userId == state.get('userId')) {
               state.store('gameId', game.gameId);
               state.store('username', player.username);
-              events.exec('user_info.success');
             }
           })
         });
       }
+      events.exec('user_info.success');
     };
     net.send(q, h);
   }

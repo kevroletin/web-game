@@ -141,12 +141,13 @@ major_modes.storage.logout = {
   init: function(content) {
     var q = { action: "logout",
               sid: game.sid };
-    state.delete('userId');
-    state.delete('gameId');
-    state.delete('net');
 
     net.send(q, function() {
       state.delete('sid');
+      state.delete('userId');
+      state.delete('gameId');
+      state.delete('net');
+
       events.exec('logout.success') });
   },
   uninit: function() {
@@ -476,7 +477,6 @@ major_modes.storage.play_game = {
 
 minor_modes.storage.logined = {
   init: function() {
-    game.get_current_user_info();
     var h = function() {
       var name = state.get('username');
       name = '<b>' + name + '</b>';
@@ -487,15 +487,19 @@ minor_modes.storage.logined = {
         .on('click', function() { major_modes.change('logout') })
         .text('logout');
     };
+
     events.reg_h('user_info.success',
                  'minor_modes.storage.logined->user_info.success',
                  h);
+    game.get_current_user_info();
     return 1;
   },
   uninit: function() {
     events.del_h('user_info.success',
                  'minor_modes.storage.logined->user_info.success');
     d3.select('div#login_info').text('');
+    state.delete('sid');
+    state.delete('userId');
   }
 };
 
@@ -503,8 +507,10 @@ minor_modes.storage.in_game = {
   available_if: {
     minor_m: ['logined']
   },
-  init: function() { return 1;  },
-  uninit: function() {  }
+  init: function() { return 1; },
+  uninit: function() {
+    state.delete('gameId');
+  }
 };
 
 minor_modes.storage.game_started = {
