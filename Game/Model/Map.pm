@@ -134,6 +134,12 @@ sub extract_state_durty {
              tokensNum => num($reg->population())
         };
 
+        for (@{$reg->landDescription()}) {
+            if ($_ ~~ [qw(sea mountain farmland forest hill swamp)]) {
+                $st->{landscape} = $_;
+                last;
+            }
+        }
 # TODO: DEBUG:
         $st->{regionId} = $reg->{regionId};
 
