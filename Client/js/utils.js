@@ -15,7 +15,7 @@ var state = new state_type();
 /* State & Net realization */
 
 Net.send = function(msg, on_resp, to_log, blocked) {
-  if (is_null(msg.sid)) {
+  if (is_null(msg.sid) && !is_null(state.get('sid'))) {
     msg.sid = state.get('sid');
   }
   var initial_request;
