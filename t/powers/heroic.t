@@ -51,8 +51,8 @@ test('redeploy',
     {
       action => "redeploy",
       heroes => [
-        1,
-        2
+        {regionId => 1},
+        {regionId => 2}
       ],
       regions => [
         {

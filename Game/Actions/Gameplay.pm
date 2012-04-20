@@ -217,13 +217,12 @@ sub __fortified_reg_from_data {
 sub __heroes_regs_from_date {
     my ($data) = @_;
     return undef unless defined $data->{heroes};
-    unless (ref($data->{heroes}) eq 'ARRAY') {
-        early_response_json({result => 'badJson'})
-    }
+    assert(ref($data->{heroes}) eq 'ARRAY', 'badJson');
     my @res;
     for (@{$data->{heroes}}) {
         last if @res > 2;
-        push @res, global_game()->map()->region_by_id($_);
+        assert(ref($_) eq 'HASH', 'badJson');
+        push @res, global_game()->map()->region_by_id($_->{regionId});
     }
     if (@res == 2 && $res[0] eq $res[1] || @res > 2) {
         early_response_json({result => 'badSetHeroCommand'})

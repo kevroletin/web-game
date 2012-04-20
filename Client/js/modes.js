@@ -651,7 +651,7 @@ minor_modes.storage.redeploy = {
       res.fortified = { regionId: Number(minor_modes.storage.redeploy.__new_fort__) + 1};
     }
     var a = {};
-    a.heroic = function(ei, i) { if (ei.hero) { res.heroes.push(i) } };
+    a.heroic = function(ei, i) { if (ei.hero) { res.heroes.push({regionId: i}) } };
     a.bivouacking = function(ei, i) {
       if (ei.encampment) {
         res.encampments.push({ encampmentsNum: ei.encampment,
