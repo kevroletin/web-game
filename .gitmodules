@@ -7,3 +7,6 @@
 [submodule "SmallWorld"]
 	path = SmallWorld
 	url = https://github.com/Terentyev/SmallWorld.git
+[submodule "web_game"]
+	path = web_game
+	url = https://github.com/elvslv/web_game.git
