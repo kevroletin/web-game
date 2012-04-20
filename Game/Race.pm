@@ -143,14 +143,15 @@ sub __kill_region_owner {
 
 sub conquer {
     my ($self, $reg, $dice) = @_;
+
     my $game = global_game();
     my $units_cnt = $self->_calculate_land_strength($reg);
     $units_cnt = 1 if $units_cnt <= 0;
 
     # FIXME: move db()-> update in Actions/Gameplay.pm
     if (global_user()->tokensInHand() < $units_cnt) {
-        if (!is_debug() || !defined $dice) {
-            $dice ||= global_game->random_dice()
+        if (!is_debug() && !defined $dice) {
+            $dice = global_game->random_dice()
         }
         global_game()->lastDiceValue($dice);
         db()->update(global_game());
