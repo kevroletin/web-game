@@ -491,6 +491,16 @@ sub reset_server {
     test('reset server', {action => 'resetServer'}, {result => 'ok'});
 }
 
+sub create_maps {
+    test('create default maps',
+         {action => 'createDefaultMaps'}, {result => 'ok'});
+}
+
+sub init_server {
+    reset_server();
+    create_maps();
+}
+
 sub game_state_to_test {
     init();
     my ($self, $params) = @_;

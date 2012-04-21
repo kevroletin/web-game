@@ -32,7 +32,7 @@ test('reset server', {action => 'resetServer'}, {result => 'ok'} );
 test('register 1st user',
     {
       action => "register",
-      password => "password1",
+      password => "123123",
       username => "user1"
     },
     {
@@ -42,7 +42,7 @@ test('register 1st user',
 test('login 1st user',
     {
       action => "login",
-      password => "password1",
+      password => "123123",
       username => "user1"
     },
     {
@@ -55,7 +55,7 @@ test('login 1st user',
 test('register 2nd user',
     {
       action => "register",
-      password => "password2",
+      password => "123123",
       username => "user2"
     },
     {
@@ -65,7 +65,7 @@ test('register 2nd user',
 test('login 2nd user',
     {
       action => "login",
-      password => "password2",
+      password => "123123",
       username => "user2"
     },
     {

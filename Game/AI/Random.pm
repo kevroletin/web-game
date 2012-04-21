@@ -65,7 +65,7 @@ sub act_defend {
     $reg_not_adj = $reg_adj unless @$reg_not_adj;
 
     my @regions = !($_ = $s->defender()->{tokensInHand}) ? () :
-                   ( { regionId => $reg_not_adj->[0],
+                   ( { regionId => $reg_not_adj->[int rand()*@$reg_not_adj],
                        tokensNum => $_ } );
     $s->send_cmd(action => 'defend',
                  regions => [ @regions ]);

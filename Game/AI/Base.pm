@@ -14,7 +14,9 @@ sub new {
     $s->{log}{std}      = *STDOUT;
     $s->{log}{info}     = *STDOUT;
     $s->{log}{debug}    = *STDOUT;
-    $s->{log}{net}      = *STDOUT;
+
+    #$s->{log}{net}      = *STDOUT;
+    open $s->{log}{net}, '>ai.log';
 
     $s
 }
@@ -22,7 +24,7 @@ sub new {
 sub _write_to_log {
     my $s = shift;
     my $log_type = shift;
-    printf "[ %-5s] ", $log_type;
+    printf {$s->{log}{$log_type}} "[ %-5s] ", $log_type;
     for (@_) {
         if (ref($_)) {
             print {$s->{log}{$log_type}} Dumper($_)
@@ -43,8 +45,8 @@ sub log { shift->_write_to_log('std', @_) }
 
 sub debug { shift->_write_to_log('debug', @_) }
 
-#sub log_net { shift->_write_to_log('net', @_) }
-sub log_net { }
+sub log_net { shift->_write_to_log('net', @_) }
+#sub log_net { }
 
 1;
 
@@ -138,13 +140,6 @@ sub cmd_get_game_state {
     $_->{gameState}
 }
 
-sub last_game_state {
-    my $s = shift;
-    $s->{resp_cache}{getGameState} //=
-        $s->send_cmd(action => 'getGameState', gameId => $s->{data}{gameId});
-    $s->{resp_cache}{getGameState}{gameState}
-}
-
 sub cmd_conquer {
     my ($s, $reg_id) = @_;
     $s->send_cmd(action   => 'conquer',
@@ -188,6 +183,12 @@ sub translate_state { shift }
 
 sub last_map_regions {
     shift->{resp_cache}{getGameState}{gameState}{regions};
+}
+
+sub last_game_state {
+    my $s = shift;
+    $s->cmd_get_game_state() unless defined $s->{resp_cache}{getGameState};
+    $s->{resp_cache}{getGameState}{gameState}
 }
 
 sub cmd_get_map_info {
@@ -347,12 +348,36 @@ sub continue_game {
 
 sub find_and_join_game {
     my ($s) = @_;
-    my $joined = AnyEvent->condvar;
     my $ok = 0;
     while (!$ok) {
         my $game_id = $s->find_game();
-        $ok =  $s->join_game($game_id);
+        $ok = $s->join_game($game_id);
     }
+}
+
+sub bruteforce_join_game {
+    my ($s, $params) = @_;
+    $s->info('trying to find open game using bruteforce...' .
+             'thanks for Terentryv/Nazarov team');
+    my $find_game_cv = AnyEvent->condvar;
+    my $wait_game;
+    $wait_game = AnyEvent->timer(
+        after => $params->{after} // 0,
+        interval => $params->{interval} // 2,
+        cb => sub {
+            my $games = $s->cmd_get_games_list();
+            $s->info(sprintf 'exists %s games', int @$games);
+            for my $game (@$games) {
+                if ($s->join_game($game->{gameId})) {
+                    $s->info(sprintf 'found open game gameId = %s', $game->{gameId});
+                    undef $wait_game;
+                    $find_game_cv->send($game->{gameId});
+                    return
+                }
+            }
+        },
+    );
+    $find_game_cv->recv;
 }
 
 sub wait_your_turn {
@@ -404,8 +429,13 @@ sub dispatch_action {
 
 sub execute_action {
     my ($s, $act) = @_;
-    if ($act ~~['select_race', 'decline_or_conquer']) {
-        $s->before_turn_hook()
+
+    my $state = $s->last_game_state();
+    if (!defined $s->{data}{prev_turn} ||
+        $s->{data}{prev_turn} ne $state->{turn})
+    {
+        $s->{data}{prev_turn} = $state->{turn};
+        $s->before_turn_hook();
     }
 
     $s->info('execute action: ' . $act);

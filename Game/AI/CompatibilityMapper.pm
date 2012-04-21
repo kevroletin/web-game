@@ -6,9 +6,11 @@ use base 'Game::AI::StdCmd';
 
 sub fix_game_state {
     my ($s, $gs) = @_;
+    my $ok = 0;
     $s->_fix_players_in_place($gs);
     for my $i (0 .. $#{$gs->{players}}) {
-        if ($gs->{players}[$i]{id} eq $gs->{activePlayerId}) {
+        if (defined $gs->{activePlayerId} &&
+            $gs->{players}[$i]{id} eq $gs->{activePlayerId}) {
             $gs->{activePlayerNum} = $i;
         }
     }
@@ -121,15 +123,11 @@ sub get_game_state_fields {
     my $state = $int_to_state{$state_int};
     my $result = { attacksHistory => [], raceSelected => 0 };
 
-   $s->info('last_event: ' . $last_event . '(' . $last_event_int . ')');
-   $s->info('state: ' . $state . '(' . $state_int . ')');
+#   $s->info('last_event: ' . $last_event . '(' . $last_event_int . ')');
+#   $s->info('state: ' . $state . '(' . $state_int . ')');
 
     if ($state eq 'wait') {
         $result->{state} = 'notStarted';
-    #}
-    #elsif ($state eq 'begin') {
-    #    $result->{state} = 'conquer';
-    #    $result->{raceSelected} = 0;
     } elsif ($state eq 'finish' || $state eq 'empty') {
         $result->{state} = 'finished';
     } elsif ($last_event eq 'finishTurn') {
@@ -158,12 +156,11 @@ sub get_game_state_fields {
         $result->{lastDiceValue} = 'used';
         $result->{attacksHistory} = [{}];
     } else {
-        $s->error('can\'t obtain game state field');
-        #            $result->{state} = $state;
+#        $s->error('can\'t obtain game state field');
         $result->{state} = 'conquer';
     }
 
-    $s->info('result: ' , $result);
+#    $s->info('result: ' , $result);
 
     return $result;
 }

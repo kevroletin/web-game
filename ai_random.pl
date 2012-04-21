@@ -29,13 +29,14 @@ $SIG{INT} = \&_dier;
 
 sub run {
     #my $ai = Game::AI::Random->new();
-    #my $ai = Game::AI::Random->new({url => 'http://server.smallworld'});
-    my $ai = Game::AI::Random->new({url => 'http://server.lena/small_worlds'});
+    my $ai = Game::AI::Random->new({url => 'http://server.smallworld'});
+    #my $ai = Game::AI::Random->new({url => 'http://server.lena/small_worlds'});
 
     if (@ARGV) {
         @{$ai->{data}}{'id', 'sid'} = (@ARGV[0, 1]);
     } else {
-        $ai->find_and_join_game();
+#        $ai->find_and_join_game();
+        $ai->bruteforce_join_game();
     }
     $ai->continue_game(1);
 #    eval {
